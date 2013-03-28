@@ -5,10 +5,10 @@ Overview
 --------
 
 IonMD is a molecular dynamics (MD) simulation of ions in a linear Paul
-trap. The implmentation uses time step integration and Newtonian
-equations of motion to clasically simulate the forces on individual
-ions. Methods are largely based on the MD simulation described in
-[1]_.
+trap. The implmentation uses the leapfrog integration technique and
+Newtonian equations of motion to clasically simulate the forces on
+individual ions. Methods are largely based on the MD simulation
+described in [1]_.
 
 Model Description
 `````````````````

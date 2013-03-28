@@ -188,14 +188,14 @@ def main(dll, params_file=None, save_final_params=False):
     else:
         # Ion parameters
         N = 150
-        m, Z, lc = initIons(N, 138, 1, int(N*.3), 136, 1)
+        m, Z, lc = initIons(N, 138, 1, int(N*.5), 136, 1)
         #m, Z, lc = initIons(N, 138, 1)
         m_p = m.ctypes.data_as(double_p)
         Z_p = Z.ctypes.data_as(double_p)
         lc_p = lc.ctypes.data_as(int_p)
 
         # Simulation parameters
-        dt, t_max, traj_start = .1e-6, 70e-3, 10e-6
+        dt, t_max, traj_start = .08e-6, 15e-3, 500e-6
         use_rfmm = 0
         use_coulomb = 1
         use_laser = 1
@@ -214,7 +214,7 @@ def main(dll, params_file=None, save_final_params=False):
         # Trap parameters
         r0, z0, kappa = 3.18e-3, 25.4e-3/2., 0.006
         Omega = 2*pi*3.0e6
-        V, U, UEC = 100., 0., 300.
+        V, U, UEC = 75., 0., 100.
         Vsec, wsec = 1, 2*pi*90e3
 
         # Data recording parameters
@@ -252,10 +252,10 @@ def main(dll, params_file=None, save_final_params=False):
     if False:
         x0, v0 = initialConditions(N, pos_fname=fpos_fname, vel_fname=fvel_fname)
     elif True:
-        x0, v0 = initialConditions(N, randomize=True, rlim=r0/4.,
-                                   zlim=z0/5., vlim=sqrt(3*kB*T0/mass))
+        x0, v0 = initialConditions(N, randomize=True, rlim=r0/3.,
+                                   zlim=z0/10., vlim=vlim)
     else:
-        x0, v0 = initialConditions(N, rlim=r0/4., zlim=z0/5., vlim=vlim)
+        x0, v0 = initialConditions(N, rlim=r0/4., zlim=z0 %N, vlim=vlim)
     savetxt("init.txt", concatenate([x0/1e-6,v0], axis=1))
     x0 = x0.flatten()
     v0 = v0.flatten()
