@@ -26,6 +26,9 @@ typedef struct Params {
 	V, U, UEC,		// RF amplitude, offset, end cap voltages
 	Vsec, w;		// secular amplitude, frequency
 
+    // Background gas parameters
+    double gamma_col;	// collision rate
+
     // Simulation settings
     double dt, t_max;	// time step and max time
     int t_steps,	// number of time steps (easy to give with Python)
@@ -34,7 +37,8 @@ typedef struct Params {
 	use_laser,	// include laser cooling
 	use_secular,	// include secular excitation
 	use_stochastic,	// include stochastic processes
-	num_threads;	// number of threads to use for multiprocessing
+	num_threads,	// number of threads to use for multiprocessing
+	quiet;		// 1 to turn off progress reports, etc.
 
     // Data recording
     char *traj_fname,	// trajectory file name

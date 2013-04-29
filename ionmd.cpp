@@ -2,11 +2,16 @@
 #include <cmath>
 #include <omp.h>
 #include <iostream>
+#include <gsl/gsl_rng.h>
 #include "ionmd.hpp"
 
 using namespace std;
 
 #define dbg(wat) (std::cout << wat << "\n")
+
+// Random number generator
+const gsl_rng_type *rng_T = gsl_rng_mt19937;
+gsl_rng *rng = gsl_rng_alloc(rng_T);
 
 //---------------------//
 //--UTILITY FUNCTIONS--//
@@ -27,6 +32,8 @@ void printParams(Params *p) {
     printf("Trap parameters:\n");
     printf("   V = %.1f, U = %.1f, UEC = %.1f\n   r0 = %.2e, z0 = %2e, kappa = %.1e\n", p->V, p->U, p->UEC, p->r0, p->z0, p->kappa);
     printf("   Vsec = %.1f, w = 2*pi*%.1f\n\n", p->Vsec, p->w/(2*pi));
+    printf("Background gas parameters:\n");
+    printf("   gamma_col = %.5f\n\n", p->gamma_col);
     printf("Simulation options:\n");
     printf("   RF micromotion: %s\n", (p->use_rfmm ? "on" : "off"));
     printf("   Coulomb interaction: %s\n", (p->use_coulomb ? "on" : "off"));
@@ -71,9 +78,9 @@ void updateIon(Ion *ion, Ion **ions, double t, double *Fcoullist, Params *p) {
     for(i=0; i<3; i++)
 	ion->x[i] = ion->x[i] + ion->v[i]*p->dt + 0.5*ion->a[i]*pow(p->dt,2);
     FTrap(ion, t, p,Ft);
-    if(p->use_laser) {// && ion->lc)
-	if(ion->lc || (!ion->lc && t < p->traj_start))
-	    FLaser(ion, p, Fl);
+    if(p->use_laser && ion->lc) {
+	//if(ion->lc || (!ion->lc && t < p->traj_start))
+	FLaser(ion, p, Fl);
     }
     else
         zeroVector(Fl);
@@ -121,7 +128,8 @@ void FTrap(Ion *ion, double t, Params *p, double *F) { //result stored in F
 }
 
 // Laser cooling
-void FLaser(Ion *ion, Params *p, double *F) { //result stored in F
+// (result stored in F)
+void FLaser(Ion *ion, Params *p, double *F) {
     zeroVector(F);
     double F0, k, s0, Gamma, beta, delta;
     k = 2*pi/p->lmbda;
@@ -130,16 +138,15 @@ void FLaser(Ion *ion, Params *p, double *F) { //result stored in F
     delta = p->delta - k*dot(p->khat, ion->v);
     beta = -HBAR*pow(k,2)*4*s0*delta/Gamma/pow(1+s0+pow(2*delta/Gamma,2),2);
     for (int i = 0; i < 3; i++) {
-        F0 = HBAR*k*p->khat[i]*Gamma/(s0/(s0 + 1));
-        //F0 = 2*pi*HBAR*c*s0*Gamma/(3*pow(p->lmbda,3)*pow(p->r_l,2))*p->khat[i];
-        //F0 = HBAR*k*p->khat[i]*Gamma/2/(1 + s0 + pow(2*delta/Gamma,2));
+        F0 = HBAR*k*p->khat[i]*Gamma/2/(s0/(s0 + 1));
         //F0 = 0;
         F[i] = F0 - beta*ion->v[i];
     }
 }
 
 // Coulomb interaction
-void FCoulomb(Ion *ion, Ion **ions, Params *p, double *F) { //result stored in F
+// (result stored in F)
+void FCoulomb(Ion *ion, Ion **ions, Params *p, double *F) { 
     double r[3];
     zeroVector(r);
     zeroVector(F);
@@ -158,20 +165,30 @@ void FCoulomb(Ion *ion, Ion **ions, Params *p, double *F) { //result stored in F
 }
 
 // Secular excitations
-void FSecular(Ion *ion, double t, Params *p, double *F) { //result stored in F
+// (result stored in F)
+void FSecular(Ion *ion, double t, Params *p, double *F) {
     zeroVector(F);
     F[0] = ion->Z*p->Vsec*ion->x[0]*cos(p->w*t);
 }
 
 // Stochastic processes, e.g. collisions with background gases
-void FStochastic(Ion *ion, Params *p, double *F) { //result stored in F
+// (result stored in F)
+void FStochastic(Ion *ion, Params *p, double *F) {
     zeroVector(F);
+    if(gsl_rng_uniform(rng) <= exp(-p->gamma_col*p->dt))
+       return;	// no collision
+    double hat[] = {gsl_rng_uniform(rng), gsl_rng_uniform(rng), gsl_rng_uniform(rng)};
+    normalize(hat);
+    double hbark = HBAR*2*pi/p->lmbda;
+    for(int i=0; i<3; i++)
+	F[i] = hbark*hat[i]/p->dt;
 }
 
 // Precomputes all Coulomb interactions (that way they can be applied
 // all at once instead of having one ion updated before the Coulomb
 // interaction is computed for the rest).
-void allCoulomb(Ion **ions, Params *p, double *Flist) { //result stored in Flist
+// (result stored in Flist)
+void allCoulomb(Ion **ions, Params *p, double *Flist) { 
     int i;
     #pragma omp parallel for
     for (i = 0; i < p->N; i++)
@@ -181,7 +198,11 @@ void allCoulomb(Ion **ions, Params *p, double *Flist) { //result stored in Flist
 //--------------//
 //--SIMULATION--//
 //--------------//
+
 int simulate(double *x0, double *v0, Params *p) {
+    // RNG seeding
+    gsl_rng_set(rng, time(0));
+
     //every %3 element is the start of a new vector 
     //keeps from having to reallocate every time
     //don't have to manually manage the memory for each vector
@@ -202,19 +223,26 @@ int simulate(double *x0, double *v0, Params *p) {
     // Run simulation
     omp_set_num_threads(p->num_threads);
     int t_i = 0;
-    for (double t = 0; t < p->t_max; t+=p->dt) {
+    int t_10 = (int)(p->t_max/p->dt)/10;
+    for(double t=0; t<p->t_max; t+=p->dt) {
         // Calculate Coulomb forces
         if (p->use_coulomb)
             allCoulomb(ions, p, Fclist);
+
+	// Progress update
+	if (t_i % t_10 == 0 && !p->quiet)
+	    printf("%d%% complete; t = %f\n", (int)10*t_i/t_10, t);
 
         // Update each ion
         for (i = 0; i < p->N; i++) {
             // Record data
             if (p->record_traj) {
-                if( t > p->traj_start) {
-                    for (j = 0; j < 3; j++) {
-                        tmp = (float)(ions[i]->x[j]/1e-3);
-                        fwrite(&tmp, sizeof(float), 1, traj_file);
+                if(t > p->traj_start) {
+		    if(i == 0) {
+			for (j=0; j<3; j++) {
+			    tmp = (float)(ions[i]->x[j]/1e-3);
+			    fwrite(&tmp, sizeof(float), 1, traj_file);
+			}
                     }
                     simCCDPoint(ccd_file, ions[i]);
                 }
@@ -244,10 +272,12 @@ int simulate(double *x0, double *v0, Params *p) {
     // Cleanup
     fclose(traj_file);
     fclose(fpos_file);
+    fclose(fvel_file);
     fclose(ccd_file);
     for (i = 0; i < p->N; i++)
         delete ions[i];
     delete[] ions;
     delete[] Fclist;
+    gsl_rng_free(rng);
     return 1;
 }

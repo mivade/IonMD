@@ -1,6 +1,6 @@
 CXX = g++
 CXXFLAGS = -Wall -O3 -fPIC -fopenmp -g
-LIBS = -lm
+LIBS = -lm -lgsl -lgslcblas
 SRCS = *.cpp
 HDRS = *.hpp
 

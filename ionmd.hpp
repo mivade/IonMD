@@ -2,6 +2,7 @@
 #define IONMD_HPP
 
 #include <cmath>
+#include <cstdlib>
 #include "params.hpp"
 
 //-------------//
@@ -14,6 +15,7 @@ const double q_e = 1.602176487e-19;
 const double c = 2.99792458e8;
 const double OOFPEN = 8.9875518e+09;
 const double HBAR = 1.0545716e-34;
+const double g_elastic = 0.017;	// elastic collision rate with 
 double xhat[] = {-sqrt(2)/2, sqrt(2)/2, 0};
 double yhat[] = {0,0,1};
 
@@ -43,6 +45,13 @@ extern "C" {
 
     inline double dot(double *a, double *b) {
 	return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+    }
+
+    inline void normalize(double *a) {
+	double mag = sqrt(dot(a,a));
+	a[0] /= mag;
+	a[1] /= mag;
+	a[2] /= mag;
     }
 
     void printIonStatistics(Params *p);
