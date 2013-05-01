@@ -8,8 +8,10 @@ class Params(Structure):
 Params._pack_ = 4
 Params._fields_ = [
     ('N', c_int),
+    ('N_masses', c_int),
     ('m', POINTER(c_double)),
     ('Z', POINTER(c_double)),
+    ('masses', POINTER(c_double)),
     ('lc', POINTER(c_int)),
     ('khat', POINTER(c_double)),
     ('lmbda', c_double),
@@ -27,6 +29,9 @@ Params._fields_ = [
     ('Vsec', c_double),
     ('w', c_double),
     ('gamma_col', c_double),
+    ('sim_ccd', c_int),
+    ('ccd_bins', c_double),
+    ('ccd_extent', c_double),
     ('dt', c_double),
     ('t_max', c_double),
     ('t_steps', c_int),

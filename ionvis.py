@@ -3,6 +3,8 @@ import ctypes
 import matplotlib.pyplot as plt
 from mayavi import mlab
 
+colors = [(1,0,0), (0,1,0), (0,0,1)]
+
 def display(fpos_fname='fpos.xyz', m_lc=138):
     scale = 25.
     ions, x, y, z = np.loadtxt(fpos_fname, skiprows=2, unpack=True)
@@ -24,28 +26,37 @@ def display(fpos_fname='fpos.xyz', m_lc=138):
         pass
     mlab.show()
 
-def simCCD(ccd_fname="ccd.dat", bins=500, clim=None, outfile=None):
+def toRGB(data, channels):
+    """Convert 2D grayscale data to 2D 3 channel 'RGB' data."""
+    new_data = np.zeros((data.shape[0],data.shape[1],3))
+    for i in range(3):
+        new_data[:,:,i] = data*channels[i]
+    return new_data
+
+def simCCD(ccd_fname_prefix, N_ccd, bins, extents,
+           clim=None, xlim=None, ylim=None, outfile=None):
     """Simulate a CCD image."""
-    tmp = np.fromfile(ccd_fname, dtype=ctypes.c_float)
-    tmp.shape = (tmp.shape[0]/3, 3)
-    m = tmp[:,0]
-    x = tmp[:,1]
-    y = tmp[:,2]
-    tmp = None
-    h, xe, ye = np.histogram2d(x, y, bins=bins)
-    #print xe, ye
+    ccd = np.zeros((bins,bins,3))
+    for i in range(N_ccd):
+        hist = np.fromfile(ccd_fname_prefix + "_" + str(i+1) + ".dat")
+        ranges = hist[:(bins*2+2)]
+        data = hist[(bins*2+2):]
+        data /= data.max()
+        data.shape = (bins,bins)
+        ccd += toRGB(data, colors[i%len(colors)])
     plt.figure()
-    plt.hot()
-    plt.imshow(h)
+    plt.imshow(ccd)
     plt.clim(clim)
-    #plt.xticks([])
-    #plt.yticks([])
-    plt.xlabel(r'$x$ [$\mu$m]')
-    plt.ylabel(r'$y$ [$\mu$m]')
+    plt.xticks([])
+    plt.yticks([])
+    #plt.xlabel(r'$x$ [$\mu$m]')
+    #plt.ylabel(r'$y$ [$\mu$m]')
+    plt.xlim(xlim)
+    plt.ylim(ylim)
     if not outfile:
         plt.show()
     else:
-        plt.savefig(outfile)
+        plt.savefig(outfile, bbox_inches='tight')
 
 if __name__ == "__main__":
     display()

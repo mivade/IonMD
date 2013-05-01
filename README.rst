@@ -44,8 +44,8 @@ should work on any platform that can meet the following dependencies:
   - Scipy
   - Matplotlib (for plotting/simulating CCD images)
 * C++ requirements
-  - Nothing beyond standard libraries for now (tested under g++
-    version 4.7.2).
+  - `GNU Scientific Library <https://www.gnu.org/software/gsl/>`_ (for
+    random number generation and 2D binning for simulated CCD images)
 
 Usage
 =====

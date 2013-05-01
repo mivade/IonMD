@@ -8,9 +8,12 @@
 // Parameters to pass from the simulation control scripts
 typedef struct Params {
     // Ion parameters
-    int N;		// total number of ions
-    double *m, *Z;	// masses and charges
+    int N,		// total number of ions
+	N_masses;	// number of unique masses
+    double *m, *Z,	// masses and charges
+	*masses;	// list of unique masses
     int *lc;		// laser cooled or not
+
 
     // Laser parameters
     double *khat;	// direction
@@ -29,6 +32,11 @@ typedef struct Params {
     // Background gas parameters
     double gamma_col;	// collision rate
 
+    // CCD settings
+    int sim_ccd;	// set to 1 to simulate CCD
+    double ccd_bins,	// number of bins ("pixels") of the simulated CCD
+	ccd_extent;	// physical extent of CCD in um
+
     // Simulation settings
     double dt, t_max;	// time step and max time
     int t_steps,	// number of time steps (easy to give with Python)
@@ -43,7 +51,7 @@ typedef struct Params {
     // Data recording
     char *traj_fname,	// trajectory file name
 	*fpos_fname,	// final positions file name
-	*ccd_fname;	// file name for generating simulated CCD images
+	*ccd_fname;	// file name prefix for generating simulated CCD images
     int record_traj;	// record trajectories?
     double traj_start;	// time to start recording trajectory data
 } Params;

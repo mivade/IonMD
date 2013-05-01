@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <cstdlib>
+#include <gsl/gsl_histogram2d.h>
 #include "params.hpp"
 
 //-------------//
@@ -56,7 +57,8 @@ extern "C" {
 
     void printIonStatistics(Params *p);
     void printParams(Params *p);
-    void simCCDPoint(FILE *fout, Ion *ion);
+    //void simCCDPoint(FILE *fout, Ion *ion);
+    void simCCDPoint(Ion *ion, gsl_histogram2d **ccd, Params *p);
 
     // Ion functions
     Ion *initIon(double *x0, double *v0, int index, Params *p);

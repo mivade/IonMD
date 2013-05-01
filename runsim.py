@@ -128,7 +128,8 @@ def initialConditions(N, pos_fname=None,
         #x0[:,2] = uniform(-zlim, zlim, (N,))
         x0[:,:2] = normal(0, rlim, size=(N,2))
         x0[:,2] = normal(0, zlim, size=(N,))
-        v0 = normal(0, vlim/3, (N,3))
+        #v0 = normal(0, vlim, (N,3))
+        v0 = zeros((N,3))
     else:
         x0[:,:2] = uniform(-rlim, rlim, (N,2))
         x0[:,2] = linspace(-zlim, zlim, N)
@@ -148,24 +149,22 @@ def langevinRate(m_ion, m_gas, P, T, alpha):
     Ze = 4.8032043e-10
     return 2*pi*Ze*sqrt(alpha/mu)*P/(kB*1e7*T)
 
-def plotTrajectory(p, dt, t_max, N, traj_file="traj.dat", outfile=None):
+def plotTrajectory(dt, t_max, N, traj_file="traj.dat", outfile=None):
     """Plot the saved ion trajectory."""
-    if not isinstance(p, Params):
-        raise TypeError("p must be a Params instance.")
     traj = fromfile(traj_file, dtype=c_float)
     t = arange(0, t_max, dt)
-    traj.shape = ((3,len(t)))
+    traj.shape = ((3,len(traj)/3))
     x, y, z = traj[0,:], traj[1,:], traj[2,:]
     plt.figure()
     plt.subplot(211)
     plt.hold(True)
-    plt.plot(t, x, label='$x$')
-    plt.plot(t, y, label='$y$')
+    plt.plot(x, label='$x$')
+    plt.plot(y, label='$y$')
     plt.ylabel('$x, y$ [mm]')
     plt.legend()
     plt.hold(False)
     plt.subplot(212)
-    plt.plot(t, z)
+    plt.plot(z)
     plt.xlabel(r'$t$ [$\mu$s]')
     plt.ylabel(r'$z$ [mm]')
     if not outfile:
@@ -188,14 +187,18 @@ def main(dll, dt, t_max,
             N = 250
         if kwargs['all_lc']:
             m, Z, lc = initIons(N, 138, 1)
+            masses = array([138.])
         else:
-            m, Z, lc = initIons(N, 138, 1, int(N*.3), 136, 1)
+            masses = array([138*amu, 136*amu])
+            m, Z, lc = initIons(N, masses[0]/amu, 1, int(N*.15), masses[1]/amu, 1)
+        N_masses = len(masses)
         m_p = m.ctypes.data_as(double_p)
         Z_p = Z.ctypes.data_as(double_p)
+        masses_p = masses.ctypes.data_as(double_p)
         lc_p = lc.ctypes.data_as(int_p)
 
         # Simulation parameters
-        dt, t_max, traj_start = dt, t_max, 0.
+        dt, t_max, traj_start = dt, t_max, 0
         use_rfmm = 0
         use_coulomb = 1
         use_laser = 1
@@ -207,34 +210,42 @@ def main(dll, dt, t_max,
         khat_p = khat.ctypes.data_as(double_p)
         lmda = 493.5e-9
         r_l = 0.5e-3
-        s0 = 10.
+        s0 = 5.
         Gamma = 2*pi*15e6
-        delta = -Gamma
+        delta = -2*Gamma
 
         # Trap parameters
         r0, z0, kappa = 3.18e-3, 25.4e-3/2., 0.008
         Omega = 2*pi*3.0e6
-        V, U, UEC = 235., 0., 300.
+        V, U, UEC = 125., 0., 300.
         Vsec, wsec = 1, 2*pi*90e3
 
         # Background gas parameters
-        gamma_col = langevinRate(138, 28, 5e-10, 298, 1.71)
+        gamma_col = langevinRate(138, 28, 8e-10, 298, 1.71)
+
+        # CCD settings
+        sim_ccd = 1
+        ccd_bins = kwargs.get('ccd_bins', 500)
+        ccd_extent = kwargs.get('ccd_extent', 1000)
 
         # Data recording parameters
         traj_fname = "traj.dat"
         fpos_fname = "fpos.xyz"
         fvel_fname = "fvel.txt"
-        ccd_fname = "ccd.dat"
+        ccd_fname = "ccd"
         record_traj = 1
 
         # Create Params object to pass to the compiled library
-        p = Params(N=N, m=m_p, Z=Z_p, lc=lc_p,
+        p = Params(N=N, N_masses=len(masses),
+                   m=m_p, Z=Z_p, masses=masses_p, lc=lc_p,
                    khat=khat_p, lmbda=lmda, r_l=r_l,
                    delta=delta, s0=s0, Gamma=Gamma,
                    r0=r0, z0=z0, Omega=Omega,
                    V=V, U=U, UEC=UEC, kappa=kappa,
                    Vsec=Vsec, w=wsec,
                    gamma_col=gamma_col,
+                   sim_ccd=sim_ccd,
+                   ccd_bins=ccd_bins, ccd_extent=ccd_extent,
                    dt=dt, t_max=t_max,
                    t_steps=len(arange(0, t_max, dt)),
                    use_rfmm=use_rfmm,
@@ -242,7 +253,7 @@ def main(dll, dt, t_max,
                    use_laser=use_laser,
                    use_secular=use_secular,
                    use_stochastic=use_stochastic,
-                   num_threads=4,
+                   num_threads=8,
                    quiet=0,
                    traj_fname=traj_fname,
                    fpos_fname=fpos_fname,
@@ -290,7 +301,7 @@ def main(dll, dt, t_max,
 ##########
 
 if __name__ == "__main__":
-    dt, t_max = .05e-6, 2e-3
+    dt, t_max = .05e-6, 5e-3
     dll = loadLibrary()
     if False:
         # 2 ms is plenty sufficient for generating initial conditions
@@ -299,15 +310,19 @@ if __name__ == "__main__":
             p = main(dll, dt, 2e-3, N=N, all_lc=True, print_params=False)
             shutil.copyfile("fpos.xyz", "init/fpos%i.xyz" % N)
     else:
-        N = 25
-        print "\nMinimizing..."
-        main(dll, 0.08e-6, 2e-3, N=N, all_lc=True, print_params=False,
-             use_stochastic=0)
-        print "\nSimulating..."
-        p = main(dll, dt, t_max, N=N, all_lc=False, print_params=True,
-                 ipos_fname="fpos.xyz")
-                 #ipos_fname="init/fpos%i.xyz" % N)
-        #plotTrajectory(p, dt, t_max, N)
-        extents = linspace(-600,600,512)
-        ionvis.simCCD(bins=extents, clim=[0,5e3])
-        ionvis.display()
+        N = 150
+        ccd_bins, ccd_extent = 500, 600
+        if False:
+            print "\nMinimizing..."
+            main(dll, dt, 2e-3, N=N, all_lc=True, print_params=False,
+                 use_stochastic=0)
+            print "\nSimulating..."
+        if False:
+            p = main(dll, dt, t_max, N=N, all_lc=False, print_params=True,
+                     ccd_bins=ccd_bins, ccd_extent=ccd_extent,
+                     ipos_fname="init/fpos%i.xyz" % N)
+        #plotTrajectory(dt, t_max, N)
+        ionvis.simCCD("ccd", 2, ccd_bins, ccd_extent,
+                      clim=(0,1))
+                      #outfile="images/CCD_new_method.png")
+        #ionvis.display()

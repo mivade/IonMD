@@ -45,13 +45,32 @@ void printParams(Params *p) {
 
 // Write point to the CCD file for creating a simulated CCD image
 // later. Mass given in amu, x and y points in microns.
-void simCCDPoint(FILE *fout, Ion *ion) {
-    float m = (float)(ion->m/amu),
-    x = (float)(dot(ion->x, xhat)/1e-6),
-    y = (float)(dot(ion->x, yhat)/1e-6);
-    fwrite(&m, sizeof(float), 1, fout);
-    fwrite(&x, sizeof(float), 1, fout);
-    fwrite(&y, sizeof(float), 1, fout);
+// void simCCDPoint(FILE *fout, Ion *ion) {
+//     float m = (float)(ion->m/amu),
+//     x = (float)(dot(ion->x, xhat)/1e-6),
+//     y = (float)(dot(ion->x, yhat)/1e-6);
+//     fwrite(&m, sizeof(float), 1, fout);
+//     fwrite(&x, sizeof(float), 1, fout);
+//     fwrite(&y, sizeof(float), 1, fout);
+//     return;
+// }
+
+void simCCDPoint(Ion *ion, gsl_histogram2d **ccd, Params *p) {
+    if(!p->sim_ccd)
+	return;
+    int j = -1;
+    for(int i=0; i<p->N_masses; i++) {
+	if(ion->m == p->masses[i])
+	    j = i;
+    }
+    if(j == -1) {
+	fprintf(stderr, "ERROR: Mass list not configured correctly. Not simulating CCD images.\n");
+	p->sim_ccd = 0;
+	return;
+    }
+    double x = dot(ion->x, xhat)/1e-6,
+	y = dot(ion->x, yhat)/1e-6;
+    gsl_histogram2d_increment(ccd[j], x, y);
     return;
 }
 
@@ -112,7 +131,8 @@ void updateIon(Ion *ion, Ion **ions, double t, double *Fcoullist, Params *p) {
 //----------//
 
 // Trap force
-void FTrap(Ion *ion, double t, Params *p, double *F) { //result stored in F
+// (result stored in F)
+void FTrap(Ion *ion, double t, Params *p, double *F) {
     double A, B;
     A = p->kappa*p->UEC/pow(p->z0,2);
     if (p->use_rfmm) {
@@ -209,16 +229,24 @@ int simulate(double *x0, double *v0, Params *p) {
     double *Fclist = new double[p->N*3]; 
     int i,j;
     float tmp;
+
+    // Initialize CCD
+    gsl_histogram2d *ccd[p->N_masses];
+    for(i=0; i<p->N_masses; i++) {
+	ccd[i] = gsl_histogram2d_alloc(p->ccd_bins, p->ccd_bins);
+	gsl_histogram2d_set_ranges_uniform(ccd[i],
+					   -p->ccd_extent, p->ccd_extent,
+					   -p->ccd_extent, p->ccd_extent);
+    }
     
     // Initialize ions
     Ion **ions = new Ion*[p->N];
-    for(i = 0; i < p->N; i++) {
+    for(i=0; i<p->N; i++) {
         ions[i] = initIon(&x0[i*3], &v0[i*3], i, p);
     }
     
     // Data recording initialization
     FILE *traj_file = fopen(p->traj_fname, "wb");
-    FILE *ccd_file = fopen(p->ccd_fname, "wb");
     
     // Run simulation
     omp_set_num_threads(p->num_threads);
@@ -244,7 +272,7 @@ int simulate(double *x0, double *v0, Params *p) {
 			    fwrite(&tmp, sizeof(float), 1, traj_file);
 			}
                     }
-                    simCCDPoint(ccd_file, ions[i]);
+		    simCCDPoint(ions[i], ccd, p);
                 }
             }
             // Update
@@ -268,16 +296,27 @@ int simulate(double *x0, double *v0, Params *p) {
         fprintf(fpos_file, "\n");
         fprintf(fvel_file, "\n");
     }
+    if(p->sim_ccd) {
+	for(i=0; i<p->N_masses; i++) {
+	    char s[256];
+	    sprintf(s, "%s_%i.dat", p->ccd_fname, i+1);
+	    FILE *ccd_file = fopen(s, "wb");
+	    //gsl_histogram2d_fprintf(ccd_file, ccd[i], "%g", "%g");
+	    gsl_histogram2d_fwrite(ccd_file, ccd[i]);
+	    fclose(ccd_file);
+	}
+    }
 
     // Cleanup
     fclose(traj_file);
     fclose(fpos_file);
     fclose(fvel_file);
-    fclose(ccd_file);
     for (i = 0; i < p->N; i++)
         delete ions[i];
     delete[] ions;
     delete[] Fclist;
-    gsl_rng_free(rng);
+    //gsl_rng_free(rng);
+    for(i=0; i<p->N_masses; i++)
+	gsl_histogram2d_free(ccd[i]);
     return 1;
 }
