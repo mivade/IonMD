@@ -8,6 +8,7 @@
 using namespace std;
 
 #define dbg(wat) (std::cout << wat << "\n")
+#define err(e) (cerr << "ERROR: " << e << endl)
 
 // Random number generator
 const gsl_rng_type *rng_T = gsl_rng_mt19937;
@@ -40,37 +41,9 @@ void printParams(Params *p) {
     printf("   Laser interaction: %s\n", (p->use_laser ? "on" : "off"));
     printf("   Secular excitation: %s\n", (p->use_secular ? "on" : "off"));
     printf("   Stochastic forces: %s\n", (p->use_stochastic ? "on" : "off"));
-    return;
-}
-
-// Write point to the CCD file for creating a simulated CCD image
-// later. Mass given in amu, x and y points in microns.
-// void simCCDPoint(FILE *fout, Ion *ion) {
-//     float m = (float)(ion->m/amu),
-//     x = (float)(dot(ion->x, xhat)/1e-6),
-//     y = (float)(dot(ion->x, yhat)/1e-6);
-//     fwrite(&m, sizeof(float), 1, fout);
-//     fwrite(&x, sizeof(float), 1, fout);
-//     fwrite(&y, sizeof(float), 1, fout);
-//     return;
-// }
-
-void simCCDPoint(Ion *ion, gsl_histogram2d **ccd, Params *p) {
-    if(!p->sim_ccd)
-	return;
-    int j = -1;
-    for(int i=0; i<p->N_masses; i++) {
-	if(ion->m == p->masses[i])
-	    j = i;
-    }
-    if(j == -1) {
-	fprintf(stderr, "ERROR: Mass list not configured correctly. Not simulating CCD images.\n");
-	p->sim_ccd = 0;
-	return;
-    }
-    double x = dot(ion->x, xhat)/1e-6,
-	y = dot(ion->x, yhat)/1e-6;
-    gsl_histogram2d_increment(ccd[j], x, y);
+    printf("   Abort on ion out of bounds: %s\n", (p->use_abort ? "on" : "off"));
+    if(p->use_abort)
+	printf("   Abort bounds: %.3e\n", p->abort_bounds);
     return;
 }
 
@@ -90,17 +63,83 @@ Ion *initIon(double *x0, double *v0, int i, Params *p) {
     return ion;
 }
 
+void minimize(Ion **ions, Params *p) {
+    double t = 0;
+    double *Fclist = new double[p->N*3]; 
+
+    // Store settings
+    int use_rfmm = p->use_rfmm,
+	use_coulomb = p->use_coulomb,
+	use_laser = p->use_laser,
+	use_stochastic = p->use_stochastic,
+	i, j;
+
+    // Turn off everything but Coulomb, trap, and laser
+    p->use_rfmm = 0;
+    p->use_coulomb = 1;
+    p->use_laser = 1;
+    p->use_stochastic = 0;
+
+    // Begin minimization
+    p->minimizing = 1;
+    while(true) {	// TODO: better end decision
+	allCoulomb(ions, p, Fclist);
+	for(i=0; i<p->N; i++) {
+	    for(j=0; j<3; j++)
+		printf("%e ", ions[i]->v[j]);
+	    printf("\n");
+	    updateIon(ions[i], ions, t, Fclist, p);
+	    if(ions[i]->x[0] != ions[i]->x[0])
+		continue;//printf("ugh, t = %e\n", t);
+	}
+	if(t >= p->t_max)
+	    break;
+	t += p->dt;
+    }
+    for(i=0; i<p->N; i++) {
+	for(j=0; j<3; j++) {
+	    ions[i]->v[j] = 0;
+	    ions[i]->a[j] = 0;
+	}
+    }
+    p->minimizing = 0;
+
+    // Restore settings
+    p->use_rfmm = use_rfmm;
+    p->use_coulomb = use_coulomb;
+    p->use_laser = use_laser;
+    p->use_stochastic = use_stochastic;
+    delete[] Fclist;
+}
+
+void simCCDPoint(Ion *ion, gsl_histogram2d **ccd, Params *p) {
+    if(!p->sim_ccd)
+	return;
+    int j = -1;
+    for(int i=0; i<p->N_masses; i++) {
+	if(ion->m == p->masses[i])
+	    j = i;
+    }
+    if(j == -1) {
+	err("Mass list not configured correctly. Not simulating CCD images.");
+	p->sim_ccd = 0;
+	return;
+    }
+    double x = dot(ion->x, xhat)/1e-6,
+	y = dot(ion->x, yhat)/1e-6;
+    gsl_histogram2d_increment(ccd[j], x, y);
+    return;
+}
+
 void updateIon(Ion *ion, Ion **ions, double t, double *Fcoullist, Params *p) {
     int i;
     double F[3], Ft[3], Fl[3], Fc[3], Fsec[3], Fs[3], a[3];
     zeroVector(F);
     for(i=0; i<3; i++)
-	ion->x[i] = ion->x[i] + ion->v[i]*p->dt + 0.5*ion->a[i]*pow(p->dt,2);
-    FTrap(ion, t, p,Ft);
-    if(p->use_laser && ion->lc) {
-	//if(ion->lc || (!ion->lc && t < p->traj_start))
+	ion->x[i] += ion->v[i]*p->dt + 0.5*ion->a[i]*pow(p->dt, 2);
+    FTrap(ion, t, p, Ft);
+    if((p->use_laser && ion->lc) || p->minimizing)
 	FLaser(ion, p, Fl);
-    }
     else
         zeroVector(Fl);
     if(p->use_coulomb)
@@ -115,13 +154,11 @@ void updateIon(Ion *ion, Ion **ions, double t, double *Fcoullist, Params *p) {
         FStochastic(ion, p, Fs);
     else
         zeroVector(Fs);
-    for(int i = 0; i < 3; i++) {
-        F[i] += Ft[i] + Fl[i] + Fc[i] + Fsec[i] + Fs[i];
+    for(i=0; i<3; i++) {
+        F[i] = Ft[i] + Fl[i] + Fc[i] + Fsec[i] + Fs[i];
 	a[i] = F[i]/ion->m;
-	//ion->x[i] = ion->x[i] + ion->v[i]*p->dt + 0.5*ion->a[i]*pow(p->dt,2);
-	ion->v[i] = ion->v[i] + 0.5*(ion->a[i] + a[i])*p->dt;
-	//ion->x[i] += ion->v[i]*p->dt;
-        //ion->v[i] += F[i]*p->dt/ion->m;
+	//ion->x[i] += ion->v[i]*p->dt + 0.5*ion->a[i]*pow(p->dt, 2);
+	ion->v[i] += 0.5*(ion->a[i] + a[i])*p->dt;
     }
     copyVector(ion->a, a);
 }
@@ -134,33 +171,45 @@ void updateIon(Ion *ion, Ion **ions, double t, double *Fcoullist, Params *p) {
 // (result stored in F)
 void FTrap(Ion *ion, double t, Params *p, double *F) {
     double A, B;
-    A = p->kappa*p->UEC/pow(p->z0,2);
+    //A = p->kappa*p->UEC/pow(p->z0,2);
     if (p->use_rfmm) {
-        B = 4*p->V*cos(p->Omega*t)/pow(p->r0,2);
+        //B = 4*p->V*cos(p->Omega*t)/pow(p->r0,2);
+	// TODO: Fix
+	A = 0; B = 0;
         F[0] = ion->Z*(A - B)*ion->x[0];
         F[1] = ion->Z*(A + B)*ion->x[1];
-    } else {
-        B = 2*ion->Z*pow(p->V,2)/(ion->m*pow(p->Omega,2)*pow(p->r0,4));
-        F[0] = ion->Z*(A - B)*ion->x[0];
-        F[1] = ion->Z*(A - B)*ion->x[1];
     }
-    F[2] = -2*ion->Z*A*ion->x[2];
+    else {
+	A = ion->Z*pow(p->V,2)/(ion->m*pow(p->Omega,2)*pow(p->r0,4));
+        B = p->kappa*p->UEC/(2*pow(p->z0,2));
+        F[0] = -2*ion->Z*(A-B)*ion->x[0];
+        F[1] = -2*ion->Z*(A-B)*ion->x[1];
+    }
+    F[2] = -4*ion->Z*B*ion->x[2];
 }
 
 // Laser cooling
+// TODO: make critical damping work if laser is pointing in another
+// direction
 // (result stored in F)
 void FLaser(Ion *ion, Params *p, double *F) {
     zeroVector(F);
-    double F0, k, s0, Gamma, beta, delta;
-    k = 2*pi/p->lmbda;
-    s0 = p->s0;
-    Gamma = p->Gamma;
-    delta = p->delta - k*dot(p->khat, ion->v);
-    beta = -HBAR*pow(k,2)*4*s0*delta/Gamma/pow(1+s0+pow(2*delta/Gamma,2),2);
+    double F0, k, s0, Gamma, beta, delta, B;
+    if(!p->minimizing) {
+	k = 2*pi/p->lmbda;
+	s0 = p->s0;
+	Gamma = p->Gamma;
+	delta = p->delta - k*dot(p->khat, ion->v);
+	beta = -HBAR*pow(k,2)*4*s0*delta/Gamma/pow(1+s0+pow(2*delta/Gamma,2),2);
+	F0 = HBAR*k*Gamma/2/(s0/(s0 + 1));
+    }
+    else {
+	F0 = 0;
+	B = p->kappa*p->UEC/(2*pow(p->z0,2));
+	beta = sqrt(4*ion->Z*B/ion->m);	// critical damping in z direction
+    }
     for (int i = 0; i < 3; i++) {
-        F0 = HBAR*k*p->khat[i]*Gamma/2/(s0/(s0 + 1));
-        //F0 = 0;
-        F[i] = F0 - beta*ion->v[i];
+        F[i] = F0*p->khat[i] - beta*ion->v[i];
     }
 }
 
@@ -212,7 +261,7 @@ void allCoulomb(Ion **ions, Params *p, double *Flist) {
     int i;
     #pragma omp parallel for
     for (i = 0; i < p->N; i++)
-        FCoulomb(ions[i], ions, p,&Flist[i*3]); //Alternately: Flist+i*3
+        FCoulomb(ions[i], ions, p, &Flist[i*3]); //Alternately: Flist+i*3
 }
 
 //--------------//
@@ -226,8 +275,11 @@ int simulate(double *x0, double *v0, Params *p) {
     //every %3 element is the start of a new vector 
     //keeps from having to reallocate every time
     //don't have to manually manage the memory for each vector
-    double *Fclist = new double[p->N*3]; 
-    int i,j;
+    double *Fclist = new double[p->N*3];
+    int i, j,
+	abort = 0,
+	T_ctr = 0;
+    double vT = 0;
     float tmp;
 
     // Initialize CCD
@@ -244,14 +296,20 @@ int simulate(double *x0, double *v0, Params *p) {
     for(i=0; i<p->N; i++) {
         ions[i] = initIon(&x0[i*3], &v0[i*3], i, p);
     }
+
+    // Do minimization routine
+    printf("Minimizing...\n");
+    minimize(ions, p);
     
     // Data recording initialization
     FILE *traj_file = fopen(p->traj_fname, "wb");
+    FILE *temp_file = fopen(p->temp_fname, "w");
     
     // Run simulation
     omp_set_num_threads(p->num_threads);
     int t_i = 0;
     int t_10 = (int)(p->t_max/p->dt)/10;
+    printf("Simulating...\n");
     for(double t=0; t<p->t_max; t+=p->dt) {
         // Calculate Coulomb forces
         if (p->use_coulomb)
@@ -262,7 +320,7 @@ int simulate(double *x0, double *v0, Params *p) {
 	    printf("%d%% complete; t = %f\n", (int)10*t_i/t_10, t);
 
         // Update each ion
-        for (i = 0; i < p->N; i++) {
+        for (i=0; i<p->N; i++) {
             // Record data
             if (p->record_traj) {
                 if(t > p->traj_start) {
@@ -275,10 +333,36 @@ int simulate(double *x0, double *v0, Params *p) {
 		    simCCDPoint(ions[i], ccd, p);
                 }
             }
+
+	    // Update "temperature"
+	    // TODO: DTRT
+	    for(j=0; j<3; j++)
+		vT += pow(ions[i]->v[j], 2);
+	    if(T_ctr == p->T_steps) {
+		T_ctr = 0;
+		vT = vT/p->T_steps/p->N;
+		fprintf(temp_file, "%e %e\n", t, vT);
+	    }
+	    else T_ctr++;
+
             // Update
             updateIon(ions[i], ions, t, Fclist, p);
+
+	    // Check bounds
+	    if(p->use_abort) {
+		for(j=0; j<2; j++) {
+		    if(abs(ions[i]->x[j]) >= p->abort_bounds || ions[i]->x[j] != ions[i]->x[j]) {
+			err("Ion out of bounds! Aborting...");
+			fprintf(stderr, "x[%i] = %.3e\n",
+				j, ions[i]->x[j]);
+			abort = 1;
+		    }
+		}
+		if(abort) break;
+	    }
         }
         t_i++;
+	if(abort) break;
     }
 
     // Save data
@@ -286,7 +370,7 @@ int simulate(double *x0, double *v0, Params *p) {
     FILE *fvel_file = fopen("fvel.txt", "w");
     fprintf(fpos_file, "%d\n", p->N);
     fprintf(fpos_file, "Simulated ion crystal, positions in microns\n");
-    for (i = 0; i < p->N; i++) {
+    for (i=0; i<p->N; i++) {
         fprintf(fpos_file, "%d ", (int)(ions[i]->m/amu));
         //fprintf(fpos_file, "BA ");
         for(j=0; j<3; j++) {
@@ -311,6 +395,7 @@ int simulate(double *x0, double *v0, Params *p) {
     fclose(traj_file);
     fclose(fpos_file);
     fclose(fvel_file);
+    fclose(temp_file);
     for (i = 0; i < p->N; i++)
         delete ions[i];
     delete[] ions;
@@ -318,5 +403,7 @@ int simulate(double *x0, double *v0, Params *p) {
     //gsl_rng_free(rng);
     for(i=0; i<p->N_masses; i++)
 	gsl_histogram2d_free(ccd[i]);
+    if(p->use_abort && abort == 1)
+	return 0;
     return 1;
 }

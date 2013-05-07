@@ -14,7 +14,6 @@ typedef struct Params {
 	*masses;	// list of unique masses
     int *lc;		// laser cooled or not
 
-
     // Laser parameters
     double *khat;	// direction
     double lmbda,	// wavelength
@@ -38,22 +37,29 @@ typedef struct Params {
 	ccd_extent;	// physical extent of CCD in um
 
     // Simulation settings
-    double dt, t_max;	// time step and max time
+    double dt, t_max,	// time step and max time
+	abort_bounds;	// radial postion at which ions are considered
+			// out of bounds
+    int minimizing;	// internal variable; 1 when performing
+			// minimization routine
     int t_steps,	// number of time steps (easy to give with Python)
 	use_rfmm,	// include RF micromotion
 	use_coulomb,	// include the Coulomb interaction
 	use_laser,	// include laser cooling
 	use_secular,	// include secular excitation
 	use_stochastic,	// include stochastic processes
+	use_abort,	// abort if ions are out of bounds
 	num_threads,	// number of threads to use for multiprocessing
 	quiet;		// 1 to turn off progress reports, etc.
 
     // Data recording
     char *traj_fname,	// trajectory file name
 	*fpos_fname,	// final positions file name
-	*ccd_fname;	// file name prefix for generating simulated CCD images
+	*ccd_fname,	// file name prefix for generating simulated CCD images
+	*temp_fname;	// file name for recording ensemble temperature
     int record_traj;	// record trajectories?
     double traj_start;	// time to start recording trajectory data
+    int T_steps;	// number of steps for averaging velocities
 } Params;
 
 #endif

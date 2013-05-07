@@ -42,7 +42,9 @@ should work on any platform that can meet the following dependencies:
   - Python 2.6 or 2.7
   - Numpy
   - Scipy
-  - Matplotlib (for plotting/simulating CCD images)
+  - MayaVI (optional; for displaying ions in 3D)
+  - Matplotlib (optional; for plotting/simulating CCD images)
+  - PIL (optional; for simulating CCD images)
 * C++ requirements
   - `GNU Scientific Library <https://www.gnu.org/software/gsl/>`_ (for
     random number generation and 2D binning for simulated CCD images)

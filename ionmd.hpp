@@ -33,7 +33,7 @@ typedef struct Ion {
 //------------------------//
 
 extern "C" {
-    // Utility functions
+    // Vector functions
     inline void zeroVector(double *vec) {
 	vec[0] = vec[1] = vec[2] = 0.0;
     }
@@ -55,13 +55,14 @@ extern "C" {
 	a[2] /= mag;
     }
 
+    // Utility functions
     void printIonStatistics(Params *p);
     void printParams(Params *p);
-    //void simCCDPoint(FILE *fout, Ion *ion);
-    void simCCDPoint(Ion *ion, gsl_histogram2d **ccd, Params *p);
 
     // Ion functions
     Ion *initIon(double *x0, double *v0, int index, Params *p);
+    void minimize(Ion **ions, Params *p);
+    void simCCDPoint(Ion *ion, gsl_histogram2d **ccd, Params *p);
     void updateIon(Ion *ion, Ion **ions, double t, double *Fcoullist, Params *p);
     void FTrap(Ion *ion, double t, Params *p, double *F);
     void FLaser(Ion *ion, Params *p, double *F);

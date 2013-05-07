@@ -1,6 +1,13 @@
+"""
+ionvis.py
+
+IonMD ion visualization functions.
+"""
+
 import numpy as np
 import ctypes
 import matplotlib.pyplot as plt
+import Image, ImageEnhance
 from mayavi import mlab
 
 colors = [(1,0,0), (0,1,0), (0,0,1)]
@@ -34,8 +41,9 @@ def toRGB(data, channels):
     return new_data
 
 def simCCD(ccd_fname_prefix, N_ccd, bins, extents,
-           clim=None, xlim=None, ylim=None, outfile=None):
+           outfile=None, show=True, brightness=4, imgcmd="eog"):
     """Simulate a CCD image."""
+    tmpimg = "images/tmp.png"
     ccd = np.zeros((bins,bins,3))
     for i in range(N_ccd):
         hist = np.fromfile(ccd_fname_prefix + "_" + str(i+1) + ".dat")
@@ -44,20 +52,15 @@ def simCCD(ccd_fname_prefix, N_ccd, bins, extents,
         data /= data.max()
         data.shape = (bins,bins)
         ccd += toRGB(data, colors[i%len(colors)])
-    plt.figure()
-    plt.imshow(ccd)
-    plt.clim(clim)
-    plt.xticks([])
-    plt.yticks([])
-    #plt.xlabel(r'$x$ [$\mu$m]')
-    #plt.ylabel(r'$y$ [$\mu$m]')
-    plt.xlim(xlim)
-    plt.ylim(ylim)
-    if not outfile:
-        plt.show()
-    else:
-        plt.savefig(outfile, bbox_inches='tight')
+    plt.imsave(fname=tmpimg, arr=ccd)
+    imgA = Image.open(tmpimg)
+    imgB = ImageEnhance.Brightness(imgA)
+    imgC = imgB.enhance(4)
+    if outfile:
+        imgC.save(outfile)
+    if show:
+        imgC.show(command=imgcmd)
+    return ccd
 
 if __name__ == "__main__":
     display()
-    
