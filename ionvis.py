@@ -10,7 +10,10 @@ import matplotlib.pyplot as plt
 import Image, ImageEnhance
 from mayavi import mlab
 
-colors = [(1,0,0), (0,1,0), (0,0,1)]
+if True:
+    colors = [(1,0,0), (0,1,0), (0,0,1)]
+else:
+    colors = [(1,0,0)]
 
 def display(fpos_fname='fpos.xyz', m_lc=138):
     scale = 25.
@@ -55,7 +58,7 @@ def simCCD(ccd_fname_prefix, N_ccd, bins, extents,
     plt.imsave(fname=tmpimg, arr=ccd)
     imgA = Image.open(tmpimg)
     imgB = ImageEnhance.Brightness(imgA)
-    imgC = imgB.enhance(4)
+    imgC = imgB.enhance(brightness)
     if outfile:
         imgC.save(outfile)
     if show:
@@ -63,4 +66,7 @@ def simCCD(ccd_fname_prefix, N_ccd, bins, extents,
     return ccd
 
 if __name__ == "__main__":
-    display()
+    ccd_bins, ccd_extent = 600, 400
+    #display()
+    simCCD("ccd", 2, ccd_bins, ccd_extent, brightness=1,
+           outfile="images/CCD_latest.png", show=True)

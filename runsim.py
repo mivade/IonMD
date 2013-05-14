@@ -196,8 +196,8 @@ def main(dll, dt, t_max,
             m, Z, lc = initIons(N, 138, 1)
             masses = array([138.])
         else:
-            masses = array([138*amu, 135*amu])
-            m, Z, lc = initIons(N, masses[0]/amu, 1, int(N*.4), masses[1]/amu, 1)
+            masses = array([138*amu, 136*amu])
+            m, Z, lc = initIons(N, masses[0]/amu, 1, int(N*.3), masses[1]/amu, 1)
         N_masses = len(masses)
         m_p = m.ctypes.data_as(double_p)
         Z_p = Z.ctypes.data_as(double_p)
@@ -217,11 +217,11 @@ def main(dll, dt, t_max,
         # Trap parameters
         r0, z0, kappa = 3.18e-3, 25.4e-3/2., 0.008
         Omega = 2*pi*3.0e6
-        V, U, UEC = 150., 0., 300.
+        V, U, UEC = 175., 0., 300.
         Vsec, wsec = 1, 2*pi*90e3
 
         # Background gas parameters
-        gamma_col = langevinRate(138, 28, 8e-10, 298, 1.71)
+        gamma_col = langevinRate(138, 28, 5e-10, 298, 1.71)
 
         # CCD settings
         sim_ccd = kwargs.get('sim_ccd', 1)
@@ -323,7 +323,7 @@ if __name__ == "__main__":
             p = main(dll, dt, 2e-3, N=N, all_lc=True, print_params=False)
             shutil.copyfile("fpos.xyz", "init/fpos%i.xyz" % N)
     else:
-        N = 5
+        N = 200
         ccd_bins, ccd_extent = 600, 400
         if True:
             #print "\nMinimizing..."
@@ -334,7 +334,7 @@ if __name__ == "__main__":
                      ccd_bins=ccd_bins, ccd_extent=ccd_extent,
                      use_stochastic=1,
                      T_steps=600,
-                     traj_start=500e-6)
+                     traj_start=2e-3)
         #plotTrajectory(dt, t_max, N, end=-1)
         plotTemperature(N, 138*amu)
         ionvis.simCCD("ccd", 2, ccd_bins, ccd_extent, brightness=2,

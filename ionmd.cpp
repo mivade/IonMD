@@ -85,9 +85,9 @@ void minimize(Ion **ions, Params *p) {
     while(true) {	// TODO: better end decision
 	allCoulomb(ions, p, Fclist);
 	for(i=0; i<p->N; i++) {
-	    for(j=0; j<3; j++)
-		printf("%e ", ions[i]->v[j]);
-	    printf("\n");
+	    //for(j=0; j<3; j++)
+	    //printf("%e ", ions[i]->v[j]);
+	    //printf("\n");
 	    updateIon(ions[i], ions, t, Fclist, p);
 	    if(ions[i]->x[0] != ions[i]->x[0])
 		continue;//printf("ugh, t = %e\n", t);
@@ -205,8 +205,7 @@ void FLaser(Ion *ion, Params *p, double *F) {
     }
     else {
 	F0 = 0;
-	B = p->kappa*p->UEC/(2*pow(p->z0,2));
-	beta = sqrt(4*ion->Z*B/ion->m);	// critical damping in z direction
+	beta = 1e-20; // unrealistically large damping for minimizing
     }
     for (int i = 0; i < 3; i++) {
         F[i] = F0*p->khat[i] - beta*ion->v[i];
