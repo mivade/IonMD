@@ -82,9 +82,7 @@ Future Features
 
 Some things that are planned for future releases:
 
-* Optimization!
 * Better stability -> less random initial conditions could help this
-* A simple GUI for running simulations
 
 Authors
 =======
