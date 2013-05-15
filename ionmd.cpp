@@ -194,18 +194,17 @@ void FTrap(Ion *ion, double t, Params *p, double *F) {
 // (result stored in F)
 void FLaser(Ion *ion, Params *p, double *F) {
     zeroVector(F);
-    double F0, k, s0, Gamma, beta, delta, B;
-    if(!p->minimizing) {
-	k = 2*pi/p->lmbda;
-	s0 = p->s0;
-	Gamma = p->Gamma;
-	delta = p->delta - k*dot(p->khat, ion->v);
-	beta = -HBAR*pow(k,2)*4*s0*delta/Gamma/pow(1+s0+pow(2*delta/Gamma,2),2);
-	F0 = HBAR*k*Gamma/2/(s0/(s0 + 1));
-    }
-    else {
-	F0 = 0;
+    double F0, k, s0, Gamma, beta, delta;
+    k = 2*pi/p->lmbda;
+    s0 = p->s0;
+    Gamma = p->Gamma;
+    delta = p->delta + k*dot(p->khat, ion->v);
+    beta = -HBAR*pow(k,2)*4*s0*delta/Gamma/pow(1+s0+pow(2*delta/Gamma,2),2);
+    F0 = HBAR*k*Gamma/2/(s0/(s0 + 1));
+    if(p->minimizing) {
 	beta = 1e-20; // unrealistically large damping for minimizing
+	if(!p->lc)	// don't use constant pressure term on non-lc'ed ions
+	    F0 = 0;
     }
     for (int i = 0; i < 3; i++) {
         F[i] = F0*p->khat[i] - beta*ion->v[i];
