@@ -29,11 +29,15 @@ def display(fpos_fname='fpos.xyz', m_lc=138):
             x_sc.append([x[i], y[i], z[i]])
     x_lc = np.array(x_lc)
     x_sc = np.array(x_sc)
+    fig = mlab.figure(size=(640,480))
     mlab.points3d(x_lc[:,0], x_lc[:,1], x_lc[:,2], color=c_lc, scale_factor=scale)
     try:
         mlab.points3d(x_sc[:,0], x_sc[:,1], x_sc[:,2], color=c_sc, scale_factor=scale)
     except:
         pass
+    mlab.view(azimuth=45, elevation=90)
+    mlab.roll(180)
+    mlab.orientation_axes()
     mlab.show()
 
 def toRGB(data, channels):
@@ -67,6 +71,6 @@ def simCCD(ccd_fname_prefix, N_ccd, bins, extents,
 
 if __name__ == "__main__":
     ccd_bins, ccd_extent = 600, 400
-    #display()
-    simCCD("ccd", 2, ccd_bins, ccd_extent, brightness=1,
-           outfile="images/CCD_latest.png", show=True)
+    display()
+    #simCCD("ccd", 2, ccd_bins, ccd_extent, brightness=5,
+    #       outfile="images/CCD_latest.png", show=True)
