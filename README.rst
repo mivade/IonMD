@@ -17,13 +17,51 @@ Model Description
 IonMD simulates ions in a linear Paul trap by solving each ion's
 classical equation of motion :math:`\ddot{\vec{x}}_i = \vec{F}_i/m_i`
 where the force on each ion is the sum of forces due to the trapping
-potential, cooling lasers, Coulomb repulsion, external secular
-excitation and stochastic processes such as background gas
-collisions. In other words,
+potential, cooling lasers, Coulomb repulsion, and stochastic processes
+such as background gas collisions. In other words,
 
 .. math::
    
-   \vec{F}_i = \vec{F}_i^{(trap)} + \vec{F}_i^{(laser)} + \vec{F}_i^{(Coulomb)} + \vec{F}_i^{(secular)} + \vec{F}_i^{(stochastic)}.
+   \vec{F}_i = \vec{F}_{T,i} + \vec{F}_{L,i} + \vec{F}_{C,i} + \vec{F}_{S,i}
+
+Minimization
+------------
+
+For obtaining good simulation results, it is best to start with good
+initial conditions, otherwise the simulation would need to run for an
+exorbitant amount of time. One method is to minimize the potential
+energy :math:`U` of the system. For the :math:`i`\th particle, the
+potential energy is given by 
+
+.. math:: U_i = U_{T,i} + U_{L,i} + U_{C,i},
+
+where we ignore contributions of stochastic effects. Specifically,
+there is the trapping potential energy
+
+.. math::
+
+   U_{T,i} &= Ze\psi \\
+           &= Ze \left[ (C-D)x_i^2 + (C-D)y_i^2 + 2Dz_i^2 \right]
+
+where :math:`C = ZeV^2/m\Omega^2r_0^4` and :math:`D = \kappa
+U_{EC}/2z_0^2`;
+
+.. math::
+
+   U_{L,i} = -|\vec{F}_0|(\vec{r}_i \cdot \hat{r}_L) + \frac{1}{2}
+   \beta |\vec{r}_i|^2
+
+is the potential energy contribution of the laser; and the Coulomb
+potential energy is
+
+.. math::
+
+   U_{C,i} = \frac{Ze}{4\pi\epsilon_0} \sum_{i\neq j}
+   \frac{1}{|\vec{r_i}-\vec{r_j}|}.
+
+Finding the positions for minimization is a complex problem that
+requires finding the minimum of a scalar function of :math:`3N`
+variables.
 
 License
 =======
@@ -39,15 +77,20 @@ routines. IonMD is built and tested on Linux (Debian Wheezy), but
 should work on any platform that can meet the following dependencies:
 
 * Python requirements
-  - Python 2.6 or 2.7
-  - Numpy
-  - Scipy
-  - MayaVI (optional; for displaying ions in 3D)
-  - Matplotlib (optional; for plotting/simulating CCD images)
-  - PIL (optional; for simulating CCD images)
+
+  * Python 2.6 or 2.7
+  * Numpy
+  * Scipy
+  * MayaVI (optional; for displaying ions in 3D)
+  * Matplotlib (optional; for plotting/simulating CCD images)
+  * PIL (optional; for simulating CCD images)
+
 * C++ requirements
-  - `GNU Scientific Library <https://www.gnu.org/software/gsl/>`_ (for
+
+  * `GNU Scientific Library <https://www.gnu.org/software/gsl/>`_ (for
     random number generation and 2D binning for simulated CCD images)
+  * `NLopt <http://ab-initio.mit.edu/wiki/index.php/NLopt>`_ (for
+    finding the potential energy minimum for good initial conditions)
 
 Usage
 =====

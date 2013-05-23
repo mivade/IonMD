@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="Docutils 0.8.1: http://docutils.sourceforge.net/" />
+<title>IonMD</title>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<style type="text/css">
+
+/*
+:Author: David Goodger (goodger@python.org)
+:Id: $Id: html4css1.css 7056 2011-06-17 10:50:48Z milde $
+:Copyright: This stylesheet has been placed in the public domain.
+
+Default cascading style sheet for the HTML output of Docutils.
+
+See http://docutils.sf.net/docs/howto/html-stylesheets.html for how to
+customize this style sheet.
+*/
+
+/* used to remove borders from tables and images */
+.borderless, table.borderless td, table.borderless th {
+  border: 0 }
+
+table.borderless td, table.borderless th {
+  /* Override padding for "table.docutils td" with "! important".
+     The right padding separates the table cells. */
+  padding: 0 0.5em 0 0 ! important }
+
+.first {
+  /* Override more specific margin styles with "! important". */
+  margin-top: 0 ! important }
+
+.last, .with-subtitle {
+  margin-bottom: 0 ! important }
+
+.hidden {
+  display: none }
+
+a.toc-backref {
+  text-decoration: none ;
+  color: black }
+
+blockquote.epigraph {
+  margin: 2em 5em ; }
+
+dl.docutils dd {
+  margin-bottom: 0.5em }
+
+object[type="image/svg+xml"], object[type="application/x-shockwave-flash"] {
+  overflow: hidden;
+}
+
+/* Uncomment (and remove this text!) to get bold-faced definition list terms
+dl.docutils dt {
+  font-weight: bold }
+*/
+
+div.abstract {
+  margin: 2em 5em }
+
+div.abstract p.topic-title {
+  font-weight: bold ;
+  text-align: center }
+
+div.admonition, div.attention, div.caution, div.danger, div.error,
+div.hint, div.important, div.note, div.tip, div.warning {
+  margin: 2em ;
+  border: medium outset ;
+  padding: 1em }
+
+div.admonition p.admonition-title, div.hint p.admonition-title,
+div.important p.admonition-title, div.note p.admonition-title,
+div.tip p.admonition-title {
+  font-weight: bold ;
+  font-family: sans-serif }
+
+div.attention p.admonition-title, div.caution p.admonition-title,
+div.danger p.admonition-title, div.error p.admonition-title,
+div.warning p.admonition-title {
+  color: red ;
+  font-weight: bold ;
+  font-family: sans-serif }
+
+/* Uncomment (and remove this text!) to get reduced vertical space in
+   compound paragraphs.
+div.compound .compound-first, div.compound .compound-middle {
+  margin-bottom: 0.5em }
+
+div.compound .compound-last, div.compound .compound-middle {
+  margin-top: 0.5em }
+*/
+
+div.dedication {
+  margin: 2em 5em ;
+  text-align: center ;
+  font-style: italic }
+
+div.dedication p.topic-title {
+  font-weight: bold ;
+  font-style: normal }
+
+div.figure {
+  margin-left: 2em ;
+  margin-right: 2em }
+
+div.footer, div.header {
+  clear: both;
+  font-size: smaller }
+
+div.line-block {
+  display: block ;
+  margin-top: 1em ;
+  margin-bottom: 1em }
+
+div.line-block div.line-block {
+  margin-top: 0 ;
+  margin-bottom: 0 ;
+  margin-left: 1.5em }
+
+div.sidebar {
+  margin: 0 0 0.5em 1em ;
+  border: medium outset ;
+  padding: 1em ;
+  background-color: #ffffee ;
+  width: 40% ;
+  float: right ;
+  clear: right }
+
+div.sidebar p.rubric {
+  font-family: sans-serif ;
+  font-size: medium }
+
+div.system-messages {
+  margin: 5em }
+
+div.system-messages h1 {
+  color: red }
+
+div.system-message {
+  border: medium outset ;
+  padding: 1em }
+
+div.system-message p.system-message-title {
+  color: red ;
+  font-weight: bold }
+
+div.topic {
+  margin: 2em }
+
+h1.section-subtitle, h2.section-subtitle, h3.section-subtitle,
+h4.section-subtitle, h5.section-subtitle, h6.section-subtitle {
+  margin-top: 0.4em }
+
+h1.title {
+  text-align: center }
+
+h2.subtitle {
+  text-align: center }
+
+hr.docutils {
+  width: 75% }
+
+img.align-left, .figure.align-left, object.align-left {
+  clear: left ;
+  float: left ;
+  margin-right: 1em }
+
+img.align-right, .figure.align-right, object.align-right {
+  clear: right ;
+  float: right ;
+  margin-left: 1em }
+
+img.align-center, .figure.align-center, object.align-center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.align-left {
+  text-align: left }
+
+.align-center {
+  clear: both ;
+  text-align: center }
+
+.align-right {
+  text-align: right }
+
+/* reset inner alignment in figures */
+div.align-right {
+  text-align: inherit }
+
+/* div.align-center * { */
+/*   text-align: left } */
+
+ol.simple, ul.simple {
+  margin-bottom: 1em }
+
+ol.arabic {
+  list-style: decimal }
+
+ol.loweralpha {
+  list-style: lower-alpha }
+
+ol.upperalpha {
+  list-style: upper-alpha }
+
+ol.lowerroman {
+  list-style: lower-roman }
+
+ol.upperroman {
+  list-style: upper-roman }
+
+p.attribution {
+  text-align: right ;
+  margin-left: 50% }
+
+p.caption {
+  font-style: italic }
+
+p.credits {
+  font-style: italic ;
+  font-size: smaller }
+
+p.label {
+  white-space: nowrap }
+
+p.rubric {
+  font-weight: bold ;
+  font-size: larger ;
+  color: maroon ;
+  text-align: center }
+
+p.sidebar-title {
+  font-family: sans-serif ;
+  font-weight: bold ;
+  font-size: larger }
+
+p.sidebar-subtitle {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+p.topic-title {
+  font-weight: bold }
+
+pre.address {
+  margin-bottom: 0 ;
+  margin-top: 0 ;
+  font: inherit }
+
+pre.literal-block, pre.doctest-block, pre.math {
+  margin-left: 2em ;
+  margin-right: 2em }
+
+span.classifier {
+  font-family: sans-serif ;
+  font-style: oblique }
+
+span.classifier-delimiter {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+span.interpreted {
+  font-family: sans-serif }
+
+span.option {
+  white-space: nowrap }
+
+span.pre {
+  white-space: pre }
+
+span.problematic {
+  color: red }
+
+span.section-subtitle {
+  /* font-size relative to parent (h1..h6 element) */
+  font-size: 80% }
+
+table.citation {
+  border-left: solid 1px gray;
+  margin-left: 1px }
+
+table.docinfo {
+  margin: 2em 4em }
+
+table.docutils {
+  margin-top: 0.5em ;
+  margin-bottom: 0.5em }
+
+table.footnote {
+  border-left: solid 1px black;
+  margin-left: 1px }
+
+table.docutils td, table.docutils th,
+table.docinfo td, table.docinfo th {
+  padding-left: 0.5em ;
+  padding-right: 0.5em ;
+  vertical-align: top }
+
+table.docutils th.field-name, table.docinfo th.docinfo-name {
+  font-weight: bold ;
+  text-align: left ;
+  white-space: nowrap ;
+  padding-left: 0 }
+
+h1 tt.docutils, h2 tt.docutils, h3 tt.docutils,
+h4 tt.docutils, h5 tt.docutils, h6 tt.docutils {
+  font-size: 100% }
+
+ul.auto-toc {
+  list-style-type: none }
+
+</style>
+</head>
+<body>
+<div class="document" id="ionmd">
+<h1 class="title">IonMD</h1>
+
+<div class="section" id="overview">
+<h1>Overview</h1>
+<p>IonMD is a molecular dynamics (MD) simulation of ions in a linear Paul
+trap. The implmentation uses the leapfrog integration technique and
+Newtonian equations of motion to clasically simulate the forces on
+individual ions. Methods are largely based on the MD simulation
+described in <a class="footnote-reference" href="#id3" id="id1">[1]</a> and <a class="footnote-reference" href="#id4" id="id2">[2]</a>.</p>
+<div class="section" id="model-description">
+<h2>Model Description</h2>
+<p>IonMD simulates ions in a linear Paul trap by solving each ion's
+classical equation of motion <span class="math">
+\(\ddot{\vec{x}}_i = \vec{F}_i/m_i\)</span>
+
+where the force on each ion is the sum of forces due to the trapping
+potential, cooling lasers, Coulomb repulsion, and stochastic processes
+such as background gas collisions. In other words,</p>
+<div class="math">
+\begin{equation*}
+\vec{F}_i = \vec{F}_{T,i} + \vec{F}_{L,i} + \vec{F}_{C,i} + \vec{F}_{S,i}
+\end{equation*}
+</div>
+</div>
+<div class="section" id="minimization">
+<h2>Minimization</h2>
+<p>For obtaining good simulation results, it is best to start with good
+initial conditions, otherwise the simulation would need to run for an
+exorbitant amount of time. One method is to minimize the potential
+energy <span class="math">
+\(U\)</span>
+ of the system. For the <span class="math">
+\(i\)</span>
+th particle, the
+potential energy is given by</p>
+<div class="math">
+\begin{equation*}
+U_i = U_{T,i} + U_{L,i} + U_{C,i},
+\end{equation*}
+</div>
+<p>where we ignore contributions of stochastic effects. Specifically,
+there is the trapping potential energy</p>
+<div class="math">
+\begin{align*}
+U_{T,i} &amp;= Ze\psi \\
+        &amp;= Ze \left[ (C-D)x_i^2 + (C-D)y_i^2 + 2Dz_i^2 \right]
+\end{align*}
+</div>
+<p>where <span class="math">
+\(C = ZeV^2/m\Omega^2r_0^4\)</span>
+ and <span class="math">
+\(D = \kappa
+U_{EC}/2z_0^2\)</span>
+;</p>
+<div class="math">
+\begin{equation*}
+U_{L,i} = -|\vec{F}_0|(\vec{r}_i \cdot \hat{r}_L) + \frac{1}{2}
+\beta |\vec{r}_i|^2
+\end{equation*}
+</div>
+<p>is the potential energy contribution of the laser; and the Coulomb
+potential energy is</p>
+<div class="math">
+\begin{equation*}
+U_{C,i} = \frac{Ze}{4\pi\epsilon_0} \sum_{i\neq j}
+\frac{1}{|\vec{r_i}-\vec{r_j}|}.
+\end{equation*}
+</div>
+<p>Finding the positions for minimization is a complex problem that
+requires finding the minimum of a scalar function of <span class="math">
+\(3N\)</span>
+
+variables.</p>
+</div>
+</div>
+<div class="section" id="license">
+<h1>License</h1>
+<p>IonMD is freely distributable under the terms of the GNU GPL version 3
+(see LICENSE for details).</p>
+</div>
+<div class="section" id="system-requirements">
+<h1>System Requirements</h1>
+<p>IonMD uses Python as a frontend for accessing compiled C++
+routines. IonMD is built and tested on Linux (Debian Wheezy), but
+should work on any platform that can meet the following dependencies:</p>
+<ul class="simple">
+<li>Python requirements<ul>
+<li>Python 2.6 or 2.7</li>
+<li>Numpy</li>
+<li>Scipy</li>
+<li>MayaVI (optional; for displaying ions in 3D)</li>
+<li>Matplotlib (optional; for plotting/simulating CCD images)</li>
+<li>PIL (optional; for simulating CCD images)</li>
+</ul>
+</li>
+<li>C++ requirements<ul>
+<li><a class="reference external" href="https://www.gnu.org/software/gsl/">GNU Scientific Library</a> (for
+random number generation and 2D binning for simulated CCD images)</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="usage">
+<h1>Usage</h1>
+<p>The simulation at present is run through the runsim.py
+file. Simulation parameters may be entered in the main() function, or
+any other valid Python code can be written by the user to interface
+with the C++ library.</p>
+<p>If modifying the C++ code, the included Makefile should be sufficient
+if using a standard Linux environment with g++.</p>
+</div>
+<div class="section" id="data-output">
+<h1>Data Output</h1>
+<p>Large data files containing, e.g., trajectories are written in low
+level binary format. This means that they may not be portable to
+another computer, but within a machine, there should be no
+issues. Data can be easily read with numpy.fromfile. See the simCCD
+function in runsim.py for an example.</p>
+<p>Simulated CCD data gives mass in amu and position data in
+microns. Trajectory data gives time in microseconds and position in
+mm. In both cases, floats are used rather than the internal doubles in
+order to reduce file size (precision should not be an issue in this
+case). A &quot;final positions&quot; file gives x y z positions of all ions at
+the end of the simulation in the plaintext xyz format (a common
+chemical file format).</p>
+</div>
+<div class="section" id="future-features">
+<h1>Future Features</h1>
+<p>Some things that are planned for future releases:</p>
+<ul class="simple">
+<li>Better stability -&gt; less random initial conditions could help this</li>
+</ul>
+</div>
+<div class="section" id="known-bugs">
+<h1>Known Bugs</h1>
+<ul class="simple">
+<li>The params.py generation has an error for 64 bit systems which
+causes problems with CCD simulation. Workaround: either turn off CCD
+simulation or edit the file to make it read &quot;Params._pack_ = 8&quot;.</li>
+<li>Laser pressure force is not sorting Ba<sup>+</sup> isotopes properly.</li>
+</ul>
+</div>
+<div class="section" id="authors">
+<h1>Authors</h1>
+<p>IonMD is principally written by Michael V. DePalatis &lt;<a class="reference external" href="mailto:mvd&#37;&#52;&#48;gatech&#46;edu">mvd<span>&#64;</span>gatech<span>&#46;</span>edu</a>&gt;
+with some optimization enhancements by Ben Land.</p>
+</div>
+<div class="section" id="references">
+<h1>References</h1>
+<table class="docutils footnote" frame="void" id="id3" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>C.B. Zhang <em>et al.</em>, Phys. Rev. A <strong>76</strong>, 012719 (2007).</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id4" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>C.B. Zhang, <em>Production and Sympathetic Cooling of Complex
+Molecular Ions</em>, PhD thesis, Heinrich-Heine-Universität
+Düsseldorf (2008).</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</body>
+</html>

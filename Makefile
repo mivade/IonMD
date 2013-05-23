@@ -1,6 +1,6 @@
 CXX = g++
 CXXFLAGS = -Wall -O3 -fPIC -flto -fopenmp -march=native -g
-LIBS = -lm -lgsl -lgslcblas
+LIBS = -lm -lgsl -lgslcblas -lnlopt
 SRCS = *.cpp
 HDRS = *.hpp
 RESTFLAGS = --math-output="MathJax" --cloak-email-addresses
