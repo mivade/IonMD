@@ -84,6 +84,14 @@ Some things that are planned for future releases:
 
 * Better stability -> less random initial conditions could help this
 
+Known Bugs
+==========
+
+* The params.py generation has an error for 64 bit systems which
+  causes problems with CCD simulation. Workaround: either turn off CCD
+  simulation or edit the file to make it read "Params._pack_ = 8".
+* Laser pressure force is not sorting |Ba+| isotopes properly.
+
 Authors
 =======
 
@@ -97,3 +105,5 @@ References
 .. [2] C.B. Zhang, *Production and Sympathetic Cooling of Complex
        Molecular Ions*, PhD thesis, Heinrich-Heine-Universität
        Düsseldorf (2008).
+
+.. |Ba+| replace:: Ba\ :sup:`+`\ 
