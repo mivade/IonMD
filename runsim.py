@@ -10,6 +10,7 @@ from ctypes import *
 from numpy import *
 from numpy.random import random, uniform, normal, shuffle
 from scipy.linalg import norm
+from numpy.fft import fft, fftshift
 import scipy.optimize
 import scipy.constants as consts
 import matplotlib.pyplot as plt
@@ -126,7 +127,8 @@ def initialConditions(N, pos_fname=None,
     elif randomize:
         x0[:,:2] = uniform(-rlim, rlim, (N,2))
         x0[:,2] = uniform(-zlim, zlim, (N,))
-        v0 = zeros((N,3))
+        v0 = normal(0., vlim, (N,3))
+        #v0 = zeros((N,3))
     else:
         x0[:,:2] = uniform(-rlim, rlim, (N,2))
         x0[:,2] = linspace(-zlim, zlim, N)
@@ -146,31 +148,53 @@ def langevinRate(m_ion, m_gas, P, T, alpha):
     Ze = 4.8032043e-10
     return 2*pi*Ze*sqrt(alpha/mu)*P/(kB*1e7*T)
 
-def plotTrajectory(dt, t_max, N, traj_file="traj.dat", outfile=None, end=1000):
+def plotTrajectory(dt, t_max, N, traj_file="traj.dat",
+                   outfile=None, start=0, end=1000):
     """Plot the saved ion trajectory."""
     traj = fromfile(traj_file, dtype=c_float)
-    t = arange(0, t_max, dt)/1e-6
+    t = (arange(0, t_max, dt)/1e-6)[start:]
     traj.shape = (len(traj)/3,3)
     x, y, z = traj[:,0], traj[:,1], traj[:,2]
     plt.figure()
-    plt.subplot(211)
+    plt.subplot(2,1,1)
     plt.hold(True)
     plt.plot(t[:end], x[:end], '-', label='$x$')
     plt.plot(t[:end], y[:end], '-', label='$y$')
     plt.ylabel('$x, y$ [mm]')
     plt.legend()
     plt.hold(False)
-    plt.subplot(212)
+    plt.subplot(2,1,2)
     plt.plot(t[:end], z[:end], '-')
     plt.xlabel(r'$t$ [$\mu$s]')
     plt.ylabel(r'$z$ [mm]')
     if not outfile:
         plt.show()
 
+def plotFourier(dt, t_max, N, traj_file="traj.dat",
+                outfile=None, start=0, end=1000):
+    """Plot the Fourier transform of the trajectory data to extract
+    motional frequencies."""
+    traj = fromfile(traj_file, dtype=c_float)
+    t = (arange(0, t_max, dt)/1e-6)[start:]
+    traj.shape = (len(traj)/3,3)
+    x, y, z = traj[:,0], traj[:,1], traj[:,2]
+    plt.figure()
+    plt.subplot(2,1,1)
+    plt.hold(True)
+    plt.plot(fft(x[:end]), '-', label='$x$')
+    plt.plot(fft(y[:end]), '-', label='$y$')
+    plt.hold(False)
+    plt.legend()
+    plt.hold(False)
+    plt.subplot(2,1,2)
+    plt.plot(fft(z[:end]), '-')
+    if not outfile:
+        plt.show()
+
 def plotTemperature(N, m=138*amu, temp_file="temperature.txt", outfile=None):
     t, v = loadtxt(temp_file, unpack=True)
     t /= 1e-6
-    T = m*v/(3*N*kB)
+    T = m*v**2/(3*N*kB)
     plt.figure()
     plt.plot(t, T)
     plt.xlabel(r'$t$ [$\mu$s]')
@@ -194,10 +218,10 @@ def main(dll, dt, t_max,
             N = 250
         if kwargs['all_lc']:
             m, Z, lc = initIons(N, 138, 1)
-            masses = array([138.])
+            masses = array([138*amu])
         else:
-            masses = array([138*amu, 136*amu])
-            m, Z, lc = initIons(N, masses[0]/amu, 1, int(N*.3), masses[1]/amu, 1)
+            masses = array([138, 135])*amu
+            m, Z, lc = initIons(N, masses[0]/amu, 1, int(N*.5), masses[1]/amu, 1)
         N_masses = len(masses)
         m_p = m.ctypes.data_as(double_p)
         Z_p = Z.ctypes.data_as(double_p)
@@ -210,18 +234,20 @@ def main(dll, dt, t_max,
         khat_p = khat.ctypes.data_as(double_p)
         lmda = 493.5e-9
         r_l = 0.5e-3
-        s0 = 10.
+        s = 5.
         Gamma = 2*pi*15e6
-        delta = -Gamma
+        delta = -1*Gamma
 
         # Trap parameters
-        r0, z0, kappa = 3.18e-3, 25.4e-3/2., 0.008
+        r0, z0, kappa = 3.18e-3, 25.4e-3/2., 0.006 #0.008
         Omega = 2*pi*3.0e6
-        V, U, UEC = 175., 0., 300.
+        V, U, UEC = 100., 0., 300.
         Vsec, wsec = 1, 2*pi*90e3
 
         # Background gas parameters
-        gamma_col = langevinRate(138, 28, 5e-10, 298, 1.71)
+        gamma_col = langevinRate(138, 28, 5e-9, 298, 1.71)
+        m_gas = 28*amu
+        T_gas = 298.
 
         # CCD settings
         sim_ccd = kwargs.get('sim_ccd', 1)
@@ -230,6 +256,7 @@ def main(dll, dt, t_max,
 
         # Simulation parameters
         dt, t_max, traj_start = dt, t_max, kwargs.get('traj_start', 0.)
+        min_time = kwargs.get('min_time', 2e-3)
         use_rfmm = kwargs.get('use_rfmm', 0)
         use_coulomb = kwargs.get('use_coulomb', 1)
         use_laser = kwargs.get('use_laser', 1)
@@ -251,14 +278,14 @@ def main(dll, dt, t_max,
         p = Params(N=N, N_masses=len(masses),
                    m=m_p, Z=Z_p, masses=masses_p, lc=lc_p,
                    khat=khat_p, lmbda=lmda, r_l=r_l,
-                   delta=delta, s0=s0, Gamma=Gamma,
+                   delta=delta, s=s, Gamma=Gamma,
                    r0=r0, z0=z0, Omega=Omega,
                    V=V, U=U, UEC=UEC, kappa=kappa,
                    Vsec=Vsec, w=wsec,
-                   gamma_col=gamma_col,
+                   gamma_col=gamma_col, m_gas=m_gas, T_gas=T_gas,
                    sim_ccd=sim_ccd,
                    ccd_bins=ccd_bins, ccd_extent=ccd_extent,
-                   dt=dt, t_max=t_max,
+                   dt=dt, t_max=t_max, min_time=min_time,
                    abort_bounds=abort_bounds,
                    t_steps=len(arange(0, t_max, dt)),
                    use_rfmm=use_rfmm,
@@ -279,13 +306,13 @@ def main(dll, dt, t_max,
         #saveParams("default.par", p)
 
     # Initial conditions
-    vlim = 0
+    T0 = 1e-12#5e-3
     if kwargs.has_key('ipos_fname'):
         ipos = kwargs['ipos_fname']
         x0, v0 = initialConditions(N, pos_fname=ipos)
     else:
         x0, v0 = initialConditions(N, randomize=True, rlim=r0/2.,
-                                   zlim=z0, vlim=vlim)
+                                   zlim=z0, vlim=sqrt(kB*T0/masses[0]))
     x0 = x0.flatten()
     v0 = v0.flatten()
     x0_p = x0.ctypes.data_as(double_p)
@@ -314,7 +341,9 @@ def main(dll, dt, t_max,
 ##########
 
 if __name__ == "__main__":
-    dt, t_max = 50e-9, 5e-3
+    dt, t_max = 20e-9, 5e-3
+    min_time = 2e-3
+    traj_start = dt*0
     dll = loadLibrary()
     if False:
         # 2 ms is plenty sufficient for generating initial conditions
@@ -323,20 +352,32 @@ if __name__ == "__main__":
             p = main(dll, dt, 2e-3, N=N, all_lc=True, print_params=False)
             shutil.copyfile("fpos.xyz", "init/fpos%i.xyz" % N)
     else:
-        N = 200
-        ccd_bins, ccd_extent = 600, 400
+        N = 5
+        ccd_bins, ccd_extent = 600, 500
+        all_lc = False
         if True:
             #print "\nMinimizing..."
             #p = main(dll, 75e-9, 8e-3, N=N, all_lc=True, print_params=False,
             #         use_stochastic=0, sim_ccd=0)
             #print "\nSimulating..."
-            p = main(dll, dt, t_max, N=N, all_lc=False, print_params=True,
+            p = main(dll, dt, t_max, min_time=min_time,
+                     N=N, all_lc=all_lc, print_params=True,
                      ccd_bins=ccd_bins, ccd_extent=ccd_extent,
                      use_stochastic=1,
-                     T_steps=600,
-                     traj_start=2e-3)
-        #plotTrajectory(dt, t_max, N, end=-1)
-        plotTemperature(N, 138*amu)
-        ionvis.simCCD("ccd", 2, ccd_bins, ccd_extent, brightness=2,
-                      outfile="images/CCD_latest.png", show=True)
+                     T_steps=1200,
+                     traj_start=traj_start)
+        #plotTrajectory(dt, t_max, N, start=traj_start/dt, end=-1)
+        #plotFourier(dt, t_max, N, start=traj_start/dt, end=-1)
+        ionvis.display(fpos_fname="ipos.xyz")
         #ionvis.display()
+        #plotTemperature(N, 138*amu)
+        if True:
+            #for N_ccd in range(5,0,-1):
+            if all_lc:
+                N_ccd = 1
+            else:
+                N_ccd = 2
+            ionvis.simCCD("ccd", N_ccd, ccd_bins, ccd_extent,
+                          outfile="images/CCD_latest.png",
+                          show=False, brightness=2)
+                

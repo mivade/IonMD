@@ -1,15 +1,80 @@
+#include <cstdio>
+#include <iostream>
+#include <cstdlib>
+#include <nlopt.hpp>
 #include "minimize.hpp"
 #include "ionmd.hpp"
 
-void minfunc(const vector<double> &x, vector<double> &grad, void *data) {
-    double U = 0;
-    for(int i=0; i<p->N; i++) {
-	U += UTrap(i, x) + ULaser(i, x) + UCoulomb(i, x, p);
+using std::copy;
+using std::cout;
+using std::endl;
+
+void minimize(double *x0, Ion **ions, Params *p) {
+    int i;
+    double Umin;
+
+    // Vectors for passing stuff to NLopt
+    vector<double> ubounds(3*p->N), lbounds(3*p->N), x(3*p->N);
+
+    // Data for passing to minimization routine
+    MinData *min_data = new MinData;
+    min_data->i = 0;
+    min_data->fcalls = 0;
+    min_data->p = p;
+    min_data->ions = ions;
+
+    // Setup optimization
+    nlopt::opt opt(nlopt::LN_COBYLA, 3*p->N);
+    for(i=0; i<3*p->N; i+=3) {
+	ubounds[i+0] = p->r0;
+	ubounds[i+1] = p->r0;
+	ubounds[i+2] = p->z0;
+	lbounds[i+0] = -p->r0;
+	lbounds[i+1] = -p->r0;
+	lbounds[i+2] = -p->z0;
     }
+    opt.set_upper_bounds(ubounds);
+    opt.set_lower_bounds(lbounds);
+    //opt.set_ftol_abs(1e-8);
+    opt.set_min_objective(minfunc, min_data);
+    opt.set_initial_step(.1e-6);
+    copy(x0, x0+3*p->N, x.begin());
+    opt.optimize(x, Umin);
+    printf("Finished minimization in %d function calls.\n", min_data->fcalls);
+    cout << "Minimum energy: " << Umin << endl;
+    delete min_data;
+    FILE *init_pos_file = fopen("ipos.xyz", "w");
+    fprintf(init_pos_file, "%d\nInitial positions in microns\n", p->N);
+    for(i=0; i<p->N; i++) {
+	ions[i]->x[0] = x[0];
+	ions[i]->x[1] = x[1];
+	ions[i]->x[2] = x[2];
+	printf("%e %e %e\n", ions[i]->x[0], ions[i]->x[1], ions[i]->x[2]);
+	fprintf(init_pos_file, "%d %e %e %e\n", int(ions[i]->m/amu),
+		ions[i]->x[0]/1e-6, ions[i]->x[1]/1e-6, ions[i]->x[2]/1e-6);
+    }
+    fclose(init_pos_file);
+}
+
+double minfunc(const vector<double> &x, vector<double> &grad, void *_data) {
+    int i,j;
+    double U = 0;
+    MinData *data = (MinData*)_data;
+    #pragma omp parallel for
+    for(i=0; i<data->p->N; i++) {
+	for(j=0; j<3; j++)
+	    data->ions[i]->x[j] = x[i+j];
+    }
+    for(i=0; i<data->p->N; i++) {
+	U += UTrap(i, data->ions, data->p) + \
+	    ULaser(i, data->ions, data->p) + \
+	    UCoulomb(i, data->ions, data->p);
+    }
+    data->fcalls++;
     return U;
 }
 
-void UTrap(int i, Ion **ions, Params *p) {
+double UTrap(int i, Ion **ions, Params *p) {
     double C, D, U;
     C = ions[i]->Z*pow(p->V,2)/(ions[i]->m*pow(p->Omega,2)*pow(p->r0,4));
     D = p->kappa*p->UEC/(2*pow(p->z0,2));
@@ -18,12 +83,12 @@ void UTrap(int i, Ion **ions, Params *p) {
     return U;
 }
 
-void ULaser(int i, Ion **ions, Params *p) {
+double ULaser(int i, Ion **ions, Params *p) {
     double F0, k, s, s0, Gamma, beta, delta, U;
     k = 2*pi/p->lmbda;
     Gamma = p->Gamma;
     s = p->s;
-    delta = p->delta + k*dot(p->khat, ion->v);
+    delta = p->delta + k*dot(p->khat, ions[i]->v);
     s0 = s*(1 + pow(2*delta/Gamma,2));
     beta = -HBAR*pow(k,2)*4*s0*delta/Gamma/pow(1+s0+pow(2*delta/Gamma,2),2);
     if(ions[i]->lc != 0)
@@ -34,10 +99,10 @@ void ULaser(int i, Ion **ions, Params *p) {
     return U;
 }
 
-void UCoulomb(int i, Ion **ions, Params *p) {
+double UCoulomb(int i, Ion **ions, Params *p) {
     double U = 0;
     double r[3];
-    #pragma parallel for
+    #pragma omp parallel for
     for(int j=0; j<p->N; j++) {
 	if(i == j)
 	    continue;
