@@ -29,48 +29,10 @@ Minimization
 
 For obtaining good simulation results, it is best to start with good
 initial conditions, otherwise the simulation would need to run for an
-exorbitant amount of time. One method is to minimize the potential
-energy :math:`U` of the system. For the :math:`i`\th particle, the
-potential energy is given by 
-
-.. math:: U_i = U_{T,i} + U_{L,i} + U_{C,i},
-
-where we ignore contributions of stochastic effects. Specifically,
-there is the trapping potential energy
-
-.. math::
-
-   U_{T,i} &= Ze\psi \\
-           &= Ze \left[ (C-D)x_i^2 + (C-D)y_i^2 + 2Dz_i^2 \right]
-
-where :math:`C = ZeV^2/m\Omega^2r_0^4` and :math:`D = \kappa
-U_{EC}/2z_0^2`;
-
-.. math::
-
-   U_{L,i} = -|\vec{F}_0|(\vec{r}_i \cdot \hat{r}_L) + \frac{1}{2}
-   \beta |\vec{r}_i|^2
-
-is the potential energy contribution of the laser; and the Coulomb
-potential energy is
-
-.. math::
-
-   U_{C,i} = \frac{Ze}{4\pi\epsilon_0} \sum_{i\neq j}
-   \frac{1}{|\vec{r_i}-\vec{r_j}|}.
-
-Finding the positions for minimization is a complex problem that
-requires finding the minimum of a scalar function of :math:`3N`
-variables. Presently, this is *not* the method used for
-minimization. This is mainly because of difficulties in getting NLopt
-to give sensible results (which might be due to an error in the
-implementation).
-
-An alternative (and the currently implemented minimization method) is
-to treat *all* ions as laser cooled in the beginning and let the
-system evolve for a short period of time. This has the elegance of not
-requiring any extra code, but seems to suffer from not allowing
-isotope sorting.
+exorbitant amount of time. Essentially, this means minimizing the
+potential energy of the system. This is currently implemented by first
+treating *all* ions as laser cooled for a period of time in order to
+obtain good starting positions.
 
 License
 =======
