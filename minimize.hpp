@@ -13,22 +13,21 @@ typedef struct MinData {
     Ion **ions;
 } MinData;
 
-extern "C" {
-    // Minimization main controlling function
-    void minimize(double *x0, Ion **ions, Params *p);
+// Old-style minimization by treating all ions as laser cooled
+void minimize(Ion **ions, Params *p);
+
+// Minimization main controlling function for nlopt
+void minimize(double *x0, Ion **ions, Params *p);
+
+// Writes initial positions to a file
+void writeInitPos(Ion **ions, Params *p);
     
-    // Minimization function for nlopt
-    double minfunc(const vector<double> &x, vector<double> &grad, void *_data);
+// Minimization function for nlopt
+double minfunc(const vector<double> &x, vector<double> &grad, void *_data);
 
-    // Constraint function
-    // need to make this vector valued
-    // the idea is, for x,y, return abs(x-r0); for z: return abs(z-z0/2.0)
-    double cfunc(const vector<double> &x, vector<double> &grad, void *_data);
-
-    // Potential energy functions called by minfunc
-    double UTrap(int i, Ion **ions, Params *p);
-    double ULaser(int i, Ion **ions, Params *p);
-    double UCoulomb(int i, Ion **ions, Params *p);
-}
+// Potential energy functions called by minfunc
+double UTrap(int i, Ion **ions, Params *p);
+double ULaser(int i, Ion **ions, Params *p);
+double UCoulomb(int i, Ion **ions, Params *p);
 
 #endif

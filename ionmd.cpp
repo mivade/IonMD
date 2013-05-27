@@ -1,14 +1,19 @@
 #include <cstdio>
 #include <cmath>
+#include <vector>
 #include <omp.h>
 #include <iostream>
 #include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
 #include "ionmd.hpp"
+#include "minimize.hpp"
 
 using namespace std;
 
 #define dbg(wat) (std::cout << wat << "\n")
 #define err(e) (cerr << "ERROR: " << e << endl)
+double xhat[] = {-sqrt(2)/2, sqrt(2)/2, 0};
+double yhat[] = {0,0,1};
 
 // Random number generator
 const gsl_rng_type *rng_T = gsl_rng_mt19937;
@@ -29,7 +34,8 @@ void printParams(Params *p) {
     printf("Time parameters:\n");
     printf("   dt = %.1e, t_max = %.1e, t_steps = %d\n\n", p->dt, p->t_max, p->t_steps);
     printf("Laser parameters:\n");
-    printf("   lambda = %.1f, delta = %.1e*Gamma, Gamma = 2*pi*%.1e, s0 = %.1f\n\n", p->lmbda/1e-9, p->delta/p->Gamma, p->Gamma/(2*pi), p->s0);
+    printf("   lambda = %.1f, delta = %.1e*Gamma, Gamma = 2*pi*%.1e, s = %.1f\n", p->lmbda/1e-9, p->delta/p->Gamma, p->Gamma/(2*pi), p->s);
+    printf("   khat = [%.1f, %.1f, %.1f]\n\n", p->khat[0], p->khat[1], p->khat[2]);
     printf("Trap parameters:\n");
     printf("   V = %.1f, U = %.1f, UEC = %.1f\n   r0 = %.2e, z0 = %2e, kappa = %.1e\n", p->V, p->U, p->UEC, p->r0, p->z0, p->kappa);
     printf("   Vsec = %.1f, w = 2*pi*%.1f\n\n", p->Vsec, p->w/(2*pi));
@@ -45,6 +51,10 @@ void printParams(Params *p) {
     if(p->use_abort)
 	printf("   Abort bounds: %.3e\n", p->abort_bounds);
     return;
+}
+
+void printPositions(Ion *ion) {
+    printf("%e %e %e\n", ion->x[0], ion->x[1], ion->x[2]);
 }
 
 //-----------------//
@@ -63,62 +73,17 @@ Ion *initIon(double *x0, double *v0, int i, Params *p) {
     return ion;
 }
 
-void minimize(Ion **ions, Params *p) {
-    double t = 0;
-    double *Fclist = new double[p->N*3]; 
-
-    // Store settings
-    int use_rfmm = p->use_rfmm,
-	use_coulomb = p->use_coulomb,
-	use_laser = p->use_laser,
-	use_stochastic = p->use_stochastic,
-	i, j;
-
-    // Turn off everything but Coulomb, trap, and laser
-    p->use_rfmm = 0;
-    p->use_coulomb = 1;
-    p->use_laser = 1;
-    p->use_stochastic = 0;
-
-    // Begin minimization
-    p->minimizing = 1;
-    while(true) {	// TODO: better end decision
-	allCoulomb(ions, p, Fclist);
-	for(i=0; i<p->N; i++) {
-	    //for(j=0; j<3; j++)
-	    //printf("%e ", ions[i]->v[j]);
-	    //printf("\n");
-	    updateIon(ions[i], ions, t, Fclist, p);
-	    if(ions[i]->x[0] != ions[i]->x[0])
-		continue;//printf("ugh, t = %e\n", t);
-	}
-	if(t >= p->t_max)
-	    break;
-	t += p->dt;
-    }
-    for(i=0; i<p->N; i++) {
-	for(j=0; j<3; j++) {
-	    ions[i]->v[j] = 0;
-	    ions[i]->a[j] = 0;
-	}
-    }
-    p->minimizing = 0;
-
-    // Restore settings
-    p->use_rfmm = use_rfmm;
-    p->use_coulomb = use_coulomb;
-    p->use_laser = use_laser;
-    p->use_stochastic = use_stochastic;
-    delete[] Fclist;
-}
-
 void simCCDPoint(Ion *ion, gsl_histogram2d **ccd, Params *p) {
     if(!p->sim_ccd)
 	return;
     int j = -1;
-    for(int i=0; i<p->N_masses; i++) {
-	if(ion->m == p->masses[i])
-	    j = i;
+    if(p->N_masses == 1)
+	j = 0;
+    else {
+	for(int i=0; i<p->N_masses; i++) {
+	    if(ion->m == p->masses[i])
+		j = i;
+	}
     }
     if(j == -1) {
 	err("Mass list not configured correctly. Not simulating CCD images.");
@@ -189,21 +154,21 @@ void FTrap(Ion *ion, double t, Params *p, double *F) {
 }
 
 // Laser cooling
-// TODO: make critical damping work if laser is pointing in another
-// direction
 // (result stored in F)
 void FLaser(Ion *ion, Params *p, double *F) {
     zeroVector(F);
-    double F0, k, s0, Gamma, beta, delta;
+    double F0, k, s, s0, Gamma, beta, delta;
     k = 2*pi/p->lmbda;
-    s0 = p->s0;
     Gamma = p->Gamma;
+    s = p->s;
     delta = p->delta + k*dot(p->khat, ion->v);
+    s0 = s*(1 + pow(2*delta/Gamma,2));
     beta = -HBAR*pow(k,2)*4*s0*delta/Gamma/pow(1+s0+pow(2*delta/Gamma,2),2);
-    F0 = HBAR*k*Gamma/2/(s0/(s0 + 1));
+    //F0 = HBAR*k*Gamma/2/(s/(s + 1));
+    F0 = HBAR*k*s*Gamma/(2*(1+s));
     if(p->minimizing) {
 	beta = 1e-20; // unrealistically large damping for minimizing
-	if(!p->lc)	// don't use constant pressure term on non-lc'ed ions
+	if(ion->lc == 0) // don't use constant pressure term on non-lc'ed ions
 	    F0 = 0;
     }
     for (int i = 0; i < 3; i++) {
@@ -241,14 +206,19 @@ void FSecular(Ion *ion, double t, Params *p, double *F) {
 // Stochastic processes, e.g. collisions with background gases
 // (result stored in F)
 void FStochastic(Ion *ion, Params *p, double *F) {
+    double v;
     zeroVector(F);
-    if(gsl_rng_uniform(rng) <= exp(-p->gamma_col*p->dt))
-       return;	// no collision
-    double hat[] = {gsl_rng_uniform(rng), gsl_rng_uniform(rng), gsl_rng_uniform(rng)};
+    //if(gsl_rng_uniform(rng) <= exp(-p->gamma_col*p->dt))
+    //return;	// no collision
+    double hat[] = {gsl_rng_uniform(rng),
+		    gsl_rng_uniform(rng),
+		    gsl_rng_uniform(rng)};
     normalize(hat);
-    double hbark = HBAR*2*pi/p->lmbda;
+    //v = gsl_ran_gaussian(rng, sqrt(3*kB*p->T_gas/p->m_gas));
+    //v = sqrt(3*kB*p->T_gas/p->m_gas);
+    v = 0.0085;
     for(int i=0; i<3; i++)
-	F[i] = hbark*hat[i]/p->dt;
+	F[i] = 2*p->m_gas*v*hat[i]/p->dt;
 }
 
 // Precomputes all Coulomb interactions (that way they can be applied
@@ -262,6 +232,12 @@ void allCoulomb(Ion **ions, Params *p, double *Flist) {
         FCoulomb(ions[i], ions, p, &Flist[i*3]); //Alternately: Flist+i*3
 }
 
+void swapIons(Ion **ions, int i, int j) {
+    Ion *tmp = ions[i];
+    ions[i] = ions[j];
+    ions[j] = tmp;
+}
+
 //--------------//
 //--SIMULATION--//
 //--------------//
@@ -269,6 +245,9 @@ void allCoulomb(Ion **ions, Params *p, double *Flist) {
 int simulate(double *x0, double *v0, Params *p) {
     // RNG seeding
     gsl_rng_set(rng, time(0));
+    
+    // Set number of threads for multiprocessing
+    omp_set_num_threads(p->num_threads);
 
     //every %3 element is the start of a new vector 
     //keeps from having to reallocate every time
@@ -298,13 +277,19 @@ int simulate(double *x0, double *v0, Params *p) {
     // Do minimization routine
     printf("Minimizing...\n");
     minimize(ions, p);
+    //p->minimizing = 0;
+    //minimize(x0, ions, p);
+
+    // Reset initial velocities
+    for(i=0; i<p->N; i++) {
+	copyVector(ions[i]->v, &v0[i*3]);
+    }
     
     // Data recording initialization
     FILE *traj_file = fopen(p->traj_fname, "wb");
     FILE *temp_file = fopen(p->temp_fname, "w");
     
     // Run simulation
-    omp_set_num_threads(p->num_threads);
     int t_i = 0;
     int t_10 = (int)(p->t_max/p->dt)/10;
     printf("Simulating...\n");
@@ -338,7 +323,7 @@ int simulate(double *x0, double *v0, Params *p) {
 		vT += pow(ions[i]->v[j], 2);
 	    if(T_ctr == p->T_steps) {
 		T_ctr = 0;
-		vT = vT/p->T_steps/p->N;
+		vT = sqrt(vT)/p->T_steps/p->N;
 		fprintf(temp_file, "%e %e\n", t, vT);
 	    }
 	    else T_ctr++;
@@ -398,7 +383,6 @@ int simulate(double *x0, double *v0, Params *p) {
         delete ions[i];
     delete[] ions;
     delete[] Fclist;
-    //gsl_rng_free(rng);
     for(i=0; i<p->N_masses; i++)
 	gsl_histogram2d_free(ccd[i]);
     if(p->use_abort && abort == 1)

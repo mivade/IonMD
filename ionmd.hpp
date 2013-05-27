@@ -16,9 +16,8 @@ const double q_e = 1.602176487e-19;
 const double c = 2.99792458e8;
 const double OOFPEN = 8.9875518e+09;
 const double HBAR = 1.0545716e-34;
+const double kB = 1.3806503e-23;
 const double g_elastic = 0.017;	// elastic collision rate with 
-double xhat[] = {-sqrt(2)/2, sqrt(2)/2, 0};
-double yhat[] = {0,0,1};
 
 typedef struct Ion {
     double x[3], v[3], a[3];	// position, velocity, and acceleration
@@ -58,10 +57,11 @@ extern "C" {
     // Utility functions
     void printIonStatistics(Params *p);
     void printParams(Params *p);
+    void printPositions(Ion *ion);
 
     // Ion functions
     Ion *initIon(double *x0, double *v0, int index, Params *p);
-    void minimize(Ion **ions, Params *p);
+    //void minimize(Ion **ions, Params *p);
     void simCCDPoint(Ion *ion, gsl_histogram2d **ccd, Params *p);
     void updateIon(Ion *ion, Ion **ions, double t, double *Fcoullist, Params *p);
     void FTrap(Ion *ion, double t, Params *p, double *F);
@@ -70,6 +70,7 @@ extern "C" {
     void FSecular(Ion *ion, double t, Params *p, double *F);
     void FStochastic(Ion *ion, Params *p, double *F);
     void allCoulomb(Ion **ions, Params *p, double *Flist);
+    void swapIons(Ion **ions, int i, int j);	// swap ions i and j
 
     // Main simulation function
     int simulate(double *x0, double *v0, Params *p);

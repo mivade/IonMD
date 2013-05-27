@@ -220,8 +220,8 @@ def main(dll, dt, t_max,
             m, Z, lc = initIons(N, 138, 1)
             masses = array([138*amu])
         else:
-            masses = array([138, 135])*amu
-            m, Z, lc = initIons(N, masses[0]/amu, 1, int(N*.5), masses[1]/amu, 1)
+            masses = array([138, 146])*amu
+            m, Z, lc = initIons(N, masses[0]/amu, 1, int(N*.8), masses[1]/amu, 1)
         N_masses = len(masses)
         m_p = m.ctypes.data_as(double_p)
         Z_p = Z.ctypes.data_as(double_p)
@@ -229,8 +229,9 @@ def main(dll, dt, t_max,
         lc_p = lc.ctypes.data_as(int_p)
 
         # Laser parameters
-        khat = array([0,0,1])
+        khat = array([0,0,1], dtype=float64)
         khat /= norm(khat)
+        print khat.dtype
         khat_p = khat.ctypes.data_as(double_p)
         lmda = 493.5e-9
         r_l = 0.5e-3
@@ -306,7 +307,7 @@ def main(dll, dt, t_max,
         #saveParams("default.par", p)
 
     # Initial conditions
-    T0 = 1e-12#5e-3
+    T0 = 10e-3
     if kwargs.has_key('ipos_fname'):
         ipos = kwargs['ipos_fname']
         x0, v0 = initialConditions(N, pos_fname=ipos)
@@ -342,7 +343,7 @@ def main(dll, dt, t_max,
 
 if __name__ == "__main__":
     dt, t_max = 20e-9, 5e-3
-    min_time = 2e-3
+    min_time = 1e-3
     traj_start = dt*0
     dll = loadLibrary()
     if False:
@@ -352,8 +353,8 @@ if __name__ == "__main__":
             p = main(dll, dt, 2e-3, N=N, all_lc=True, print_params=False)
             shutil.copyfile("fpos.xyz", "init/fpos%i.xyz" % N)
     else:
-        N = 5
-        ccd_bins, ccd_extent = 600, 500
+        N = 75
+        ccd_bins, ccd_extent = 512, 600
         all_lc = False
         if True:
             #print "\nMinimizing..."
@@ -363,13 +364,13 @@ if __name__ == "__main__":
             p = main(dll, dt, t_max, min_time=min_time,
                      N=N, all_lc=all_lc, print_params=True,
                      ccd_bins=ccd_bins, ccd_extent=ccd_extent,
-                     use_stochastic=1,
+                     use_stochastic=0,
                      T_steps=1200,
                      traj_start=traj_start)
         #plotTrajectory(dt, t_max, N, start=traj_start/dt, end=-1)
         #plotFourier(dt, t_max, N, start=traj_start/dt, end=-1)
-        ionvis.display(fpos_fname="ipos.xyz")
-        #ionvis.display()
+        #ionvis.display(fpos_fname="ipos.xyz")
+        ionvis.display()
         #plotTemperature(N, 138*amu)
         if True:
             #for N_ccd in range(5,0,-1):
@@ -379,5 +380,5 @@ if __name__ == "__main__":
                 N_ccd = 2
             ionvis.simCCD("ccd", N_ccd, ccd_bins, ccd_extent,
                           outfile="images/CCD_latest.png",
-                          show=False, brightness=2)
+                          show=True, brightness=2)
                 
