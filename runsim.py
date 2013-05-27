@@ -65,14 +65,14 @@ def initIons(N, m_lc, Z_lc, N_sc=None, m_sc=None, Z_sc=None):
     Examples:
 
     To create 10 ions, 7 of which are laser cooled, and 3 of which are
-    the same sympathetically cooled mass:
+    the same sympathetically cooled mass::
 
-       m, Z, lc = initIons(10, 138, 1, 3, 136, 1)
+         m, Z, lc = initIons(10, 138, 1, 3, 136, 1)
 
     To create 10 ions, 7 laser cooled, 3 of different masses that are
-    sympathetically cooled (this doesn't actually work yet):
+    sympathetically cooled::
 
-       m, Z, lc = initIons(10, 138, 1, [1,1,1], [135,136,137], [1,1,1])"""
+        m, Z, lc = initIons(10, 138, 1, [1,1,1], [135,136,137], [1,1,1])"""
     m, Z, lc = zeros(N), zeros(N), zeros(N, dtype=c_int)
     if not N_sc:
         m += m_lc*amu
@@ -88,7 +88,6 @@ def initIons(N, m_lc, Z_lc, N_sc=None, m_sc=None, Z_sc=None):
         Z[N_lc:] = Z_sc*q_e
         lc[:N_lc] = 1
     else:
-        raise NotImplementedError("This doesn't work yet.")
         N_lc = N - sum(N_sc)
         m[:N_lc] = m_lc*amu
         Z[:N_lc] = Z_lc*q_e
@@ -96,11 +95,9 @@ def initIons(N, m_lc, Z_lc, N_sc=None, m_sc=None, Z_sc=None):
         N_i = N_lc
         for i in range(len(N_sc)):
             try:
-                m[N_i:N_sc[i]] = m_sc[i]*amu
-                Z[N_i:N_sc[i]] = Z_sc[i]*q_e
-                N_i += N[i]
-            except TypeError:
-                raise TypeError("If N_sc is array-like, so must be m_sc and Z_sc!")
+                m[N_i:(N_i+N_sc[i])] = m_sc[i]*amu
+                Z[N_i:(N_i+N_sc[i])] = Z_sc[i]*q_e
+                N_i += N_sc[i]
             except IndexError:
                 raise IndexError("N_sc must have the same dimensions as m_sc and Z_sc!")
     return m, Z, lc
@@ -219,9 +216,13 @@ def main(dll, dt, t_max,
         if kwargs['all_lc']:
             m, Z, lc = initIons(N, 138, 1)
             masses = array([138*amu])
+        elif False:
+            masses = array([138, 136, 146])*amu
+            m, Z, lc = initIons(N, masses[0]/amu, 1, [int(N*.05),int(N*.8)],
+                                [masses[1]/amu,masses[2]/amu], [1,1])
         else:
-            masses = array([138, 146])*amu
-            m, Z, lc = initIons(N, masses[0]/amu, 1, int(N*.8), masses[1]/amu, 1)
+            masses = array([138, 136])*amu
+            m, Z, lc = initIons(N, masses[0]/amu, 1, int(N*.1), masses[1]/amu, 1)
         N_masses = len(masses)
         m_p = m.ctypes.data_as(double_p)
         Z_p = Z.ctypes.data_as(double_p)
@@ -229,24 +230,24 @@ def main(dll, dt, t_max,
         lc_p = lc.ctypes.data_as(int_p)
 
         # Laser parameters
-        khat = array([0,0,1], dtype=float64)
+        khat = array([0,0,-1], dtype=float64)
         khat /= norm(khat)
-        print khat.dtype
         khat_p = khat.ctypes.data_as(double_p)
         lmda = 493.5e-9
         r_l = 0.5e-3
-        s = 5.
+        s = 10.
         Gamma = 2*pi*15e6
-        delta = -1*Gamma
+        delta = -4*Gamma
 
         # Trap parameters
         r0, z0, kappa = 3.18e-3, 25.4e-3/2., 0.006 #0.008
         Omega = 2*pi*3.0e6
-        V, U, UEC = 100., 0., 300.
+        V, U, UEC = 120., 0., 300.
         Vsec, wsec = 1, 2*pi*90e3
 
         # Background gas parameters
-        gamma_col = langevinRate(138, 28, 5e-9, 298, 1.71)
+        #gamma_col = langevinRate(138, 28, 5e-9, 298, 1.71)
+        gamma_col = 10.#11.95 # K/s
         m_gas = 28*amu
         T_gas = 298.
 
@@ -307,13 +308,13 @@ def main(dll, dt, t_max,
         #saveParams("default.par", p)
 
     # Initial conditions
-    T0 = 10e-3
+    T0 = 10e-13
     if kwargs.has_key('ipos_fname'):
         ipos = kwargs['ipos_fname']
         x0, v0 = initialConditions(N, pos_fname=ipos)
     else:
         x0, v0 = initialConditions(N, randomize=True, rlim=r0/2.,
-                                   zlim=z0, vlim=sqrt(kB*T0/masses[0]))
+                                   zlim=z0, vlim=sqrt(3*kB*T0/masses[0]/2.))
     x0 = x0.flatten()
     v0 = v0.flatten()
     x0_p = x0.ctypes.data_as(double_p)
@@ -342,9 +343,9 @@ def main(dll, dt, t_max,
 ##########
 
 if __name__ == "__main__":
-    dt, t_max = 20e-9, 5e-3
-    min_time = 1e-3
-    traj_start = dt*0
+    dt, t_max = 20e-9, 8e-3
+    min_time = 1.5e-3
+    traj_start = 1.2e-3# dt*1000
     dll = loadLibrary()
     if False:
         # 2 ms is plenty sufficient for generating initial conditions
@@ -353,7 +354,7 @@ if __name__ == "__main__":
             p = main(dll, dt, 2e-3, N=N, all_lc=True, print_params=False)
             shutil.copyfile("fpos.xyz", "init/fpos%i.xyz" % N)
     else:
-        N = 75
+        N = 300
         ccd_bins, ccd_extent = 512, 600
         all_lc = False
         if True:
@@ -364,14 +365,14 @@ if __name__ == "__main__":
             p = main(dll, dt, t_max, min_time=min_time,
                      N=N, all_lc=all_lc, print_params=True,
                      ccd_bins=ccd_bins, ccd_extent=ccd_extent,
-                     use_stochastic=0,
+                     use_stochastic=1,
                      T_steps=1200,
                      traj_start=traj_start)
         #plotTrajectory(dt, t_max, N, start=traj_start/dt, end=-1)
         #plotFourier(dt, t_max, N, start=traj_start/dt, end=-1)
         #ionvis.display(fpos_fname="ipos.xyz")
-        ionvis.display()
-        #plotTemperature(N, 138*amu)
+        #ionvis.display()
+        plotTemperature(N, 138*amu)
         if True:
             #for N_ccd in range(5,0,-1):
             if all_lc:
@@ -380,5 +381,5 @@ if __name__ == "__main__":
                 N_ccd = 2
             ionvis.simCCD("ccd", N_ccd, ccd_bins, ccd_extent,
                           outfile="images/CCD_latest.png",
-                          show=True, brightness=2)
+                          show=True, brightness=5)
                 

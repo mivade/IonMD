@@ -11,7 +11,8 @@ import Image, ImageEnhance
 from mayavi import mlab
 
 if True:
-    colors = [(1,0,0), (0,1,0), (0,0,1)]
+    # color order = red, forest green, cyan, gold
+    colors = [(1,0,0), (.13,.55,.13), (0,1,1), (1,.84,0)]
 else:
     colors = [(1,0,0)]
 
@@ -70,7 +71,7 @@ def simCCD(ccd_fname_prefix, N_ccd, bins, extents,
     return ccd
 
 if __name__ == "__main__":
-    ccd_bins, ccd_extent = 600, 400
-    display()
-    #simCCD("ccd", 2, ccd_bins, ccd_extent, brightness=5,
-    #       outfile="images/CCD_latest.png", show=True)
+    ccd_bins, ccd_extent = 512, 600
+    #display()
+    simCCD("ccd", 2, ccd_bins, ccd_extent, brightness=2.5,
+           outfile="images/CCD_latest.png", show=True)

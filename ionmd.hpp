@@ -70,7 +70,6 @@ extern "C" {
     void FSecular(Ion *ion, double t, Params *p, double *F);
     void FStochastic(Ion *ion, Params *p, double *F);
     void allCoulomb(Ion **ions, Params *p, double *Flist);
-    void swapIons(Ion **ions, int i, int j);	// swap ions i and j
 
     // Main simulation function
     int simulate(double *x0, double *v0, Params *p);

@@ -164,8 +164,10 @@ void FLaser(Ion *ion, Params *p, double *F) {
     delta = p->delta + k*dot(p->khat, ion->v);
     s0 = s*(1 + pow(2*delta/Gamma,2));
     beta = -HBAR*pow(k,2)*4*s0*delta/Gamma/pow(1+s0+pow(2*delta/Gamma,2),2);
+    beta = 2e-22;
     //F0 = HBAR*k*Gamma/2/(s/(s + 1));
-    F0 = HBAR*k*s*Gamma/(2*(1+s));
+    //F0 = HBAR*k*s*Gamma/(2*(1+s));
+    F0 = (HBAR*k*Gamma/2.)*(s0/(s0+1));
     if(p->minimizing) {
 	beta = 1e-20; // unrealistically large damping for minimizing
 	if(ion->lc == 0) // don't use constant pressure term on non-lc'ed ions
@@ -214,11 +216,12 @@ void FStochastic(Ion *ion, Params *p, double *F) {
 		    gsl_rng_uniform(rng),
 		    gsl_rng_uniform(rng)};
     normalize(hat);
-    //v = gsl_ran_gaussian(rng, sqrt(3*kB*p->T_gas/p->m_gas));
-    //v = sqrt(3*kB*p->T_gas/p->m_gas);
-    v = 0.0085;
-    for(int i=0; i<3; i++)
-	F[i] = 2*p->m_gas*v*hat[i]/p->dt;
+    //v = 0.0085;
+    v = sqrt(2*kB*p->gamma_col*p->dt/ion->m);
+    for(int i=0; i<3; i++) {
+	//F[i] = ion->m*v*hat[i]/p->dt;
+	ion->v[i] += v*hat[i];
+    }
 }
 
 // Precomputes all Coulomb interactions (that way they can be applied
@@ -230,12 +233,6 @@ void allCoulomb(Ion **ions, Params *p, double *Flist) {
     #pragma omp parallel for
     for (i = 0; i < p->N; i++)
         FCoulomb(ions[i], ions, p, &Flist[i*3]); //Alternately: Flist+i*3
-}
-
-void swapIons(Ion **ions, int i, int j) {
-    Ion *tmp = ions[i];
-    ions[i] = ions[j];
-    ions[j] = tmp;
 }
 
 //--------------//
@@ -281,9 +278,8 @@ int simulate(double *x0, double *v0, Params *p) {
     //minimize(x0, ions, p);
 
     // Reset initial velocities
-    for(i=0; i<p->N; i++) {
+    for(i=0; i<p->N; i++)
 	copyVector(ions[i]->v, &v0[i*3]);
-    }
     
     // Data recording initialization
     FILE *traj_file = fopen(p->traj_fname, "wb");
