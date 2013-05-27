@@ -61,7 +61,16 @@ potential energy is
 
 Finding the positions for minimization is a complex problem that
 requires finding the minimum of a scalar function of :math:`3N`
-variables.
+variables. Presently, this is *not* the method used for
+minimization. This is mainly because of difficulties in getting NLopt
+to give sensible results (which might be due to an error in the
+implementation).
+
+An alternative (and the currently implemented minimization method) is
+to treat *all* ions as laser cooled in the beginning and let the
+system evolve for a short period of time. This has the elegance of not
+requiring any extra code, but seems to suffer from not allowing
+isotope sorting.
 
 License
 =======
@@ -123,9 +132,12 @@ chemical file format).
 Future Features
 ===============
 
-Some things that are planned for future releases:
+Some things that are planned (or possible) for the future:
 
 * Better stability -> less random initial conditions could help this
+* Converting from raw double arrays to either std::vector or possibly
+  `Armadillo <http://arma.sourceforge.net/>`_ (mostly for code
+  readability more than anything else)
 
 Known Bugs
 ==========
@@ -133,7 +145,8 @@ Known Bugs
 * The params.py generation has an error for 64 bit systems which
   causes problems with CCD simulation. Workaround: either turn off CCD
   simulation or edit the file to make it read "Params._pack_ = 8".
-* Laser pressure force is not sorting |Ba+| isotopes properly.
+* The Python function for setting up the number of ions of various
+  masses doesn't currently work for more than 2 distinct masses.
 
 Authors
 =======

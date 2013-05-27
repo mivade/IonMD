@@ -388,7 +388,15 @@ U_{C,i} = \frac{Ze}{4\pi\epsilon_0} \sum_{i\neq j}
 requires finding the minimum of a scalar function of <span class="math">
 \(3N\)</span>
 
-variables.</p>
+variables. Presently, this is <em>not</em> the method used for
+minimization. This is mainly because of difficulties in getting NLopt
+to give sensible results (which might be due to an error in the
+implementation).</p>
+<p>An alternative (and the currently implemented minimization method) is
+to treat <em>all</em> ions as laser cooled in the beginning and let the
+system evolve for a short period of time. This has the elegance of not
+requiring any extra code, but seems to suffer from not allowing
+isotope sorting.</p>
 </div>
 </div>
 <div class="section" id="license">
@@ -414,6 +422,8 @@ should work on any platform that can meet the following dependencies:</p>
 <li>C++ requirements<ul>
 <li><a class="reference external" href="https://www.gnu.org/software/gsl/">GNU Scientific Library</a> (for
 random number generation and 2D binning for simulated CCD images)</li>
+<li><a class="reference external" href="http://ab-initio.mit.edu/wiki/index.php/NLopt">NLopt</a> (for
+finding the potential energy minimum for good initial conditions)</li>
 </ul>
 </li>
 </ul>
@@ -444,9 +454,12 @@ chemical file format).</p>
 </div>
 <div class="section" id="future-features">
 <h1>Future Features</h1>
-<p>Some things that are planned for future releases:</p>
+<p>Some things that are planned (or possible) for the future:</p>
 <ul class="simple">
 <li>Better stability -&gt; less random initial conditions could help this</li>
+<li>Converting from raw double arrays to either std::vector or possibly
+<a class="reference external" href="http://arma.sourceforge.net/">Armadillo</a> (mostly for code
+readability more than anything else)</li>
 </ul>
 </div>
 <div class="section" id="known-bugs">
@@ -455,7 +468,8 @@ chemical file format).</p>
 <li>The params.py generation has an error for 64 bit systems which
 causes problems with CCD simulation. Workaround: either turn off CCD
 simulation or edit the file to make it read &quot;Params._pack_ = 8&quot;.</li>
-<li>Laser pressure force is not sorting Ba<sup>+</sup> isotopes properly.</li>
+<li>The Python function for setting up the number of ions of various
+masses doesn't currently work for more than 2 distinct masses.</li>
 </ul>
 </div>
 <div class="section" id="authors">

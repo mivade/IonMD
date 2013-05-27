@@ -19,7 +19,7 @@ typedef struct Params {
     double lmbda,	// wavelength
 	r_l,		// beam radius
 	delta,		// detuning
-	s0,		// saturation parameter
+	s,		// saturation parameter
 	Gamma;		// laser cooled ion's linewidth
 
     // Trap parameters
@@ -29,7 +29,9 @@ typedef struct Params {
 	Vsec, w;		// secular amplitude, frequency
 
     // Background gas parameters
-    double gamma_col;	// collision rate
+    double gamma_col,	// collision rate
+	m_gas,		// background gas mass
+	T_gas;		// background gas temperature
 
     // CCD settings
     int sim_ccd;	// set to 1 to simulate CCD
@@ -38,6 +40,7 @@ typedef struct Params {
 
     // Simulation settings
     double dt, t_max,	// time step and max time
+	min_time,	// amount of time to run minimization routine for
 	abort_bounds;	// radial postion at which ions are considered
 			// out of bounds
     int minimizing;	// internal variable; 1 when performing

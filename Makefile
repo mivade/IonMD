@@ -3,10 +3,14 @@ CXXFLAGS = -Wall -O3 -fPIC -flto -fopenmp -march=native -g
 LIBS = -lm -lgsl -lgslcblas -lnlopt
 SRCS = *.cpp
 HDRS = *.hpp
+OBJS = minimize.o
 RESTFLAGS = --math-output="MathJax" --cloak-email-addresses
 
-ionmd.so: $(SRCS) $(HDRS) params.py README.html
+ionmd.so: $(SRCS) $(HDRS) params.py README.html minimize.o
 	$(CXX) $(CXXFLAGS) -shared $(LIBS) $(OBJS) ionmd.cpp -oionmd.so
+
+minimize.o: minimize.cpp minimize.hpp
+	$(CXX) $(CXXFLAGS) $(LIBS) -c minimize.cpp -ominimize.o
 
 # apparently this doesn't work right on 64 bit machines
 # set Params._pack_ = 4 to Params._pack_ = 8 in params.py
