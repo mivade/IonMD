@@ -20,7 +20,8 @@ typedef struct Params {
 	r_l,		// beam radius
 	delta,		// detuning
 	s,		// saturation parameter
-	Gamma;		// laser cooled ion's linewidth
+	Gamma,		// laser cooled ion's linewidth
+	beta;		// cooling rate (for constant cooling rate)
 
     // Trap parameters
     double r0, z0, kappa,	// radius, length, geometric paremter

@@ -238,16 +238,18 @@ def main(dll, dt, t_max,
         s = 10.
         Gamma = 2*pi*15e6
         delta = -4*Gamma
+        beta = kwargs.get('beta', 2e-22)
 
         # Trap parameters
-        r0, z0, kappa = 3.18e-3, 25.4e-3/2., 0.006 #0.008
+        r0, z0 = 3.18e-3, 25.4e-3/2.
+        kappa = kwargs.get('kappa', 0.006) #.008
         Omega = 2*pi*3.0e6
         V, U, UEC = 120., 0., 300.
         Vsec, wsec = 1, 2*pi*90e3
 
         # Background gas parameters
         #gamma_col = langevinRate(138, 28, 5e-9, 298, 1.71)
-        gamma_col = 10.#11.95 # K/s
+        gamma_col = kwargs.get('gamma_col', 1.) #11.95 # K/s
         m_gas = 28*amu
         T_gas = 298.
 
@@ -280,7 +282,7 @@ def main(dll, dt, t_max,
         p = Params(N=N, N_masses=len(masses),
                    m=m_p, Z=Z_p, masses=masses_p, lc=lc_p,
                    khat=khat_p, lmbda=lmda, r_l=r_l,
-                   delta=delta, s=s, Gamma=Gamma,
+                   delta=delta, s=s, Gamma=Gamma, beta=beta,
                    r0=r0, z0=z0, Omega=Omega,
                    V=V, U=U, UEC=UEC, kappa=kappa,
                    Vsec=Vsec, w=wsec,
@@ -345,26 +347,36 @@ def main(dll, dt, t_max,
 if __name__ == "__main__":
     dt, t_max = 20e-9, 8e-3
     min_time = 1.5e-3
-    traj_start = 1.2e-3# dt*1000
+    traj_start = dt*0
+    ccd_bins, ccd_extent = 512, 600
+    all_lc = False
     dll = loadLibrary()
-    if False:
-        # 2 ms is plenty sufficient for generating initial conditions
-        for N in range(600,601):
-            print "N = %d" % N
-            p = main(dll, dt, 2e-3, N=N, all_lc=True, print_params=False)
-            shutil.copyfile("fpos.xyz", "init/fpos%i.xyz" % N)
+    N_ccd = 2
+    if True:
+        N = 100
+        t0 = time.time()
+        for gcol in arange(1, 21, 1):
+            print "gamma_col =", gcol, "K/s"
+            p = main(dll, dt, t_max, min_time=min_time,
+                     N=N, all_lc=all_lc, print_params=False,
+                     ccd_bins=ccd_bins, ccd_extent=ccd_extent,
+                     kappa=1e-2,
+                     gamma_col=gcol,
+                     use_stochastic=1,
+                     T_steps=1200,
+                     traj_start=traj_start)
+            ionvis.simCCD("ccd", N_ccd, ccd_bins, ccd_extent,
+                          outfile="images/gcol_%i.png" % gcol,
+                          show=False, brightness=2)
+        t = time.time() - t0
+        print "Finished all in: %s" % str(datetime.timedelta(seconds=t))
     else:
-        N = 300
-        ccd_bins, ccd_extent = 512, 600
-        all_lc = False
+        N = 100
         if True:
-            #print "\nMinimizing..."
-            #p = main(dll, 75e-9, 8e-3, N=N, all_lc=True, print_params=False,
-            #         use_stochastic=0, sim_ccd=0)
-            #print "\nSimulating..."
             p = main(dll, dt, t_max, min_time=min_time,
                      N=N, all_lc=all_lc, print_params=True,
                      ccd_bins=ccd_bins, ccd_extent=ccd_extent,
+                     kappa=1e-2,
                      use_stochastic=1,
                      T_steps=1200,
                      traj_start=traj_start)
@@ -381,5 +393,5 @@ if __name__ == "__main__":
                 N_ccd = 2
             ionvis.simCCD("ccd", N_ccd, ccd_bins, ccd_extent,
                           outfile="images/CCD_latest.png",
-                          show=True, brightness=5)
+                          show=True, brightness=2)
                 

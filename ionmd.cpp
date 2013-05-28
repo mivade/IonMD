@@ -164,7 +164,7 @@ void FLaser(Ion *ion, Params *p, double *F) {
     delta = p->delta + k*dot(p->khat, ion->v);
     s0 = s*(1 + pow(2*delta/Gamma,2));
     beta = -HBAR*pow(k,2)*4*s0*delta/Gamma/pow(1+s0+pow(2*delta/Gamma,2),2);
-    beta = 2e-22;
+    beta = p->beta;
     //F0 = HBAR*k*Gamma/2/(s/(s + 1));
     //F0 = HBAR*k*s*Gamma/(2*(1+s));
     F0 = (HBAR*k*Gamma/2.)*(s0/(s0+1));
@@ -219,8 +219,8 @@ void FStochastic(Ion *ion, Params *p, double *F) {
     //v = 0.0085;
     v = sqrt(2*kB*p->gamma_col*p->dt/ion->m);
     for(int i=0; i<3; i++) {
-	//F[i] = ion->m*v*hat[i]/p->dt;
-	ion->v[i] += v*hat[i];
+	F[i] = ion->m*v*hat[i]/p->dt;
+	//ion->v[i] += v*hat[i];
     }
 }
 
