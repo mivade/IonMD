@@ -34,23 +34,22 @@ else:
 def display(fpos_fname='fpos.xyz', m_lc=138, outfile=None):
     scale = 25.
     ions, x, y, z = np.loadtxt(fpos_fname, skiprows=2, unpack=True)
-    c_lc = (0,1,1)
-    c_sc = (1,0,0)
-    x_lc = []
-    x_sc = []
-    for i, ion in enumerate(ions):
-        if ion == m_lc:
-            x_lc.append([x[i], y[i], z[i]])
-        else:
-            x_sc.append([x[i], y[i], z[i]])
-    x_lc = np.array(x_lc)
-    x_sc = np.array(x_sc)
+    xlist = []
     fig = mlab.figure(size=(640,480), bgcolor=(0,0,0))
-    mlab.points3d(x_lc[:,0], x_lc[:,1], x_lc[:,2], color=c_lc, scale_factor=scale)
-    try:
-        mlab.points3d(x_sc[:,0], x_sc[:,1], x_sc[:,2], color=c_sc, scale_factor=scale)
-    except:
-        pass
+    m_last, ci = ions[0], 0
+    for i, ion in enumerate(ions):
+        if ion == m_last:
+            xlist.append([x[i], y[i], z[i]])
+        else:
+            xlist = np.array(xlist)
+            mlab.points3d(xlist[:,0], xlist[:,1], xlist[:,2],
+                          color=colors[ci], scale_factor=scale)
+            xlist = []
+            ci += 1
+            try:
+                m_last = ions[i+1]
+            except IndexError:
+                pass
     mlab.view(azimuth=45, elevation=90)
     mlab.roll(180)
     mlab.orientation_axes()
@@ -91,6 +90,6 @@ def simCCD(ccd_fname_prefix, N_ccd, bins, extents,
 
 if __name__ == "__main__":
     ccd_bins, ccd_extent = 512, 600
-    #display()
-    simCCD("ccd", 2, ccd_bins, ccd_extent, brightness=1.5,
-           outfile="images/CCD_latest.png", show=True)
+    display()
+    #simCCD("ccd", 2, ccd_bins, ccd_extent, brightness=1.5,
+    #       outfile="images/CCD_latest.png", show=True)
