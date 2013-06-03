@@ -25,31 +25,24 @@ import matplotlib.pyplot as plt
 import Image, ImageEnhance
 from mayavi import mlab
 
-if True:
-    # color order = red, forest green, cyan, gold
-    colors = [(1,0,0), (.13,.55,.13), (0,1,1), (1,.84,0)]
-else:
-    colors = [(1,0,0)]
+# color order = red, forest green, cyan, gold
+colors = [(1,0,0), (.13,.55,.13), (0,1,1), (1,.84,0)]
 
 def display(fpos_fname='fpos.xyz', m_lc=138, outfile=None):
     scale = 25.
     ions, x, y, z = np.loadtxt(fpos_fname, skiprows=2, unpack=True)
     xlist = []
-    fig = mlab.figure(size=(640,480), bgcolor=(0,0,0))
     m_last, ci = ions[0], 0
+    fig = mlab.figure(size=(640,480), bgcolor=(0,0,0))
     for i, ion in enumerate(ions):
-        if ion == m_last:
-            xlist.append([x[i], y[i], z[i]])
-        else:
+        if ion != m_last or i == len(ions)-1:
             xlist = np.array(xlist)
             mlab.points3d(xlist[:,0], xlist[:,1], xlist[:,2],
                           color=colors[ci], scale_factor=scale)
             xlist = []
             ci += 1
-            try:
-                m_last = ions[i+1]
-            except IndexError:
-                pass
+            m_last = ions[i]
+        xlist.append([x[i], y[i], z[i]])
     mlab.view(azimuth=45, elevation=90)
     mlab.roll(180)
     mlab.orientation_axes()
