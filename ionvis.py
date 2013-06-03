@@ -31,7 +31,7 @@ if True:
 else:
     colors = [(1,0,0)]
 
-def display(fpos_fname='fpos.xyz', m_lc=138):
+def display(fpos_fname='fpos.xyz', m_lc=138, outfile=None):
     scale = 25.
     ions, x, y, z = np.loadtxt(fpos_fname, skiprows=2, unpack=True)
     c_lc = (0,1,1)
@@ -45,7 +45,7 @@ def display(fpos_fname='fpos.xyz', m_lc=138):
             x_sc.append([x[i], y[i], z[i]])
     x_lc = np.array(x_lc)
     x_sc = np.array(x_sc)
-    fig = mlab.figure(size=(640,480))
+    fig = mlab.figure(size=(640,480), bgcolor=(0,0,0))
     mlab.points3d(x_lc[:,0], x_lc[:,1], x_lc[:,2], color=c_lc, scale_factor=scale)
     try:
         mlab.points3d(x_sc[:,0], x_sc[:,1], x_sc[:,2], color=c_sc, scale_factor=scale)
@@ -54,7 +54,11 @@ def display(fpos_fname='fpos.xyz', m_lc=138):
     mlab.view(azimuth=45, elevation=90)
     mlab.roll(180)
     mlab.orientation_axes()
-    mlab.show()
+    if outfile:
+        mlab.savefig(outfile, figure=fig)
+        mlab.close(all=True)
+    else:
+        mlab.show()
 
 def toRGB(data, channels):
     """Convert 2D grayscale data to 2D 3 channel 'RGB' data."""
