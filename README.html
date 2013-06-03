@@ -353,7 +353,7 @@ obtain good starting positions.</p>
 <div class="section" id="license">
 <h1>License</h1>
 <p>IonMD is freely distributable under the terms of the GNU GPL version 3
-(see LICENSE for details).</p>
+(see COPYING for details).</p>
 </div>
 <div class="section" id="system-requirements">
 <h1>System Requirements</h1>
@@ -374,7 +374,11 @@ should work on any platform that can meet the following dependencies:</p>
 <li><a class="reference external" href="https://www.gnu.org/software/gsl/">GNU Scientific Library</a> (for
 random number generation and 2D binning for simulated CCD images)</li>
 <li><a class="reference external" href="http://ab-initio.mit.edu/wiki/index.php/NLopt">NLopt</a> (for
-finding the potential energy minimum for good initial conditions)</li>
+finding the potential energy minimum for good initial
+conditions). Note that in the current implementation, this is not
+actually used, but the code still exists for it. I plan to later
+try using this along with nearest neighbor Coulomb potential
+approximation which is why it's staying in.</li>
 </ul>
 </li>
 </ul>
@@ -411,6 +415,7 @@ chemical file format).</p>
 <li>Converting from raw double arrays to either std::vector or possibly
 <a class="reference external" href="http://arma.sourceforge.net/">Armadillo</a> (mostly for code
 readability more than anything else)</li>
+<li>Python frontend cleanup</li>
 </ul>
 </div>
 <div class="section" id="known-bugs">
@@ -419,8 +424,7 @@ readability more than anything else)</li>
 <li>The params.py generation has an error for 64 bit systems which
 causes problems with CCD simulation. Workaround: either turn off CCD
 simulation or edit the file to make it read &quot;Params._pack_ = 8&quot;.</li>
-<li>The Python function for setting up the number of ions of various
-masses doesn't currently work for more than 2 distinct masses.</li>
+<li>Temperature calculation is... wrong.</li>
 </ul>
 </div>
 <div class="section" id="authors">

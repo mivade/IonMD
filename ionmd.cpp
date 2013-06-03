@@ -1,3 +1,20 @@
+/*
+  This file is part of IonMD.
+
+  IonMD is free software: you can redistribute it and/or modify it
+  under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  
+  IonMD is distributed in the hope that it will be useful, but WITHOUT
+  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+  License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with IonMD.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include <cstdio>
 #include <cmath>
 #include <vector>
@@ -122,7 +139,6 @@ void updateIon(Ion *ion, Ion **ions, double t, double *Fcoullist, Params *p) {
     for(i=0; i<3; i++) {
         F[i] = Ft[i] + Fl[i] + Fc[i] + Fsec[i] + Fs[i];
 	a[i] = F[i]/ion->m;
-	//ion->x[i] += ion->v[i]*p->dt + 0.5*ion->a[i]*pow(p->dt, 2);
 	ion->v[i] += 0.5*(ion->a[i] + a[i])*p->dt;
     }
     copyVector(ion->a, a);
@@ -157,17 +173,9 @@ void FTrap(Ion *ion, double t, Params *p, double *F) {
 // (result stored in F)
 void FLaser(Ion *ion, Params *p, double *F) {
     zeroVector(F);
-    double F0, k, s, s0, Gamma, beta, delta;
-    k = 2*pi/p->lmbda;
-    Gamma = p->Gamma;
-    s = p->s;
-    delta = p->delta + k*dot(p->khat, ion->v);
-    s0 = s*(1 + pow(2*delta/Gamma,2));
-    beta = -HBAR*pow(k,2)*4*s0*delta/Gamma/pow(1+s0+pow(2*delta/Gamma,2),2);
+    double beta, F0;
     beta = p->beta;
-    //F0 = HBAR*k*Gamma/2/(s/(s + 1));
-    //F0 = HBAR*k*s*Gamma/(2*(1+s));
-    F0 = (HBAR*k*Gamma/2.)*(s0/(s0+1));
+    F0 = p->F0;
     if(p->minimizing) {
 	beta = 1e-20; // unrealistically large damping for minimizing
 	if(ion->lc == 0) // don't use constant pressure term on non-lc'ed ions
@@ -216,12 +224,9 @@ void FStochastic(Ion *ion, Params *p, double *F) {
 		    gsl_rng_uniform(rng),
 		    gsl_rng_uniform(rng)};
     normalize(hat);
-    //v = 0.0085;
     v = sqrt(2*kB*p->gamma_col*p->dt/ion->m);
-    for(int i=0; i<3; i++) {
+    for(int i=0; i<3; i++)
 	F[i] = ion->m*v*hat[i]/p->dt;
-	//ion->v[i] += v*hat[i];
-    }
 }
 
 // Precomputes all Coulomb interactions (that way they can be applied
@@ -279,7 +284,8 @@ int simulate(double *x0, double *v0, Params *p) {
 
     // Reset initial velocities
     for(i=0; i<p->N; i++)
-	copyVector(ions[i]->v, &v0[i*3]);
+	zeroVector(ions[i]->v);
+	//copyVector(ions[i]->v, &v0[i*3]);
     
     // Data recording initialization
     FILE *traj_file = fopen(p->traj_fname, "wb");
@@ -351,7 +357,6 @@ int simulate(double *x0, double *v0, Params *p) {
     fprintf(fpos_file, "Simulated ion crystal, positions in microns\n");
     for (i=0; i<p->N; i++) {
         fprintf(fpos_file, "%d ", (int)(ions[i]->m/amu));
-        //fprintf(fpos_file, "BA ");
         for(j=0; j<3; j++) {
             fprintf(fpos_file, "%e ", ions[i]->x[j]/1e-6);
             fprintf(fvel_file, "%e ", ions[i]->v[j]);
@@ -364,7 +369,6 @@ int simulate(double *x0, double *v0, Params *p) {
 	    char s[256];
 	    sprintf(s, "%s_%i.dat", p->ccd_fname, i+1);
 	    FILE *ccd_file = fopen(s, "wb");
-	    //gsl_histogram2d_fprintf(ccd_file, ccd[i], "%g", "%g");
 	    gsl_histogram2d_fwrite(ccd_file, ccd[i]);
 	    fclose(ccd_file);
 	}

@@ -1,3 +1,20 @@
+/*
+  This file is part of IonMD.
+
+  IonMD is free software: you can redistribute it and/or modify it
+  under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  
+  IonMD is distributed in the hope that it will be useful, but WITHOUT
+  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+  License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with IonMD.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #ifndef PARAMS_HPP
 #define PARAMS_HPP
 
@@ -21,7 +38,8 @@ typedef struct Params {
 	delta,		// detuning
 	s,		// saturation parameter
 	Gamma,		// laser cooled ion's linewidth
-	beta;		// cooling rate (for constant cooling rate)
+	beta,		// cooling parameter (for constant cooling rate)
+	F0;		// laser pressure force (~3.2E-20 kg m/s^2 for Ba+ at s = 1)
 
     // Trap parameters
     double r0, z0, kappa,	// radius, length, geometric paremter

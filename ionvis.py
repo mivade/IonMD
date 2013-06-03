@@ -2,6 +2,21 @@
 ionvis.py
 
 IonMD ion visualization functions.
+
+This file is part of IonMD.
+
+IonMD is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your
+option) any later version.
+  
+IonMD is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with IonMD.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import numpy as np
@@ -49,7 +64,7 @@ def toRGB(data, channels):
     return new_data
 
 def simCCD(ccd_fname_prefix, N_ccd, bins, extents,
-           outfile=None, show=True, brightness=4, imgcmd="eog"):
+           outfile=None, show=True, brightness=1, imgcmd="eog"):
     """Simulate a CCD image."""
     tmpimg = "images/tmp.png"
     ccd = np.zeros((bins,bins,3))
@@ -73,5 +88,5 @@ def simCCD(ccd_fname_prefix, N_ccd, bins, extents,
 if __name__ == "__main__":
     ccd_bins, ccd_extent = 512, 600
     #display()
-    simCCD("ccd", 2, ccd_bins, ccd_extent, brightness=2.5,
+    simCCD("ccd", 2, ccd_bins, ccd_extent, brightness=1.5,
            outfile="images/CCD_latest.png", show=True)

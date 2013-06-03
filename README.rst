@@ -38,7 +38,7 @@ License
 =======
 
 IonMD is freely distributable under the terms of the GNU GPL version 3
-(see LICENSE for details).
+(see COPYING for details).
 
 System Requirements
 ===================
@@ -61,7 +61,11 @@ should work on any platform that can meet the following dependencies:
   * `GNU Scientific Library <https://www.gnu.org/software/gsl/>`_ (for
     random number generation and 2D binning for simulated CCD images)
   * `NLopt <http://ab-initio.mit.edu/wiki/index.php/NLopt>`_ (for
-    finding the potential energy minimum for good initial conditions)
+    finding the potential energy minimum for good initial
+    conditions). Note that in the current implementation, this is not
+    actually used, but the code still exists for it. I plan to later
+    try using this along with nearest neighbor Coulomb potential
+    approximation which is why it's staying in.
 
 Usage
 =====
@@ -100,6 +104,7 @@ Some things that are planned (or possible) for the future:
 * Converting from raw double arrays to either std::vector or possibly
   `Armadillo <http://arma.sourceforge.net/>`_ (mostly for code
   readability more than anything else)
+* Python frontend cleanup
 
 Known Bugs
 ==========
@@ -107,8 +112,7 @@ Known Bugs
 * The params.py generation has an error for 64 bit systems which
   causes problems with CCD simulation. Workaround: either turn off CCD
   simulation or edit the file to make it read "Params._pack_ = 8".
-* The Python function for setting up the number of ions of various
-  masses doesn't currently work for more than 2 distinct masses.
+* Temperature calculation is... wrong.
 
 Authors
 =======
