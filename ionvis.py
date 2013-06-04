@@ -26,7 +26,8 @@ import Image, ImageEnhance
 from mayavi import mlab
 
 # color order = red, forest green, cyan, gold
-colors = [(1,0,0), (.13,.55,.13), (0,1,1), (1,.84,0)]
+#colors = [(1,0,0), (.13,.55,.13), (0,1,1), (1,.84,0)]
+colors = [(1,0,0), (0,1,0), (0,0,1), (0,1,1), (1,.84,0)]
 
 def display(fpos_fname='fpos.xyz', m_lc=138, outfile=None):
     scale = 25.

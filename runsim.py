@@ -231,13 +231,16 @@ def main(dll, dt, t_max,
         if kwargs['all_lc']:
             m, Z, lc = initIons(N, 138, 1)
             masses = array([138*amu])
-        elif False:
-            masses = array([138, 136, 146])*amu
-            m, Z, lc = initIons(N, masses[0]/amu, 1, [int(N*.05),int(N*.8)],
-                                [masses[1]/amu,masses[2]/amu], [1,1])
         else:
             masses = array([138, 136])*amu
             m, Z, lc = initIons(N, masses[0]/amu, 1, int(N*.1), masses[1]/amu, 1)
+        try: # use passed ion parameters if given
+            masses = kwargs['masses']
+            m = kwargs['m']
+            Z = kwargs['Z']
+            lc = kwargs['lc']
+        except KeyError:
+            print "You didn't give masses, m, Z, or lc as a kwarg!"
         N_masses = len(masses)
         m_p = m.ctypes.data_as(double_p)
         Z_p = Z.ctypes.data_as(double_p)
@@ -363,21 +366,30 @@ def main(dll, dt, t_max,
 if __name__ == "__main__":
     dt, t_max = 20e-9, 5e-3
     min_time = 1.5e-3
-    traj_start = dt*0
+    traj_start = dt*100
     ccd_bins, ccd_extent = 512, 1024/2 # corresponds to 8x magnification
-    kappa = 8e-3
+    kappa = 9e-3
     all_lc = False
-    N_ccd = 2
-    gcol, beta, F0 = 11., 2e-22, 5.0e-20 # F0 corresponds to s ~ 4
+    gcol, beta, F0 = 8., 2e-22, 5.0e-20 # F0 corresponds to s ~ 4
     dll = loadLibrary()
     V = 140.
-    N = 50
+    N = 500
+    masses = array([138,136,146])*amu
+    N_ccd = len(masses)
     if True:
         t0 = time.time()
-        for kappa in arange(1e-4, 1.2e-2, 2e-4):
-            outfile = "images/kappa%.4f.png" % (kappa)
+        for fraction in arange(.1,.91,.05):
+            Nm = int(N*fraction) # number of molecules
+            Nsc = int((N-Nm)*.1) # number of sc'ed Ba ions
+            m, Z, lc = initIons(N, masses[0]/amu, 1,
+                                [Nsc,Nm],
+                                [masses[1]/amu,masses[2]/amu], [1,1])
+            prefix = "BaF%.2f" % fraction
+            outfile = "data/" + prefix + "_ccd.png"
+            outfile2 = "data/" + prefix + "_xyz.png"
             p = main(dll, dt, t_max, min_time=min_time,
                      N=N, all_lc=all_lc, print_params=False,
+                     masses=masses, m=m, Z=Z, lc=lc,
                      ccd_bins=ccd_bins, ccd_extent=ccd_extent,
                      V=V,
                      kappa=kappa,
@@ -388,6 +400,11 @@ if __name__ == "__main__":
             ionvis.simCCD("ccd", N_ccd, ccd_bins, ccd_extent,
                           outfile=outfile,
                           show=False)
+            ionvis.display(outfile=outfile2)
+            for i in range(1,N_ccd+1):
+                fname = "ccd_%d.dat" % i
+                shutil.copy(fname, "data/"+prefix+fname)
+            shutil.copy('fpos.xyz', "data/"+prefix+".xyz")
         t = time.time() - t0
         print "Finished all in: %s" % str(datetime.timedelta(seconds=t))
     else:
@@ -404,9 +421,9 @@ if __name__ == "__main__":
         #plotTrajectory(dt, t_max, N, start=traj_start/dt, end=-1)
         #plotFourier(dt, t_max, N, start=traj_start/dt, end=-1)
         #ionvis.display(fpos_fname="ipos.xyz")
-        #ionvis.display()
-        plotTemperature(N, 138*amu)
-        if True:
+        ionvis.display()#outfile='images/test.png')
+        #plotTemperature(N, 138*amu)
+        if False:
             #for N_ccd in range(5,0,-1):
             if all_lc:
                 N_ccd = 1
