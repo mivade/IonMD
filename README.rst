@@ -67,6 +67,19 @@ should work on any platform that can meet the following dependencies:
     try using this along with nearest neighbor Coulomb potential
     approximation which is why it's staying in.
 
+Windows
+-------
+
+In principle, this should work under Cygwin_. That said, I have been
+unable to get it to work due to some linking errors. An alternative is
+to use a virtual machine such as VirtualBox_ with Linux installed on
+it. Since modern CPUs support hardware virtualization, this should
+work sufficiently well (especially if you enable multiple CPUs for the
+VM).
+
+.. _Cygwin: http://cygwin.com/
+.. _VirtualBox: https://www.virtualbox.org/
+
 Usage
 =====
 
