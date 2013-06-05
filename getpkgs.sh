@@ -11,7 +11,7 @@ sudo aptitude install build-essential libgsl0-dbg libgsl0-dev git python-numpy p
 wget http://ab-initio.mit.edu/nlopt/nlopt-2.3.tar.gz
 tar -xvzf nlopt-2.3.tar.gz
 cd nlopt-2.3
-./configure --prefix=/usr
+./configure --enable-debug --with-cxx
 make
 sudo make install
 
