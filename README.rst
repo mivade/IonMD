@@ -53,7 +53,9 @@ should work on any platform that can meet the following dependencies:
   * Numpy
   * Scipy
   * MayaVI (optional; for displaying ions in 3D)
-  * Matplotlib (optional; for plotting/simulating CCD images)
+  * Matplotlib (optional; for plotting/simulating CCD images; tested
+    successfully with version 1.2.1, fails with Debian wheezy's
+    version)
   * PIL (optional; for simulating CCD images)
 
 * C++ requirements
