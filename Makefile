@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -Wall -O3 -fPIC -flto -fopenmp -march=native -g
+CXXFLAGS = -Wall -O3 -fPIC -flto -fopenmp -march=native -L/usr/local/lib -g
 LIBS = -lm -lgsl -lgslcblas -lnlopt
 SRCS = *.cpp
 HDRS = *.hpp

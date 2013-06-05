@@ -17,8 +17,8 @@ sudo pip install matplotlib # wheezy's version is out of date
 wget http://ab-initio.mit.edu/nlopt/nlopt-2.3.tar.gz
 tar -xvzf nlopt-2.3.tar.gz
 cd nlopt-2.3
-./configure --enable-debug --with-cxx
+./configure --enable-debug
 make
 sudo make install
-mkdir data
-mkdir images
+cd -
+mkdir data images
