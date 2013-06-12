@@ -62,7 +62,8 @@ should work on any platform that can meet the following dependencies:
 
   * `GNU Scientific Library <https://www.gnu.org/software/gsl/>`_ (for
     random number generation and 2D binning for simulated CCD images)
-  * `NLopt <http://ab-initio.mit.edu/wiki/index.php/NLopt>`_ (for
+
+..  * `NLopt <http://ab-initio.mit.edu/wiki/index.php/NLopt>`_ (for
     finding the potential energy minimum for good initial
     conditions). Note that in the current implementation, this is not
     actually used, but the code still exists for it. I plan to later
@@ -124,9 +125,6 @@ Some things that are planned (or possible) for the future:
 Known Bugs
 ==========
 
-* The params.py generation has an error for 64 bit systems which
-  causes problems with CCD simulation. Workaround: either turn off CCD
-  simulation or edit the file to make it read "Params._pack_ = 8".
 * Temperature calculation is... wrong.
 
 Authors
