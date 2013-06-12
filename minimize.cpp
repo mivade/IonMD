@@ -18,7 +18,7 @@
 #include <cstdio>
 #include <iostream>
 #include <cstdlib>
-#include <nlopt.hpp>
+//#include <nlopt.hpp>
 #include "minimize.hpp"
 #include "ionmd.hpp"
 
@@ -74,7 +74,7 @@ void minimize(Ion **ions, Params *p) {
     writeInitPos(ions, p);
 }
 
-void minimize(double *x0, Ion **ions, Params *p) {
+/*void minimize(double *x0, Ion **ions, Params *p) {
     int i;
     double Umin;
 
@@ -111,7 +111,7 @@ void minimize(double *x0, Ion **ions, Params *p) {
     cout << "Minimum energy: " << Umin << endl;
     delete min_data;
     writeInitPos(ions, p);
-}
+    }*/
 
 void writeInitPos(Ion **ions, Params *p) {
     FILE *init_pos_file = fopen("ipos.xyz", "w");

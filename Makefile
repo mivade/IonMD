@@ -1,6 +1,6 @@
 CXX = g++
-CXXFLAGS = -Wall -O3 -fPIC -flto -fopenmp -march=native -L/usr/local/lib -g
-LIBS = -lm -lgsl -lgslcblas -lnlopt
+CXXFLAGS = -Wall -O3 -fPIC -flto -fopenmp -march=native -g
+LIBS = -lm -lgsl -lgslcblas
 SRCS = *.cpp
 HDRS = *.hpp
 OBJS = minimize.o
@@ -12,8 +12,6 @@ ionmd.so: $(SRCS) $(HDRS) params.py README.html minimize.o
 minimize.o: minimize.cpp minimize.hpp
 	$(CXX) $(CXXFLAGS) $(LIBS) -c minimize.cpp -ominimize.o
 
-# apparently this doesn't work right on 64 bit machines
-# set Params._pack_ = 4 to Params._pack_ = 8 in params.py
 params.py: params.hpp
 	h2xml $(PWD)/params.hpp -o params.xml
 	xml2py params.xml -s Params -o params.py
