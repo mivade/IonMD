@@ -7,7 +7,7 @@ OBJS = minimize.o
 RESTFLAGS = --math-output="MathJax" --cloak-email-addresses
 
 ionmd.so: $(SRCS) $(HDRS) params.py README.html minimize.o
-	$(CXX) $(CXXFLAGS) -shared $(LIBS) $(OBJS) ionmd.cpp -oionmd.so
+	$(CXX) $(CXXFLAGS) -shared $(OBJS) $(LIBS) ionmd.cpp -oionmd.so
 
 minimize.o: minimize.cpp minimize.hpp
 	$(CXX) $(CXXFLAGS) -c minimize.cpp -ominimize.o
