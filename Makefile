@@ -10,7 +10,7 @@ ionmd.so: $(SRCS) $(HDRS) params.py README.html minimize.o
 	$(CXX) $(CXXFLAGS) -shared $(LIBS) $(OBJS) ionmd.cpp -oionmd.so
 
 minimize.o: minimize.cpp minimize.hpp
-	$(CXX) $(CXXFLAGS) $(LIBS) -c minimize.cpp -ominimize.o
+	$(CXX) $(CXXFLAGS) -c minimize.cpp -ominimize.o
 
 params.py: params.hpp
 	h2xml $(PWD)/params.hpp -o params.xml
