@@ -76,6 +76,7 @@ typedef struct Params {
 
     // Data recording
     char *traj_fname,	// trajectory file name
+	*com_fname,	// COM coordinate file name
 	*fpos_fname,	// final positions file name
 	*ccd_fname,	// file name prefix for generating simulated CCD images
 	*temp_fname;	// file name for recording ensemble temperature

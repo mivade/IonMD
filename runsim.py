@@ -262,7 +262,7 @@ def main(dll, dt, t_max,
         # Trap parameters
         r0, z0 = 3.18e-3, (25e-3)/2.
         kappa = kwargs.get('kappa', 0.006) #.008
-        Omega = 2*pi*3.0e6
+        Omega = kwargs.get('Omega', 2*pi*2.7e6)
         V, U, UEC = kwargs.get('V', 125.), 0., kwargs.get('UEC', 300.)
         Vsec, wsec = 1, 2*pi*90e3
 
@@ -289,7 +289,8 @@ def main(dll, dt, t_max,
         use_abort = 1
 
         # Data recording parameters
-        traj_fname = "traj.dat"
+        traj_fname = kwargs.get("traj_fname", "traj.dat")
+        com_fname = kwargs.get("com_fname", "com_traj.dat")
         fpos_fname = "fpos.xyz"
         fvel_fname = "fvel.txt"
         ccd_fname = "ccd"
@@ -317,8 +318,9 @@ def main(dll, dt, t_max,
                    use_secular=use_secular,
                    use_stochastic=use_stochastic,
                    use_abort=use_abort,
-                   num_threads=8,
+                   num_threads=4,
                    quiet=0,
+                   com_fname=com_fname,
                    traj_fname=traj_fname,
                    fpos_fname=fpos_fname,
                    ccd_fname=ccd_fname,
@@ -329,7 +331,7 @@ def main(dll, dt, t_max,
         #saveParams("default.par", p)
 
     # Initial conditions
-    T0 = 10e-13
+    T0 = 10e-3
     if kwargs.has_key('ipos_fname'):
         ipos = kwargs['ipos_fname']
         x0, v0 = initialConditions(N, pos_fname=ipos)
@@ -364,47 +366,41 @@ def main(dll, dt, t_max,
 ##########
 
 if __name__ == "__main__":
+    dll = loadLibrary()
     dt, t_max = 20e-9, 5e-3
     min_time = 1.5e-3
     traj_start = dt*100
-    ccd_bins, ccd_extent = 512, 1024/2 # corresponds to 8x magnification
+    ccd_bins, ccd_extent = 768, 1024
     kappa = 9e-3
     all_lc = False
-    gcol, beta, F0 = 8., 2e-22, 5.0e-20 # F0 corresponds to s ~ 4
-    dll = loadLibrary()
-    V = 140.
-    N = 500
-    masses = array([138,136,146])*amu
+    gcol, beta, F0 = 8., 4e-22, 5.0e-20 # F0 corresponds to s ~ 4
+    V = 120.
+    N = 100
+    masses = array([138,136])*amu
     N_ccd = len(masses)
     if True:
         t0 = time.time()
-        for fraction in arange(.1,.91,.05):
-            Nm = int(N*fraction) # number of molecules
-            Nsc = int((N-Nm)*.1) # number of sc'ed Ba ions
-            m, Z, lc = initIons(N, masses[0]/amu, 1,
-                                [Nsc,Nm],
-                                [masses[1]/amu,masses[2]/amu], [1,1])
-            prefix = "BaF%.2f" % fraction
-            outfile = "data/" + prefix + "_ccd.png"
-            outfile2 = "data/" + prefix + "_xyz.png"
+        Nsc = int(N*0.1)
+        m, Z, lc = initIons(N, masses[0]/amu, 1., 
+                            Nsc, masses[1]/amu, 1.)
+        for UEC in arange(10, 101, 10):
+            prefix = "UEC%.0f" % UEC
             p = main(dll, dt, t_max, min_time=min_time,
                      N=N, all_lc=all_lc, print_params=False,
                      masses=masses, m=m, Z=Z, lc=lc,
                      ccd_bins=ccd_bins, ccd_extent=ccd_extent,
-                     V=V,
+                     V=V, UEC=UEC,
                      kappa=kappa,
                      gamma_col=gcol, beta=beta, F0=F0,
                      use_stochastic=1,
                      T_steps=1200,
                      traj_start=traj_start)
-            ionvis.simCCD("ccd", N_ccd, ccd_bins, ccd_extent,
-                          outfile=outfile,
-                          show=False)
-            ionvis.display(outfile=outfile2)
-            for i in range(1,N_ccd+1):
-                fname = "ccd_%d.dat" % i
-                shutil.copy(fname, "data/"+prefix+fname)
-            shutil.copy('fpos.xyz', "data/"+prefix+".xyz")
+            ## for i in range(1,N_ccd+1):
+            ##     fname = "ccd_%d.dat" % i
+            ##     shutil.copy(fname, "data/"+prefix+fname)
+            ## shutil.copy('fpos.xyz', "data/"+prefix+".xyz")
+            ## shutil.copy('traj.dat', "data/"+prefix+"_traj.dat")
+            shutil.copy('com_traj.dat', "data/"+prefix+"_com_traj.dat")
         t = time.time() - t0
         print "Finished all in: %s" % str(datetime.timedelta(seconds=t))
     else:
@@ -432,4 +428,4 @@ if __name__ == "__main__":
             ionvis.simCCD("ccd", N_ccd, ccd_bins, ccd_extent,
                           outfile="images/CCD_latest.png",
                           show=True, brightness=2)
-                
+            

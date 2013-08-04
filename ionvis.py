@@ -31,8 +31,8 @@ from mayavi import mlab
 #colors = [(1,0,0), (.13,.55,.13), (0,1,1), (1,.84,0)]
 colors = [(1,0,0), (0,1,0), (0,0,1), (0,1,1), (1,.84,0)]
 
-def display(fpos_fname='fpos.xyz', m_lc=138, outfile=None):
-    scale = 25.
+def display(fpos_fname='fpos.xyz', m_lc=138, scale=25, outfile=None):
+    scale = scale
     ions, x, y, z = np.loadtxt(fpos_fname, skiprows=2, unpack=True)
     xlist = []
     m_last, ci = ions[0], 0
@@ -118,7 +118,7 @@ def simCCDArchive(tar_fname, N_ccd, bins, extents, **kwargs):
     runs, and there being three of each indicates there were 3
     simulated CCDs for 3 different ion species.
 
-    TODO: add kwargs for things to go to simCCDx
+    TODO: add kwargs for things to go to simCCD
     """
     tar = tarfile.open(tar_fname, 'r')
     names, members = tar.getnames(), tar.getmembers()
@@ -138,4 +138,4 @@ if __name__ == "__main__":
     #simCCD("ccd", 2, ccd_bins, ccd_extent, brightness=1.5,
     #       outfile="images/CCD_latest.png", show=True)
     bins, extents = 768, 1024
-    simCCDArchive("data/N3/ccd/ccddat.tar.gz", 2, bins, extents)
+    simCCDArchive("data/N8/ccd/ccddat.tar.gz", 2, bins, extents)

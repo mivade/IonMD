@@ -260,6 +260,7 @@ int simulate(double *x0, double *v0, Params *p) {
 	T_ctr = 0;
     double vT = 0;
     float tmp;
+    float *xcom = new float[3];
 
     // Initialize CCD
     gsl_histogram2d *ccd[p->N_masses];
@@ -271,9 +272,11 @@ int simulate(double *x0, double *v0, Params *p) {
     }
     
     // Initialize ions
+    float M = 0;
     Ion **ions = new Ion*[p->N];
     for(i=0; i<p->N; i++) {
         ions[i] = initIon(&x0[i*3], &v0[i*3], i, p);
+	M += (float)ions[i]->m;
     }
 
     // Do minimization routine
@@ -283,12 +286,14 @@ int simulate(double *x0, double *v0, Params *p) {
     //minimize(x0, ions, p);
 
     // Reset initial velocities
-    for(i=0; i<p->N; i++)
+    for(i=0; i<p->N; i++) {
 	zeroVector(ions[i]->v);
 	//copyVector(ions[i]->v, &v0[i*3]);
+    }
     
     // Data recording initialization
     FILE *traj_file = fopen(p->traj_fname, "wb");
+    FILE *com_file = fopen(p->com_fname, "wb");
     FILE *temp_file = fopen(p->temp_fname, "w");
     
     // Run simulation
@@ -305,15 +310,16 @@ int simulate(double *x0, double *v0, Params *p) {
 	    printf("%d%% complete; t = %f\n", (int)10*t_i/t_10, t);
 
         // Update each ion
-        for (i=0; i<p->N; i++) {
+	xcom[0] = xcom[1] = xcom[2] = 0.0;
+        for(i=0; i<p->N; i++) {
             // Record data
-            if (p->record_traj) {
+            if(p->record_traj) {
                 if(t > p->traj_start) {
-		    if(i == 0) {
-			for (j=0; j<3; j++) {
-			    tmp = (float)(ions[i]->x[j]/1e-3);
+		    for(j=0; j<3; j++) {
+			tmp = (float)(ions[i]->x[j]/1e-3);
+			xcom[j] += (float)ions[i]->m*tmp/M;
+			if(i == 0)
 			    fwrite(&tmp, sizeof(float), 1, traj_file);
-			}
                     }
 		    simCCDPoint(ions[i], ccd, p);
                 }
@@ -346,6 +352,9 @@ int simulate(double *x0, double *v0, Params *p) {
 		if(abort) break;
 	    }
         }
+	if(p->record_traj) {
+	    fwrite(xcom, sizeof(float), 3, com_file);
+	}
         t_i++;
 	if(abort) break;
     }
@@ -375,6 +384,7 @@ int simulate(double *x0, double *v0, Params *p) {
     }
 
     // Cleanup
+    fclose(com_file);
     fclose(traj_file);
     fclose(fpos_file);
     fclose(fvel_file);
@@ -383,6 +393,7 @@ int simulate(double *x0, double *v0, Params *p) {
         delete ions[i];
     delete[] ions;
     delete[] Fclist;
+    delete[] xcom;
     for(i=0; i<p->N_masses; i++)
 	gsl_histogram2d_free(ccd[i]);
     if(p->use_abort && abort == 1)
