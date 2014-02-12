@@ -378,7 +378,7 @@ if __name__ == "__main__":
     N = 100
     masses = array([138,136])*amu
     N_ccd = len(masses)
-    if True:
+    if False:
         t0 = time.time()
         Nsc = int(N*0.1)
         m, Z, lc = initIons(N, masses[0]/amu, 1., 

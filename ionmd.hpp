@@ -21,7 +21,10 @@
 #include <cmath>
 #include <cstdlib>
 #include <gsl/gsl_histogram2d.h>
+#include <armadillo>
 #include "params.hpp"
+
+using namespace arma;
 
 //-------------//
 //--CONSTANTS--//
@@ -37,7 +40,7 @@ const double kB = 1.3806503e-23;
 const double g_elastic = 0.017;	// elastic collision rate with 
 
 typedef struct Ion {
-    double x[3], v[3], a[3];	// position, velocity, and acceleration
+    vec x(3), v(3), a(3);
     double m,			// mass
 	Z;			// charge
     int index;
@@ -50,9 +53,9 @@ typedef struct Ion {
 
 extern "C" {
     // Vector functions
-    inline void zeroVector(double *vec) {
-	vec[0] = vec[1] = vec[2] = 0.0;
-    }
+    // inline void zeroVector(double *vec) {
+    // 	vec[0] = vec[1] = vec[2] = 0.0;
+    // }
 
     inline void copyVector(double *a, double *b) {
 	a[0] = b[0];
@@ -60,9 +63,9 @@ extern "C" {
 	a[2] = b[2];
     }
 
-    inline double dot(double *a, double *b) {
-	return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
-    }
+    // inline double dot(double *a, double *b) {
+    // 	return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+    // }
 
     inline void normalize(double *a) {
 	double mag = sqrt(dot(a,a));

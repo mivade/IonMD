@@ -26,11 +26,11 @@
 #include "minimize.hpp"
 
 using namespace std;
+using namespace arma;
 
 #define dbg(wat) (std::cout << wat << "\n")
 #define err(e) (cerr << "ERROR: " << e << endl)
-double xhat[] = {-sqrt(2)/2, sqrt(2)/2, 0};
-double yhat[] = {0,0,1};
+vec xhat = {-sqrt(2)/2, sqrt(2)/2, 0}, yhat = {0,0,1};
 
 // Random number generator
 const gsl_rng_type *rng_T = gsl_rng_mt19937;
@@ -84,7 +84,7 @@ Ion *initIon(double *x0, double *v0, int i, Params *p) {
     copyVector(ion->v, v0);
     ion->m = p->m[i];
     ion->Z = p->Z[i];
-    zeroVector(ion->a);
+    ion->a = zeros<vec>(3);
     ion->index = i;
     ion->lc = p->lc[i];
     return ion;
@@ -115,27 +115,28 @@ void simCCDPoint(Ion *ion, gsl_histogram2d **ccd, Params *p) {
 
 void updateIon(Ion *ion, Ion **ions, double t, double *Fcoullist, Params *p) {
     int i;
-    double F[3], Ft[3], Fl[3], Fc[3], Fsec[3], Fs[3], a[3];
-    zeroVector(F);
+    // TODO: These all need to be length 3
+    vec F, Ft, Fl, Fc, Fsec, Fs, a;
+    F.zeros();
     for(i=0; i<3; i++)
 	ion->x[i] += ion->v[i]*p->dt + 0.5*ion->a[i]*pow(p->dt, 2);
     FTrap(ion, t, p, Ft);
     if((p->use_laser && ion->lc) || p->minimizing)
 	FLaser(ion, p, Fl);
     else
-        zeroVector(Fl);
+        Fl.zeros();
     if(p->use_coulomb)
         copyVector(Fc, &Fcoullist[ion->index*3]); //alternately: Fcoullist+ion->index*3
     else
-        zeroVector(Fc);
+        Fc.zeros();
     if(p->use_secular)
         FSecular(ion, t, p, Fsec);
     else
-        zeroVector(Fsec);
+        Fsec.zeros();
     if(p->use_stochastic)
         FStochastic(ion, p, Fs);
     else
-        zeroVector(Fs);
+        Fs.zeros();
     for(i=0; i<3; i++) {
         F[i] = Ft[i] + Fl[i] + Fc[i] + Fsec[i] + Fs[i];
 	a[i] = F[i]/ion->m;
@@ -171,8 +172,8 @@ void FTrap(Ion *ion, double t, Params *p, double *F) {
 
 // Laser cooling
 // (result stored in F)
-void FLaser(Ion *ion, Params *p, double *F) {
-    zeroVector(F);
+void FLaser(Ion *ion, Params *p, vec F) {
+    F.zeros();
     double beta, F0;
     beta = p->beta;
     F0 = p->F0;
@@ -188,10 +189,10 @@ void FLaser(Ion *ion, Params *p, double *F) {
 
 // Coulomb interaction
 // (result stored in F)
-void FCoulomb(Ion *ion, Ion **ions, Params *p, double *F) { 
-    double r[3];
-    zeroVector(r);
-    zeroVector(F);
+void FCoulomb(Ion *ion, Ion **ions, Params *p, vec F) { 
+    vec r = vec(3);
+    r.zeros();
+    F.zeros();
     double r_mag = 0;
     int i = ion->index;
     int j,k;
@@ -208,21 +209,21 @@ void FCoulomb(Ion *ion, Ion **ions, Params *p, double *F) {
 
 // Secular excitations
 // (result stored in F)
-void FSecular(Ion *ion, double t, Params *p, double *F) {
-    zeroVector(F);
+void FSecular(Ion *ion, double t, Params *p, vec F) {
+    F.zeros();
     F[0] = ion->Z*p->Vsec*ion->x[0]*cos(p->w*t);
 }
 
 // Stochastic processes, e.g. collisions with background gases
 // (result stored in F)
-void FStochastic(Ion *ion, Params *p, double *F) {
+void FStochastic(Ion *ion, Params *p, vec F) {
     double v;
-    zeroVector(F);
+    F.zeros();
     //if(gsl_rng_uniform(rng) <= exp(-p->gamma_col*p->dt))
     //return;	// no collision
-    double hat[] = {gsl_rng_uniform(rng),
-		    gsl_rng_uniform(rng),
-		    gsl_rng_uniform(rng)};
+    vec hat = {gsl_rng_uniform(rng),
+	       gsl_rng_uniform(rng),
+	       gsl_rng_uniform(rng)};
     normalize(hat);
     v = sqrt(2*kB*p->gamma_col*p->dt/ion->m);
     for(int i=0; i<3; i++)
@@ -287,7 +288,7 @@ int simulate(double *x0, double *v0, Params *p) {
 
     // Reset initial velocities
     for(i=0; i<p->N; i++) {
-	zeroVector(ions[i]->v);
+	ions[i]->v.zeros();
 	//copyVector(ions[i]->v, &v0[i*3]);
     }
     
