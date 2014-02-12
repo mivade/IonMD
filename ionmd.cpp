@@ -26,7 +26,8 @@
 #include "minimize.hpp"
 
 using namespace std;
-using namespace arma;
+using arma::vec;
+using arma::dot;
 
 #define dbg(wat) (std::cout << wat << "\n")
 #define err(e) (cerr << "ERROR: " << e << endl)
@@ -151,7 +152,7 @@ void updateIon(Ion *ion, Ion **ions, double t, double *Fcoullist, Params *p) {
 
 // Trap force
 // (result stored in F)
-void FTrap(Ion *ion, double t, Params *p, double *F) {
+void FTrap(Ion *ion, double t, Params *p, vec F) {
     double A, B;
     //A = p->kappa*p->UEC/pow(p->z0,2);
     if (p->use_rfmm) {

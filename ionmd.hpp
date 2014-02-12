@@ -24,7 +24,8 @@
 #include <armadillo>
 #include "params.hpp"
 
-using namespace arma;
+using arma::vec;
+using arma::dot;
 
 //-------------//
 //--CONSTANTS--//
@@ -67,8 +68,8 @@ extern "C" {
     // 	return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
     // }
 
-    inline void normalize(double *a) {
-	double mag = sqrt(dot(a,a));
+    inline void normalize(vec a) {
+	double mag = sqrt(dot(a, a));
 	a[0] /= mag;
 	a[1] /= mag;
 	a[2] /= mag;
@@ -84,11 +85,11 @@ extern "C" {
     //void minimize(Ion **ions, Params *p);
     void simCCDPoint(Ion *ion, gsl_histogram2d **ccd, Params *p);
     void updateIon(Ion *ion, Ion **ions, double t, double *Fcoullist, Params *p);
-    void FTrap(Ion *ion, double t, Params *p, double *F);
-    void FLaser(Ion *ion, Params *p, double *F);
-    void FCoulomb(Ion *ion, Ion **ions, Params *p, double *F);
-    void FSecular(Ion *ion, double t, Params *p, double *F);
-    void FStochastic(Ion *ion, Params *p, double *F);
+    void FTrap(Ion *ion, double t, Params *p, vec F);
+    void FLaser(Ion *ion, Params *p, vec F);
+    void FCoulomb(Ion *ion, Ion **ions, Params *p, vec F);
+    void FSecular(Ion *ion, double t, Params *p, vec F);
+    void FStochastic(Ion *ion, Params *p, vec F);
     void allCoulomb(Ion **ions, Params *p, double *Flist);
 
     // Main simulation function
