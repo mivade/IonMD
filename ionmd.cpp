@@ -31,7 +31,7 @@ using arma::dot;
 
 #define dbg(wat) (std::cout << wat << "\n")
 #define err(e) (cerr << "ERROR: " << e << endl)
-vec xhat = {-sqrt(2)/2, sqrt(2)/2, 0}, yhat = {0,0,1};
+const vec xhat = {-sqrt(2)/2, sqrt(2)/2, 0}, yhat = {0,0,1};
 
 // Random number generator
 const gsl_rng_type *rng_T = gsl_rng_mt19937;
@@ -81,11 +81,13 @@ void printPositions(Ion *ion) {
 
 Ion *initIon(double *x0, double *v0, int i, Params *p) {
     Ion *ion = new Ion;
+    ion->x = vec(3);
+    ion->v = vec(3);
+    ion->a = arma::zeros<vec>(3);
     copyVector(ion->x, x0);
     copyVector(ion->v, v0);
     ion->m = p->m[i];
     ion->Z = p->Z[i];
-    ion->a = zeros<vec>(3);
     ion->index = i;
     ion->lc = p->lc[i];
     return ion;
@@ -143,7 +145,7 @@ void updateIon(Ion *ion, Ion **ions, double t, double *Fcoullist, Params *p) {
 	a[i] = F[i]/ion->m;
 	ion->v[i] += 0.5*(ion->a[i] + a[i])*p->dt;
     }
-    copyVector(ion->a, a);
+    ion->a = a; //copyVector(ion->a, a);
 }
 
 //----------//
@@ -253,16 +255,16 @@ int simulate(double *x0, double *v0, Params *p) {
     // Set number of threads for multiprocessing
     omp_set_num_threads(p->num_threads);
 
-    //every %3 element is the start of a new vector 
-    //keeps from having to reallocate every time
-    //don't have to manually manage the memory for each vector
+    // Every %3 element is the start of a new vector 
+    // Keeps from having to reallocate every time
+    // Don't have to manually manage the memory for each vector
     double *Fclist = new double[p->N*3];
     int i, j,
 	abort = 0,
 	T_ctr = 0;
     double vT = 0;
     float tmp;
-    float *xcom = new float[3];
+    vec xcom(3);
 
     // Initialize CCD
     gsl_histogram2d *ccd[p->N_masses];
@@ -312,7 +314,7 @@ int simulate(double *x0, double *v0, Params *p) {
 	    printf("%d%% complete; t = %f\n", (int)10*t_i/t_10, t);
 
         // Update each ion
-	xcom[0] = xcom[1] = xcom[2] = 0.0;
+	xcom.zeros();
         for(i=0; i<p->N; i++) {
             // Record data
             if(p->record_traj) {
@@ -355,7 +357,7 @@ int simulate(double *x0, double *v0, Params *p) {
 	    }
         }
 	if(p->record_traj) {
-	    fwrite(xcom, sizeof(float), 3, com_file);
+	    fwrite(xcom, sizeof(double), 3, com_file);
 	}
         t_i++;
 	if(abort) break;
@@ -395,7 +397,6 @@ int simulate(double *x0, double *v0, Params *p) {
         delete ions[i];
     delete[] ions;
     delete[] Fclist;
-    delete[] xcom;
     for(i=0; i<p->N_masses; i++)
 	gsl_histogram2d_free(ccd[i]);
     if(p->use_abort && abort == 1)

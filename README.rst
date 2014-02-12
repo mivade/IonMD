@@ -63,12 +63,18 @@ should work on any platform that can meet the following dependencies:
   * `GNU Scientific Library <https://www.gnu.org/software/gsl/>`_ (for
     random number generation and 2D binning for simulated CCD images)
 
+  * Armadillo_ and its dependencies (on Debian wheezy, this requires
+    manually adding ``libboost-math-dev`` since it is not listed as a
+    dependency).
+
 ..  * `NLopt <http://ab-initio.mit.edu/wiki/index.php/NLopt>`_ (for
     finding the potential energy minimum for good initial
     conditions). Note that in the current implementation, this is not
     actually used, but the code still exists for it. I plan to later
     try using this along with nearest neighbor Coulomb potential
     approximation which is why it's staying in.
+
+.. _Armadillo: http://arma.sourceforge.net/
 
 Windows
 -------
@@ -117,9 +123,6 @@ Future Features
 Some things that are planned (or possible) for the future:
 
 * Better stability -> less random initial conditions could help this
-* Converting from raw double arrays to either std::vector or possibly
-  `Armadillo <http://arma.sourceforge.net/>`_ (mostly for code
-  readability more than anything else)
 * Python frontend cleanup
 
 Known Bugs
@@ -130,8 +133,9 @@ Known Bugs
 Authors
 =======
 
-IonMD is principally written by Michael V. DePalatis <mvd@gatech.edu>
-with some optimization enhancements by Ben Land.
+IonMD is principally written by Michael V. DePalatis
+<depalatis@phys.au.dk> with some optimization enhancements by Ben
+Land.
 
 References
 ==========

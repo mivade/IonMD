@@ -1,0 +1,9 @@
+*~
+*.pyc
+*.o
+*.so
+*.xyz
+*.dat
+README.html
+params.py
+params.xml

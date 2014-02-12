@@ -41,7 +41,7 @@ const double kB = 1.3806503e-23;
 const double g_elastic = 0.017;	// elastic collision rate with 
 
 typedef struct Ion {
-    vec x(3), v(3), a(3);
+    vec x, v, a;
     double m,			// mass
 	Z;			// charge
     int index;
@@ -52,29 +52,35 @@ typedef struct Ion {
 //--FUNCTION DEFINITIONS--//
 //------------------------//
 
+// Vector functions
+// inline void zeroVector(double *vec) {
+//      vec[0] = vec[1] = vec[2] = 0.0;
+// }
+
+inline void copyVector(double *a, double *b) {
+    a[0] = b[0];
+    a[1] = b[1];
+    a[2] = b[2];
+}
+
+inline void copyVector(vec a, double *b) {
+    a[0] = b[0];
+    a[1] = b[1];
+    a[2] = b[2];
+}
+
+// inline double dot(double *a, double *b) {
+// 	return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+// }
+
+inline void normalize(vec a) {
+    double mag = sqrt(dot(a, a));
+    a[0] /= mag;
+    a[1] /= mag;
+    a[2] /= mag;
+}
+
 extern "C" {
-    // Vector functions
-    // inline void zeroVector(double *vec) {
-    // 	vec[0] = vec[1] = vec[2] = 0.0;
-    // }
-
-    inline void copyVector(double *a, double *b) {
-	a[0] = b[0];
-	a[1] = b[1];
-	a[2] = b[2];
-    }
-
-    // inline double dot(double *a, double *b) {
-    // 	return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
-    // }
-
-    inline void normalize(vec a) {
-	double mag = sqrt(dot(a, a));
-	a[0] /= mag;
-	a[1] /= mag;
-	a[2] /= mag;
-    }
-
     // Utility functions
     void printIonStatistics(Params *p);
     void printParams(Params *p);
