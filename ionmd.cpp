@@ -117,15 +117,13 @@ void simCCDPoint(Ion *ion, gsl_histogram2d **ccd, Params *p) {
 }
 
 void updateIon(Ion *ion, Ion **ions, double t, double *Fcoullist, Params *p) {
-    int i;
     // TODO: These all need to be length 3
     vec F, Ft, Fl, Fc, Fsec, Fs, a;
     F.zeros();
-    for(i=0; i<3; i++)
-	ion->x[i] += ion->v[i]*p->dt + 0.5*ion->a[i]*pow(p->dt, 2);
-    FTrap(ion, t, p, Ft);
+    ion->x += ion->v*p->dt + 0.5*ion->a*pow(p->dt, 2);
+    FTrap(ion, t, p, &Ft);
     if((p->use_laser && ion->lc) || p->minimizing)
-	FLaser(ion, p, Fl);
+	FLaser(ion, p, &Fl);
     else
         Fl.zeros();
     if(p->use_coulomb)
@@ -133,19 +131,17 @@ void updateIon(Ion *ion, Ion **ions, double t, double *Fcoullist, Params *p) {
     else
         Fc.zeros();
     if(p->use_secular)
-        FSecular(ion, t, p, Fsec);
+        FSecular(ion, t, p, &Fsec);
     else
         Fsec.zeros();
     if(p->use_stochastic)
-        FStochastic(ion, p, Fs);
+        FStochastic(ion, p, &Fs);
     else
         Fs.zeros();
-    for(i=0; i<3; i++) {
-        F[i] = Ft[i] + Fl[i] + Fc[i] + Fsec[i] + Fs[i];
-	a[i] = F[i]/ion->m;
-	ion->v[i] += 0.5*(ion->a[i] + a[i])*p->dt;
-    }
-    ion->a = a; //copyVector(ion->a, a);
+    F = Ft + Fl + Fc + Fsec + Fs;
+    a = F/ion->m;
+    ion->v += 0.5*(ion->a + a)*p->dt;
+    ion->a = a;
 }
 
 //----------//
@@ -154,7 +150,7 @@ void updateIon(Ion *ion, Ion **ions, double t, double *Fcoullist, Params *p) {
 
 // Trap force
 // (result stored in F)
-void FTrap(Ion *ion, double t, Params *p, vec F) {
+void FTrap(Ion *ion, double t, Params *p, vec *F) {
     double A, B;
     //A = p->kappa*p->UEC/pow(p->z0,2);
     if (p->use_rfmm) {
@@ -175,8 +171,8 @@ void FTrap(Ion *ion, double t, Params *p, vec F) {
 
 // Laser cooling
 // (result stored in F)
-void FLaser(Ion *ion, Params *p, vec F) {
-    F.zeros();
+void FLaser(Ion *ion, Params *p, vec *F) {
+    F->zeros();
     double beta, F0;
     beta = p->beta;
     F0 = p->F0;
@@ -192,10 +188,10 @@ void FLaser(Ion *ion, Params *p, vec F) {
 
 // Coulomb interaction
 // (result stored in F)
-void FCoulomb(Ion *ion, Ion **ions, Params *p, vec F) { 
+void FCoulomb(Ion *ion, Ion **ions, Params *p, vec *F) { 
     vec r = vec(3);
     r.zeros();
-    F.zeros();
+    F->zeros();
     double r_mag = 0;
     int i = ion->index;
     int j,k;
@@ -212,16 +208,16 @@ void FCoulomb(Ion *ion, Ion **ions, Params *p, vec F) {
 
 // Secular excitations
 // (result stored in F)
-void FSecular(Ion *ion, double t, Params *p, vec F) {
-    F.zeros();
+void FSecular(Ion *ion, double t, Params *p, vec *F) {
+    F->zeros();
     F[0] = ion->Z*p->Vsec*ion->x[0]*cos(p->w*t);
 }
 
 // Stochastic processes, e.g. collisions with background gases
 // (result stored in F)
-void FStochastic(Ion *ion, Params *p, vec F) {
+void FStochastic(Ion *ion, Params *p, vec *F) {
     double v;
-    F.zeros();
+    F->zeros();
     //if(gsl_rng_uniform(rng) <= exp(-p->gamma_col*p->dt))
     //return;	// no collision
     vec hat = {gsl_rng_uniform(rng),
@@ -237,7 +233,7 @@ void FStochastic(Ion *ion, Params *p, vec F) {
 // all at once instead of having one ion updated before the Coulomb
 // interaction is computed for the rest).
 // (result stored in Flist)
-void allCoulomb(Ion **ions, Params *p, double *Flist) { 
+void allCoulomb(Ion **ions, Params *p, vec *Flist) { 
     int i;
     #pragma omp parallel for
     for (i = 0; i < p->N; i++)
@@ -258,7 +254,7 @@ int simulate(double *x0, double *v0, Params *p) {
     // Every %3 element is the start of a new vector 
     // Keeps from having to reallocate every time
     // Don't have to manually manage the memory for each vector
-    double *Fclist = new double[p->N*3];
+    vec *Fclist = new vec(p->N*3);
     int i, j,
 	abort = 0,
 	T_ctr = 0;
@@ -331,6 +327,7 @@ int simulate(double *x0, double *v0, Params *p) {
 
 	    // Update "temperature"
 	    // TODO: DTRT
+	    // TODO: arma: fix this
 	    for(j=0; j<3; j++)
 		vT += pow(ions[i]->v[j], 2);
 	    if(T_ctr == p->T_steps) {
@@ -357,7 +354,10 @@ int simulate(double *x0, double *v0, Params *p) {
 	    }
         }
 	if(p->record_traj) {
-	    fwrite(xcom, sizeof(double), 3, com_file);
+	    for(j=0; j<3; j++) {
+		float tmp = float(xcom[j]);
+		fwrite(&tmp, sizeof(float), 1, com_file);
+	    }
 	}
         t_i++;
 	if(abort) break;
