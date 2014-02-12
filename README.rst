@@ -50,13 +50,21 @@ should work on any platform that can meet the following dependencies:
 * Python requirements
 
   * Python 2.6 or 2.7
-  * Numpy
-  * Scipy
-  * MayaVI (optional; for displaying ions in 3D)
-  * Matplotlib (optional; for plotting/simulating CCD images; tested
+  * ctypeslib_
+  * Numpy_
+  * Scipy_
+  * MayaVI_ (optional; for displaying ions in 3D)
+  * Matplotlib_ (optional; for plotting/simulating CCD images; tested
     successfully with version 1.2.1, fails with Debian wheezy's
     version)
-  * PIL (optional; for simulating CCD images)
+  * PIL_ (optional; for simulating CCD images)
+
+.. _ctypeslib: https://pypi.python.org/pypi/ctypeslib/
+.. _Numpy: http://www.numpy.org/
+.. _Scipy: http://www.scipy.org/
+.. _MayaVI: http://code.enthought.com/projects/mayavi/
+.. _Matplotlib: http://matplotlib.org/
+.. _PIL: http://www.pythonware.com/products/pil/
 
 * C++ requirements
 
