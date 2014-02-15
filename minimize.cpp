@@ -31,7 +31,7 @@ using arma::vec;
 
 void minimize(Ion **ions, Params *p) {
     double t = 0;
-    vec *Fclist = new vec(p->N*3);
+    double *Fclist = new double[p->N*3];
 
     // Store settings
     int use_rfmm = p->use_rfmm,

@@ -2,7 +2,7 @@
 # using initializers.
 CXX = g++
 CXXFLAGS = -Wall -O3 -fPIC -flto -fopenmp -march=native -g -std=c++11
-LIBS = -lm -lgsl -lgslcblas
+LIBS = -lm -lgsl -lgslcblas -larmadillo
 SRCS = *.cpp
 HDRS = *.hpp
 OBJS = minimize.o

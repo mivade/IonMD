@@ -57,16 +57,23 @@ struct Ion {
 //      vec[0] = vec[1] = vec[2] = 0.0;
 // }
 
-inline void copyVector(double *a, double *b) {
+inline void copyVector(vec a, double *b) {
     a[0] = b[0];
     a[1] = b[1];
     a[2] = b[2];
 }
 
-inline void copyVector(vec a, double *b) {
-    a[0] = b[0];
-    a[1] = b[1];
-    a[2] = b[2];
+// inline void copyVector(vec a, double *b) {
+// 	a[0] = b[0];
+// 	a[1] = b[1];
+// 	a[2] = b[2];
+// }
+
+inline void normalize(vec a) {
+    double mag = sqrt(dot(a, a));
+    a[0] /= mag;
+    a[1] /= mag;
+    a[2] /= mag;
 }
 
 inline double dot(double *a, vec b) {
@@ -75,13 +82,6 @@ inline double dot(double *a, vec b) {
 
 inline double dot(vec a, double *b) {
     return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
-}
-
-inline void normalize(vec a) {
-    double mag = sqrt(dot(a, a));
-    a[0] /= mag;
-    a[1] /= mag;
-    a[2] /= mag;
 }
 
 extern "C" {
@@ -94,13 +94,13 @@ extern "C" {
     Ion *initIon(double *x0, double *v0, int index, Params *p);
     //void minimize(Ion **ions, Params *p);
     void simCCDPoint(Ion *ion, gsl_histogram2d **ccd, Params *p);
-    void updateIon(Ion *ion, Ion **ions, double t, vec *Fcoullist, Params *p);
+    void updateIon(Ion *ion, Ion **ions, double t, double *Fcoullist, Params *p);
     void FTrap(Ion *ion, double t, Params *p, vec *F);
     void FLaser(Ion *ion, Params *p, vec *F);
     void FCoulomb(Ion *ion, Ion **ions, Params *p, vec *F);
     void FSecular(Ion *ion, double t, Params *p, vec *F);
     void FStochastic(Ion *ion, Params *p, vec *F);
-    void allCoulomb(Ion **ions, Params *p, vec *Flist);
+    void allCoulomb(Ion **ions, Params *p, double *Flist);
 
     // Main simulation function
     int simulate(double *x0, double *v0, Params *p);

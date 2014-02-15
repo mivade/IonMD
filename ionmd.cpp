@@ -116,7 +116,7 @@ void simCCDPoint(Ion *ion, gsl_histogram2d **ccd, Params *p) {
     return;
 }
 
-void updateIon(Ion *ion, Ion **ions, double t, vec *Fcoullist, Params *p) {
+void updateIon(Ion *ion, Ion **ions, double t, double *Fcoullist, Params *p) {
     // TODO: These all need to be length 3
     vec F, Ft, Fl, Fc, Fsec, Fs, a;
     F.zeros();
@@ -233,11 +233,16 @@ void FStochastic(Ion *ion, Params *p, vec *F) {
 // all at once instead of having one ion updated before the Coulomb
 // interaction is computed for the rest).
 // (result stored in Flist)
-void allCoulomb(Ion **ions, Params *p, vec *Flist) { 
-    int i;
+void allCoulomb(Ion **ions, Params *p, double *Flist) { 
+    int i, j;
+    vec F(3);
     #pragma omp parallel for
-    for (i = 0; i < p->N; i++)
-        FCoulomb(ions[i], ions, p, &Flist[i*3]); //Alternately: Flist+i*3
+    for (i = 0; i < p->N; i++) {
+	for(j=0; j<3; j++)
+	    F[j] = Flist[j + i*3];
+        //FCoulomb(ions[i], ions, p, &Flist[i*3]); //Alternately: Flist+i*3
+	FCoulomb(ions[i], ions, p, &F);
+    }
 }
 
 //--------------//
@@ -254,7 +259,7 @@ int simulate(double *x0, double *v0, Params *p) {
     // Every %3 element is the start of a new vector 
     // Keeps from having to reallocate every time
     // Don't have to manually manage the memory for each vector
-    vec *Fclist = new vec(p->N*3);
+    double *Fclist = new double[p->N*3];
     int i, j,
 	abort = 0,
 	T_ctr = 0;
