@@ -18,10 +18,10 @@
 #ifndef MINIMIZE_HPP
 #define MINIMIZE_HPP
 
-#include <vector>
+//#include <vector>
 #include "ionmd.hpp"
 
-using std::vector;
+//using std::vector;
 
 // Struct for passing data to minimization function
 typedef struct MinData {
@@ -40,7 +40,7 @@ void minimize(double *x0, Ion **ions, Params *p);
 void writeInitPos(Ion **ions, Params *p);
     
 // Minimization function for nlopt
-double minfunc(const vector<double> &x, vector<double> &grad, void *_data);
+//double minfunc(const vector<double> &x, vector<double> &grad, void *_data);
 
 // Potential energy functions called by minfunc
 double UTrap(int i, Ion **ions, Params *p);

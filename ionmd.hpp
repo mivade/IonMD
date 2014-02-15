@@ -40,13 +40,13 @@ const double HBAR = 1.0545716e-34;
 const double kB = 1.3806503e-23;
 const double g_elastic = 0.017;	// elastic collision rate with 
 
-typedef struct Ion {
+struct Ion {
     vec x, v, a;
     double m,			// mass
 	Z;			// charge
     int index;
     int lc;			// 1 for laser cooled
-} Ion;
+};
 
 //------------------------//
 //--FUNCTION DEFINITIONS--//
@@ -69,9 +69,13 @@ inline void copyVector(vec a, double *b) {
     a[2] = b[2];
 }
 
-// inline double dot(double *a, double *b) {
-// 	return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
-// }
+inline double dot(double *a, vec b) {
+    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+}
+
+inline double dot(vec a, double *b) {
+    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+}
 
 inline void normalize(vec a) {
     double mag = sqrt(dot(a, a));

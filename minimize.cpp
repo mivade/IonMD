@@ -21,15 +21,17 @@
 //#include <nlopt.hpp>
 #include "minimize.hpp"
 #include "ionmd.hpp"
+#include <armadillo>
 
 using std::copy;
 using std::cout;
 using std::cerr;
 using std::endl;
+using arma::vec;
 
 void minimize(Ion **ions, Params *p) {
     double t = 0;
-    double *Fclist = new double[p->N*3];
+    vec *Fclist = new vec(p->N*3);
 
     // Store settings
     int use_rfmm = p->use_rfmm,
@@ -124,6 +126,7 @@ void writeInitPos(Ion **ions, Params *p) {
     fclose(init_pos_file);
 }
 
+/*
 double minfunc(const vector<double> &x, vector<double> &grad, void *_data) {
     int i,j;
     double U = 0;
@@ -141,7 +144,7 @@ double minfunc(const vector<double> &x, vector<double> &grad, void *_data) {
     }
     data->fcalls++;
     return U;
-}
+    }*/
 
 double UTrap(int i, Ion **ions, Params *p) {
     double C, D, U;
@@ -171,13 +174,12 @@ double ULaser(int i, Ion **ions, Params *p) {
 
 double UCoulomb(int i, Ion **ions, Params *p) {
     double U = 0;
-    double r[3];
+    vec r(3);
     #pragma omp parallel for
     for(int j=0; j<p->N; j++) {
 	if(i == j)
 	    continue;
-	for(int k=0; k<3; k++)
-	    r[k] = ions[i]->x[k] - ions[j]->x[k];
+	r = ions[i]->x - ions[j]->x;
 	U += OOFPEN*ions[i]->Z/sqrt(dot(r,r));
     }
     return U;

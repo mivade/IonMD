@@ -116,7 +116,7 @@ void simCCDPoint(Ion *ion, gsl_histogram2d **ccd, Params *p) {
     return;
 }
 
-void updateIon(Ion *ion, Ion **ions, double t, double *Fcoullist, Params *p) {
+void updateIon(Ion *ion, Ion **ions, double t, vec *Fcoullist, Params *p) {
     // TODO: These all need to be length 3
     vec F, Ft, Fl, Fc, Fsec, Fs, a;
     F.zeros();

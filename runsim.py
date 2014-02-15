@@ -375,7 +375,7 @@ if __name__ == "__main__":
     all_lc = False
     gcol, beta, F0 = 8., 4e-22, 5.0e-20 # F0 corresponds to s ~ 4
     V = 120.
-    N = 100
+    N = 10
     masses = array([138,136])*amu
     N_ccd = len(masses)
     if False:
