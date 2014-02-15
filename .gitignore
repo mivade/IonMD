@@ -4,6 +4,9 @@
 *.so
 *.xyz
 *.dat
+fvel.txt
+temperature.txt
 README.html
 params.py
 params.xml
+
