@@ -26,6 +26,7 @@
 
 using arma::vec;
 using arma::dot;
+using arma::mat;
 
 //-------------//
 //--CONSTANTS--//
@@ -53,21 +54,13 @@ struct Ion {
 //------------------------//
 
 // Vector functions
-// inline void zeroVector(double *vec) {
-//      vec[0] = vec[1] = vec[2] = 0.0;
-// }
+// ----------------
 
 inline void copyVector(vec a, double *b) {
     a[0] = b[0];
     a[1] = b[1];
     a[2] = b[2];
 }
-
-// inline void copyVector(vec a, double *b) {
-// 	a[0] = b[0];
-// 	a[1] = b[1];
-// 	a[2] = b[2];
-// }
 
 inline void normalize(vec a) {
     double mag = sqrt(dot(a, a));
@@ -86,11 +79,15 @@ inline double dot(vec a, double *b) {
 
 extern "C" {
     // Utility functions
+    // -----------------
+
     void printIonStatistics(Params *p);
     void printParams(Params *p);
     void printPositions(Ion *ion);
 
     // Ion functions
+    // -------------
+
     Ion *initIon(double *x0, double *v0, int index, Params *p);
     //void minimize(Ion **ions, Params *p);
     void simCCDPoint(Ion *ion, gsl_histogram2d **ccd, Params *p);
@@ -100,9 +97,11 @@ extern "C" {
     void FCoulomb(Ion *ion, Ion **ions, Params *p, vec *F);
     void FSecular(Ion *ion, double t, Params *p, vec *F);
     void FStochastic(Ion *ion, Params *p, vec *F);
-    void allCoulomb(Ion **ions, Params *p, double *Flist);
+    void allCoulomb(Ion **ions, Params *p, mat *Flist);
 
     // Main simulation function
+    // ------------------------
+
     int simulate(double *x0, double *v0, Params *p);
 }
 

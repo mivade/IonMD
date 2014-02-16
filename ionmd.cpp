@@ -28,6 +28,7 @@
 using namespace std;
 using arma::vec;
 using arma::dot;
+using arma::mat;
 
 #define dbg(wat) (std::cout << wat << "\n")
 #define err(e) (cerr << "ERROR: " << e << endl)
@@ -193,16 +194,16 @@ void FCoulomb(Ion *ion, Ion **ions, Params *p, vec *F) {
     r.zeros();
     F->zeros();
     double r_mag = 0;
-    int i = ion->index;
-    int j,k;
+    int i = ion->index, j, k;
+    //#pragma omp parallel for
     for(j = 0; j < p->N; j++) {
         if(i == j)
             continue;
+	r = ion->x - ions[j]->x;
+        r_mag = sqrt(dot(r, r));
         for(k = 0; k < 3; k++)
-            r[k] = (ion->x[k] - ions[j]->x[k]);
-        r_mag = sqrt(dot(r,r));
-        for(k = 0; k < 3; k++)
-            F[k] += OOFPEN*ion->Z*ions[j]->Z*r[k]/pow(r_mag,3);
+	    F[k] += OOFPEN*ion->Z*ions[j]->Z*r[k]/pow(r_mag, 3);
+	// F += OOFPEN*ion->Z*ions[j]->Z*r/pow(r_mag, 3);
     }
 }
 
@@ -233,15 +234,12 @@ void FStochastic(Ion *ion, Params *p, vec *F) {
 // all at once instead of having one ion updated before the Coulomb
 // interaction is computed for the rest).
 // (result stored in Flist)
-void allCoulomb(Ion **ions, Params *p, double *Flist) { 
+void allCoulomb(Ion **ions, Params *p, mat *Flist) { 
     int i, j;
-    vec F(3);
     #pragma omp parallel for
-    for (i = 0; i < p->N; i++) {
-	for(j=0; j<3; j++)
-	    F[j] = Flist[j + i*3];
+    for(i=0; i<p->N; i++) {
         //FCoulomb(ions[i], ions, p, &Flist[i*3]); //Alternately: Flist+i*3
-	FCoulomb(ions[i], ions, p, &F);
+	FCoulomb(ions[i], ions, p, &Flist->col(i));
     }
 }
 
@@ -259,7 +257,8 @@ int simulate(double *x0, double *v0, Params *p) {
     // Every %3 element is the start of a new vector 
     // Keeps from having to reallocate every time
     // Don't have to manually manage the memory for each vector
-    double *Fclist = new double[p->N*3];
+    //double *Fclist = new double[p->N*3];
+    mat *Fclist = new mat(3, p->N);
     int i, j,
 	abort = 0,
 	T_ctr = 0;
