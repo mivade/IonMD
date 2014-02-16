@@ -117,29 +117,22 @@ void simCCDPoint(Ion *ion, gsl_histogram2d **ccd, Params *p) {
     return;
 }
 
-void updateIon(Ion *ion, Ion **ions, double t, double *Fcoullist, Params *p) {
+void updateIon(Ion *ion, Ion **ions, double t, mat Fcoullist, Params *p) {
     // TODO: These all need to be length 3
     vec F, Ft, Fl, Fc, Fsec, Fs, a;
     F.zeros();
     ion->x += ion->v*p->dt + 0.5*ion->a*pow(p->dt, 2);
-    FTrap(ion, t, p, &Ft);
+    FTrap(ion, t, p);
     if((p->use_laser && ion->lc) || p->minimizing)
-	FLaser(ion, p, &Fl);
+	F += FLaser(ion, p);
     else
         Fl.zeros();
     if(p->use_coulomb)
-        copyVector(Fc, &Fcoullist[ion->index*3]); //alternately: Fcoullist+ion->index*3
-    else
-        Fc.zeros();
+	F += Fcoullist.col(ion->index);
     if(p->use_secular)
-        FSecular(ion, t, p, &Fsec);
-    else
-        Fsec.zeros();
+        F += FSecular(ion, t, p);
     if(p->use_stochastic)
-        FStochastic(ion, p, &Fs);
-    else
-        Fs.zeros();
-    F = Ft + Fl + Fc + Fsec + Fs;
+        F += FStochastic(ion, p);
     a = F/ion->m;
     ion->v += 0.5*(ion->a + a)*p->dt;
     ion->a = a;
@@ -151,8 +144,11 @@ void updateIon(Ion *ion, Ion **ions, double t, double *Fcoullist, Params *p) {
 
 // Trap force
 // (result stored in F)
-void FTrap(Ion *ion, double t, Params *p, vec *F) {
+//void FTrap(Ion *ion, double t, Params *p, vec *F) {
+vec FTrap(Ion *ion, double t, Params *p) {
     double A, B;
+    vec F(3);
+
     //A = p->kappa*p->UEC/pow(p->z0,2);
     if (p->use_rfmm) {
         //B = 4*p->V*cos(p->Omega*t)/pow(p->r0,2);
@@ -168,12 +164,15 @@ void FTrap(Ion *ion, double t, Params *p, vec *F) {
         F[1] = -2*ion->Z*(A-B)*ion->x[1];
     }
     F[2] = -4*ion->Z*B*ion->x[2];
+    return F;
 }
 
 // Laser cooling
 // (result stored in F)
-void FLaser(Ion *ion, Params *p, vec *F) {
-    F->zeros();
+//void FLaser(Ion *ion, Params *p, vec *F) {
+vec FLaser(Ion *ion, Params *p) {
+    vec F(3);
+    F.zeros();
     double beta, F0;
     beta = p->beta;
     F0 = p->F0;
@@ -185,14 +184,16 @@ void FLaser(Ion *ion, Params *p, vec *F) {
     for (int i = 0; i < 3; i++) {
         F[i] = F0*p->khat[i] - beta*ion->v[i];
     }
+    return F;
 }
 
 // Coulomb interaction
 // (result stored in F)
-void FCoulomb(Ion *ion, Ion **ions, Params *p, vec *F) { 
-    vec r = vec(3);
+//void FCoulomb(Ion *ion, Ion **ions, Params *p, vec *F) { 
+vec FCoulomb(Ion *ion, Ion **ions, Params *p) {
+    vec r = vec(3), F(3);
     r.zeros();
-    F->zeros();
+    F.zeros();
     double r_mag = 0;
     int i = ion->index, j, k;
     //#pragma omp parallel for
@@ -205,20 +206,26 @@ void FCoulomb(Ion *ion, Ion **ions, Params *p, vec *F) {
 	    F[k] += OOFPEN*ion->Z*ions[j]->Z*r[k]/pow(r_mag, 3);
 	// F += OOFPEN*ion->Z*ions[j]->Z*r/pow(r_mag, 3);
     }
+    return F;
 }
 
 // Secular excitations
 // (result stored in F)
-void FSecular(Ion *ion, double t, Params *p, vec *F) {
-    F->zeros();
+//void FSecular(Ion *ion, double t, Params *p, vec *F) {
+vec FSecular(Ion *ion, double t, Params *p) {
+    vec F(3);
+    F.zeros();
     F[0] = ion->Z*p->Vsec*ion->x[0]*cos(p->w*t);
+    return F;
 }
 
 // Stochastic processes, e.g. collisions with background gases
 // (result stored in F)
-void FStochastic(Ion *ion, Params *p, vec *F) {
+//void FStochastic(Ion *ion, Params *p, vec *F) {
+vec FStochastic(Ion *ion, Params *p) {
     double v;
-    F->zeros();
+    vec F(3);
+    F.zeros();
     //if(gsl_rng_uniform(rng) <= exp(-p->gamma_col*p->dt))
     //return;	// no collision
     vec hat = {gsl_rng_uniform(rng),
@@ -226,21 +233,24 @@ void FStochastic(Ion *ion, Params *p, vec *F) {
 	       gsl_rng_uniform(rng)};
     normalize(hat);
     v = sqrt(2*kB*p->gamma_col*p->dt/ion->m);
-    for(int i=0; i<3; i++)
-	F[i] = ion->m*v*hat[i]/p->dt;
+    F = ion->m*v*hat/p->dt;
+    return F;
 }
 
 // Precomputes all Coulomb interactions (that way they can be applied
 // all at once instead of having one ion updated before the Coulomb
 // interaction is computed for the rest).
 // (result stored in Flist)
-void allCoulomb(Ion **ions, Params *p, mat *Flist) { 
-    int i, j;
+//void allCoulomb(Ion **ions, Params *p, mat *Flist) { 
+mat allCoulomb(Ion **ions, Params *p) {
+    int i;
+    mat Flist(3, p->N);
     #pragma omp parallel for
     for(i=0; i<p->N; i++) {
         //FCoulomb(ions[i], ions, p, &Flist[i*3]); //Alternately: Flist+i*3
-	FCoulomb(ions[i], ions, p, &Flist->col(i));
+	Flist.col(i) = FCoulomb(ions[i], ions, p);
     }
+    return Flist;
 }
 
 //--------------//
@@ -258,7 +268,7 @@ int simulate(double *x0, double *v0, Params *p) {
     // Keeps from having to reallocate every time
     // Don't have to manually manage the memory for each vector
     //double *Fclist = new double[p->N*3];
-    mat *Fclist = new mat(3, p->N);
+    mat Fclist(3, p->N);
     int i, j,
 	abort = 0,
 	T_ctr = 0;
@@ -304,10 +314,10 @@ int simulate(double *x0, double *v0, Params *p) {
     int t_i = 0;
     int t_10 = (int)(p->t_max/p->dt)/10;
     printf("Simulating...\n");
-    for(double t=0; t<p->t_max; t+=p->dt) {
+    for(double t = 0; t < p->t_max; t += p->dt) {
         // Calculate Coulomb forces
         if (p->use_coulomb)
-            allCoulomb(ions, p, Fclist);
+            Fclist = allCoulomb(ions, p);
 
 	// Progress update
 	if (t_i % t_10 == 0 && !p->quiet)
@@ -400,7 +410,6 @@ int simulate(double *x0, double *v0, Params *p) {
     for (i = 0; i < p->N; i++)
         delete ions[i];
     delete[] ions;
-    delete[] Fclist;
     for(i=0; i<p->N_masses; i++)
 	gsl_histogram2d_free(ccd[i]);
     if(p->use_abort && abort == 1)

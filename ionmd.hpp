@@ -91,13 +91,19 @@ extern "C" {
     Ion *initIon(double *x0, double *v0, int index, Params *p);
     //void minimize(Ion **ions, Params *p);
     void simCCDPoint(Ion *ion, gsl_histogram2d **ccd, Params *p);
-    void updateIon(Ion *ion, Ion **ions, double t, double *Fcoullist, Params *p);
-    void FTrap(Ion *ion, double t, Params *p, vec *F);
-    void FLaser(Ion *ion, Params *p, vec *F);
-    void FCoulomb(Ion *ion, Ion **ions, Params *p, vec *F);
-    void FSecular(Ion *ion, double t, Params *p, vec *F);
-    void FStochastic(Ion *ion, Params *p, vec *F);
-    void allCoulomb(Ion **ions, Params *p, mat *Flist);
+    void updateIon(Ion *ion, Ion **ions, double t, mat Fcoullist, Params *p);
+    // void FTrap(Ion *ion, double t, Params *p, vec *F);
+    // void FLaser(Ion *ion, Params *p, vec *F);
+    // void FCoulomb(Ion *ion, Ion **ions, Params *p, vec *F);
+    // void FSecular(Ion *ion, double t, Params *p, vec *F);
+    // void FStochastic(Ion *ion, Params *p, vec *F);
+    // void allCoulomb(Ion **ions, Params *p, mat *Flist);
+    vec FTrap(Ion *ion, double t, Params *p);
+    vec FLaser(Ion *ion, Params *p);
+    vec FCoulomb(Ion *ion, Ion **ions, Params *p);
+    vec FSecular(Ion *ion, double t, Params *p);
+    vec FStochastic(Ion *ion, Params *p);
+    mat allCoulomb(Ion **ions, Params *p);
 
     // Main simulation function
     // ------------------------
