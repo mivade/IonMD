@@ -31,7 +31,7 @@ using arma::vec;
 
 void minimize(Ion **ions, Params *p) {
     double t = 0;
-    double *Fclist = new double[p->N*3];
+    mat Fclist(3, p->N);
 
     // Store settings
     int use_rfmm = p->use_rfmm,
@@ -49,7 +49,7 @@ void minimize(Ion **ions, Params *p) {
     // Begin minimization
     p->minimizing = 1;
     while(true) {	// TODO: better end decision
-	allCoulomb(ions, p, Fclist);
+	Fclist = allCoulomb(ions, p);
 	for(i=0; i<p->N; i++) {
 	    updateIon(ions[i], ions, t, Fclist, p);
 	}
@@ -70,7 +70,6 @@ void minimize(Ion **ions, Params *p) {
     p->use_coulomb = use_coulomb;
     p->use_laser = use_laser;
     p->use_stochastic = use_stochastic;
-    delete[] Fclist;
 
     // Write initial positions
     writeInitPos(ions, p);
