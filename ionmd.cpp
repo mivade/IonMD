@@ -120,9 +120,8 @@ void simCCDPoint(Ion *ion, gsl_histogram2d **ccd, Params *p) {
 void updateIon(Ion *ion, Ion **ions, double t, mat Fcoullist, Params *p) {
     // TODO: These all need to be length 3
     vec F, Ft, Fl, Fc, Fsec, Fs, a;
-    F.zeros();
     ion->x += ion->v*p->dt + 0.5*ion->a*pow(p->dt, 2);
-    FTrap(ion, t, p);
+    F = FTrap(ion, t, p);
     if((p->use_laser && ion->lc) || p->minimizing)
 	F += FLaser(ion, p);
     else
