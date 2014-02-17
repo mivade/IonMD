@@ -1,6 +1,8 @@
+# C++11 is required for some convenience issues with Armadillo, namely
+# using initializers.
 CXX = g++
-CXXFLAGS = -Wall -O3 -fPIC -flto -fopenmp -march=native -g
-LIBS = -lm -lgsl -lgslcblas
+CXXFLAGS = -Wall -O3 -fPIC -flto -fopenmp -march=native -g -std=c++11
+LIBS = -lm -lgsl -lgslcblas -larmadillo #-llapack -lblas
 SRCS = *.cpp
 HDRS = *.hpp
 OBJS = minimize.o

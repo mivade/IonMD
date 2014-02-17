@@ -21,7 +21,12 @@
 #include <cmath>
 #include <cstdlib>
 #include <gsl/gsl_histogram2d.h>
+#include <armadillo>
 #include "params.hpp"
+
+using arma::vec;
+using arma::dot;
+using arma::mat;
 
 //-------------//
 //--CONSTANTS--//
@@ -36,59 +41,73 @@ const double HBAR = 1.0545716e-34;
 const double kB = 1.3806503e-23;
 const double g_elastic = 0.017;	// elastic collision rate with 
 
-typedef struct Ion {
-    double x[3], v[3], a[3];	// position, velocity, and acceleration
+struct Ion {
+    vec x, v, a;
     double m,			// mass
 	Z;			// charge
     int index;
     int lc;			// 1 for laser cooled
-} Ion;
+};
 
 //------------------------//
 //--FUNCTION DEFINITIONS--//
 //------------------------//
 
+// Vector functions
+// ----------------
+
+inline void copyVector(vec a, double *b) {
+    a[0] = b[0];
+    a[1] = b[1];
+    a[2] = b[2];
+}
+
+inline void normalize(vec a) {
+    double mag = sqrt(dot(a, a));
+    a[0] /= mag;
+    a[1] /= mag;
+    a[2] /= mag;
+}
+
+inline double dot(double *a, vec b) {
+    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+}
+
+inline double dot(vec a, double *b) {
+    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+}
+
 extern "C" {
-    // Vector functions
-    inline void zeroVector(double *vec) {
-	vec[0] = vec[1] = vec[2] = 0.0;
-    }
-
-    inline void copyVector(double *a, double *b) {
-	a[0] = b[0];
-	a[1] = b[1];
-	a[2] = b[2];
-    }
-
-    inline double dot(double *a, double *b) {
-	return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
-    }
-
-    inline void normalize(double *a) {
-	double mag = sqrt(dot(a,a));
-	a[0] /= mag;
-	a[1] /= mag;
-	a[2] /= mag;
-    }
-
     // Utility functions
+    // -----------------
+
     void printIonStatistics(Params *p);
     void printParams(Params *p);
     void printPositions(Ion *ion);
 
     // Ion functions
+    // -------------
+
     Ion *initIon(double *x0, double *v0, int index, Params *p);
     //void minimize(Ion **ions, Params *p);
     void simCCDPoint(Ion *ion, gsl_histogram2d **ccd, Params *p);
-    void updateIon(Ion *ion, Ion **ions, double t, double *Fcoullist, Params *p);
-    void FTrap(Ion *ion, double t, Params *p, double *F);
-    void FLaser(Ion *ion, Params *p, double *F);
-    void FCoulomb(Ion *ion, Ion **ions, Params *p, double *F);
-    void FSecular(Ion *ion, double t, Params *p, double *F);
-    void FStochastic(Ion *ion, Params *p, double *F);
-    void allCoulomb(Ion **ions, Params *p, double *Flist);
+    void updateIon(Ion *ion, Ion **ions, double t, mat Fcoullist, Params *p);
+    // void FTrap(Ion *ion, double t, Params *p, vec *F);
+    // void FLaser(Ion *ion, Params *p, vec *F);
+    // void FCoulomb(Ion *ion, Ion **ions, Params *p, vec *F);
+    // void FSecular(Ion *ion, double t, Params *p, vec *F);
+    // void FStochastic(Ion *ion, Params *p, vec *F);
+    // void allCoulomb(Ion **ions, Params *p, mat *Flist);
+    vec FTrap(Ion *ion, double t, Params *p);
+    vec FLaser(Ion *ion, Params *p);
+    vec FCoulomb(Ion *ion, Ion **ions, Params *p);
+    vec FSecular(Ion *ion, double t, Params *p);
+    vec FStochastic(Ion *ion, Params *p);
+    mat allCoulomb(Ion **ions, Params *p);
 
     // Main simulation function
+    // ------------------------
+
     int simulate(double *x0, double *v0, Params *p);
 }
 
