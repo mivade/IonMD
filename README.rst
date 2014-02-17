@@ -70,7 +70,6 @@ should work on any platform that can meet the following dependencies:
 
   * `GNU Scientific Library <https://www.gnu.org/software/gsl/>`_ (for
     random number generation and 2D binning for simulated CCD images)
-
   * Armadillo_ and its dependencies (on Debian wheezy, this requires
     manually adding ``libboost-math-dev`` since it is not listed as a
     dependency).
@@ -132,6 +131,9 @@ Some things that are planned (or possible) for the future:
 
 * Better stability -> less random initial conditions could help this
 * Python frontend cleanup
+
+In general, see `issues
+<https://github.com/mivade/IonMD/issues?state=open>`_.
 
 Known Bugs
 ==========
