@@ -1,0 +1,46 @@
+{
+    "control": {
+	"use_rfmm": false,
+	"use_coulomb": true,
+	"use_laser": true,
+	"use_stochastic": false,
+	"sim_ccd": true,
+        "plot_trajectory": false,
+        "plot_fourier": false,
+        "display": true
+    },
+    "params": {
+	"ions": {
+	    "m": [40, 40, 40, 40, 42, 42],
+	    "Z": [1, 1, 1, 1, 1, 1],
+	    "lc": [1, 1, 1, 1, 1, 1]
+	},
+	"trap": {
+	    "r0": 4.0e-3,
+	    "z0": 2e-2,
+	    "kappa": 1e-3,
+	    "f_RF": 4.7e6,
+            "V": 120,
+            "U": 0,
+	    "UEC": 50
+	},
+	"laser": {
+	    "khat": [0, 0, 1],
+	    "lmbda": 397e-9,
+	    "Gamma_Hz": 20e6,
+	    "delta_Gamma": -10,
+	    "s": 5,
+	    "beta": 2e-22,
+	    "F0": 1.3e-19
+	},
+	"stochastic": {
+	    "gamma_col": 1.0,
+	    "m_gas_amu": 28,
+	    "T_gas": 298.0
+	},
+	"ccd": {
+            "ccd_bins": 768,
+            "ccd_extent": 1024	    
+	}
+    }
+}

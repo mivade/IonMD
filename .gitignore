@@ -9,4 +9,5 @@ temperature.txt
 README.html
 params.py
 params.xml
-
+*.json
+!default.json
