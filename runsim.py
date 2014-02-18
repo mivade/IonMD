@@ -63,14 +63,6 @@ def loadLibrary():
     dll.printParams.argtypes = [POINTER(Params)]
     return dll
 
-def saveParams(filename, p):
-    """Save parameters p to file filename."""
-    raise NotImplementedError("Saving parameters to a file is not yet implemented.")
-
-def loadParams(filename):
-    """Load and return pickled parameters object."""
-    raise NotImplementedError("Loading parameters from a file is not yet implemented.")
-
 def initIons(N, m_lc, Z_lc, N_sc=None, m_sc=None, Z_sc=None):
     """Return length N arrays of masses, charges, and boolean values
     for laser cooling to be given to the simulation. Masses are
@@ -222,7 +214,7 @@ def main(dll, dt, t_max,
     the simulation)."""
     # Load initial parameters from a file
     if params_file:
-        p = loadParams(params_file)
+        pass # TODO
 
     # Defaults
     else:
@@ -329,7 +321,6 @@ def main(dll, dt, t_max,
                    record_traj=record_traj,
                    traj_start=traj_start,
                    T_steps=T_steps)
-        #saveParams("default.par", p)
 
     # Initial conditions
     T0 = 10e-3
