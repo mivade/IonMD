@@ -5,10 +5,20 @@
 	"use_laser": true,
 	"use_stochastic": false,
 	"sim_ccd": true,
+	"dt": 20e-9,
+	"t_max": 5e-3,
+	"min_time": 1.5e-3,
         "plot_trajectory": false,
         "plot_fourier": false,
         "display": true,
 	"num_threads": 4
+    },
+    "files": {
+	"traj_fname": "traj.dat",
+	"com_fname": "com_traj.dat",
+	"fpos_fname": "fpos.xyz",
+	"ccd_fname": "ccd",
+	"temp_fname": "temperature.txt"
     },
     "params": {
 	"ions": {

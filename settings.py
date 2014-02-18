@@ -19,8 +19,16 @@ along with IonMD.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 import json
+import numpy as np
 from numpy import pi
 from params import Params
+import ctypes
+import scipy.constants as consts
+
+_DOUBLE_P = ctypes.POINTER(ctypes.c_double)
+_INT_P = ctypes.POINTER(ctypes.c_int)
+_AMU = consts.u
+_ECHARGE = consts.e
 
 class SimParams(object):
     """
@@ -41,6 +49,10 @@ class SimParams(object):
         Simulation parameters for stochastic forces.
     laser : dict
         Laser simulation parameters.
+    ccd : dict
+        Parameters for CCD image smiulation.
+    files : dict
+        File names for data files.
     cxx_params : Params
         ctypes Struct object for simulation parameters to pass to the
         C++ library.
@@ -55,6 +67,8 @@ class SimParams(object):
         defining them only once.
 
         """
+        self.control, self.ions, self.trap = {}, {}, {}
+        self.stochastic, self.laser, self.ccd, self.files = {}, {}, {}, {}
         self.load(init_file)
         self.cxx_params = None
 
@@ -75,6 +89,12 @@ class SimParams(object):
             Include stochastic processes if True.
         sim_ccd : bool
             Simulate CCD images if True.
+        dt : float
+            Time step size in s.
+        t_max : float
+            Maximum simulation time (in sim time units).
+        min_time : float
+            Simulation time to run the minimization procedure.
         plot_trajectory : bool
             Plot the COM trajectory after the simulation is done if
             True.
@@ -91,10 +111,40 @@ class SimParams(object):
         self.control['use_coulomb'] = kwargs.get('use_colomb', True)
         self.control['use_laser'] = kwargs.get('use_laser', True)
         self.control['sim_ccd'] = kwargs.get('sim_ccd', True)
+        self.control['dt'] = kwargs.get('dt', 20e-9)
+        self.control['t_max'] = kwargs.get(5e-3)
+        self.control['min_time'] = kwargs.get(1.5e-3)
         self.control['plot_trajectory'] = kwargs.get('plot_trajectory', False)
         self.control['plot_fourier'] = kwargs.get('plot_fourier', False)
         self.control['display'] = kwargs.get('display', True)
         self.control['num_threads'] = kwargs.get('num_threads', 1)
+
+    def set_files(self, traj_fname="traj.dat", com_fname="com_traj.dat",
+                  fpos_fname="fpos.xyz", ccd_fname="ccd",
+                  temp_fname="temperature.txt"):
+        """
+        Set the filenames (or prefix for filenames in the case of
+        simulated CCD files.
+
+        Parameters
+        ----------
+        traj_fname : str
+            Filename for trajectory data of the ion being tracked.
+        fpos_fname : str
+            Filename for xyz storage of final ion positions.
+        com_fname : str
+            Filename for the center of mass trajectory data.
+        ccd_fname : str
+            Prefix for simulated CCD filenames.
+        temp_fname : str
+            Filename for ion temperature data.
+        
+        """
+        self.files['traj_fname'] = traj_fname
+        self.files['com_fname'] = com_fname
+        self.files['fpos_fname'] = fpos_fname
+        self.files['ccd_fname'] = ccd_fname
+        self.files['temp_fname'] = temp_fname
 
     def set_ions(self, m, Z, lc):
         """
@@ -213,6 +263,7 @@ class SimParams(object):
     def save(self, fname):
         """Write parameters to JSON file fname."""
         obj = {"control": self.control,
+               "files": self.files,
                "params": {"ions": self.ions,
                           "trap": self.trap,
                           "laser": self.laser,
@@ -226,6 +277,7 @@ class SimParams(object):
         with open(fname, 'r') as json_file:
             params = json.load(json_file)
         self.control = params['control']
+        self.files = params['files']
         self.ions = params['params']['ions']
         self.trap = params['params']['trap']
         self.laser = params['params']['laser']
@@ -237,50 +289,61 @@ class SimParams(object):
         Return a Params representation of the simulation settings
         which can be passed to the C++ module.
 
+        Possible bug: Might not to explicitly tell np.array the dtypes
+        when creating pointers.
+
         """
-        if cxx_params is None:
-            TODO = 0
-            cxx_params = Params(N=self.ions['N'],
-                N_masses=TODO,
-                m=TODO, Z=TODO, masses=TODO, lc=TODO,
-                khat=TODO,
-                lmbda=self.ions['lmbda'], r_l=0.,
-                delta=2*pi*self.laser['delta_gamma']*self.laser['Gamma_Hz'],
-                s=self.laser['s'],
-                Gamma=2*pi*self.laser['Gamma_Hz'],
-                beta=self.laser['beta'],
-                F0=self.laser['F0'],
-                r0=self.trap['r0'], z0=self.trap['z0'],
-                Omega=2*pi*self.trap['f_RF'],
-                V=self.trap['V'], U=self.trap['U'], UEC=self.trap['UEC'],
-                kappa=self.trap['kappa'],
-                Vsec=0., w=0., # TODO
-                gamma_col=self.stochastic['gamma_col'],
-                m_gas=self.stochastic['m_gas'],
-                T_gas=self.stochastic['T_gas'],
-                sim_ccd=self.control['sim_ccd'],
-                ccd_bins=self.ccd['ccd_bins'],
-                ccd_extent=self.ccd['ccd_extent'],
-                dt=TODO, t_max=TODO, min_time=TODO,
-                abort_bounds=self.trap['r0'],
-                t_steps=len(arange(0, t_max, dt)),
-                use_rfmm=self.control['use_rfmm'],
-                use_coulomb=self.control['use_coulomb'],
-                use_laser=self.control['use_laser'],
-                use_secular=False,
-                use_stochastic=self.control['use_stochastic'],
-                use_abort=True,
-                num_threads=self.control['num_threads'],
-                quiet=0, # TODO
-                com_fname='com_traj.dat', # TODO
-                traj_fname='traj.dat', # TODO
-                fpos_fname='fpos.xyz', # TODO
-                ccd_fname='ccd', # TODO
-                temp_fname='temperature.txt', # TODO
-                record_traj=1, # TODO
-                traj_start=2e-6, # TODO
-                T_steps=1200) # TODO
-        return cxx_params
+        m_p = (np.array(self.ions['m'])*_AMU).ctypes.data_as(_DOUBLE_P)
+        Z_p = (np.array(self.ions['Z'])*_ECHARGE).ctypes.data_as(_DOUBLE_P)
+        masses = np.unique(self.ions['m'])
+        masses_p = masses.ctypes.data_as(_DOUBLE_P)
+        lc_p = np.array(self.ions['lc']).ctypes.data_as(_INT_P)
+        khat_p = np.array(self.laser['khat']).ctypes.data_as(_DOUBLE_P)
+        
+        self.cxx_params = Params(
+            N=len(self.ions['m']),
+            N_masses=len(masses),
+            m=m_p, Z=Z_p, masses=masses_p, lc=lc_p,
+            khat=khat_p,
+            lmbda=self.laser['lmbda'], r_l=0.,
+            delta=2*pi*self.laser['delta_Gamma']*self.laser['Gamma_Hz'],
+            s=self.laser['s'],
+            Gamma=2*pi*self.laser['Gamma_Hz'],
+            beta=self.laser['beta'],
+            F0=self.laser['F0'],
+            r0=self.trap['r0'], z0=self.trap['z0'],
+            Omega=2*pi*self.trap['f_RF'],
+            V=self.trap['V'], U=self.trap['U'], UEC=self.trap['UEC'],
+            kappa=self.trap['kappa'],
+            Vsec=0., w=0., # TODO
+            gamma_col=self.stochastic['gamma_col'],
+            m_gas=self.stochastic['m_gas_amu']*_AMU,
+            T_gas=self.stochastic['T_gas'],
+            sim_ccd=self.control['sim_ccd'],
+            ccd_bins=self.ccd['ccd_bins'],
+            ccd_extent=self.ccd['ccd_extent'],
+            dt=self.control['dt'], t_max=self.control['t_max'],
+            min_time=self.control['min_time'],
+            abort_bounds=self.trap['r0'],
+            t_steps=len(
+                np.arange(0, self.control['t_max'], self.control['dt'])),
+            use_rfmm=self.control['use_rfmm'],
+            use_coulomb=self.control['use_coulomb'],
+            use_laser=self.control['use_laser'],
+            use_secular=False,
+            use_stochastic=self.control['use_stochastic'],
+            use_abort=True,
+            num_threads=self.control['num_threads'],
+            quiet=0, # TODO
+            com_fname=self.files['com_fname'],
+            traj_fname=self.files['traj_fname'],
+            fpos_fname=self.files['fpos_fname'],
+            ccd_fname=self.files['ccd_fname'],
+            temp_fname=self.files['temp_fname'],
+            record_traj=1, # TODO
+            traj_start=2e-6, # TODO
+            T_steps=1200) # TODO
+        return self.cxx_params
 
 if __name__ == "__main__":
     params = SimParams()
@@ -288,3 +351,4 @@ if __name__ == "__main__":
     params.set_ccd(768, 1024)
     params.save("test.json")
     params.load("default.json")
+    print(params.to_cxx_format())
