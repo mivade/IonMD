@@ -51,9 +51,12 @@ double_pp = POINTER(POINTER(c_double))
 ## FUNCTIONS ##
 ###############
 
-def loadLibrary():
-    """Loads the C++ library and defines the functions callable
-    through Python."""
+def load_library():
+    """
+    Loads the C++ library and defines the functions callable through
+    Python.
+
+    """
     dll = ctypes.CDLL("./ionmd.so")
     dll.simulate.restype = c_int
     dll.simulate.argtypes = [double_p, double_p, POINTER(Params)]
@@ -63,24 +66,28 @@ def loadLibrary():
     dll.printParams.argtypes = [POINTER(Params)]
     return dll
 
-def initIons(N, m_lc, Z_lc, N_sc=None, m_sc=None, Z_sc=None):
-    """Return length N arrays of masses, charges, and boolean values
-    for laser cooling to be given to the simulation. Masses are
-    assumed given in amu, charges in units of e. To specify multiple
+def init_ions(N, m_lc, Z_lc, N_sc=None, m_sc=None, Z_sc=None):
+    """
+    Return length N arrays of masses, charges, and boolean values for
+    laser cooling to be given to the simulation. Masses are assumed
+    given in amu, charges in units of e. To specify multiple
     sympathetically-cooled ion species, give N_sc, m_sc and Z_sc as
     array-like objects.
 
-    Examples:
+    Examples
+    --------
 
     To create 10 ions, 7 of which are laser cooled, and 3 of which are
     the same sympathetically cooled mass::
 
-         m, Z, lc = initIons(10, 138, 1, 3, 136, 1)
+         m, Z, lc = init_ions(10, 138, 1, 3, 136, 1)
 
     To create 10 ions, 7 laser cooled, 3 of different masses that are
     sympathetically cooled::
 
-        m, Z, lc = initIons(10, 138, 1, [1,1,1], [135,136,137], [1,1,1])"""
+        m, Z, lc = init_ions(10, 138, 1, [1,1,1], [135,136,137], [1,1,1])
+
+    """
     m, Z, lc = np.zeros(N), np.zeros(N), np.zeros(N, dtype=c_int)
     if not N_sc:
         m += m_lc*amu
@@ -110,18 +117,21 @@ def initIons(N, m_lc, Z_lc, N_sc=None, m_sc=None, Z_sc=None):
                 raise IndexError("N_sc must have the same dimensions as m_sc and Z_sc!")
     return m, Z, lc
 
-def initialConditions(N, pos_fname=None,
-                      randomize=False, rlim=None, zlim=None, vlim=None):
-    """Generate intial positions and velocities for N ions. rlim,
-    zlim, and vlim are maximum values for initial r displacement, z
+def initial_conditions(N, pos_fname=None,
+                       randomize=False, rlim=None, zlim=None, vlim=None):
+    """
+    Generate intial positions and velocities for N ions. rlim, zlim,
+    and vlim are maximum values for initial r displacement, z
     displacement, and velocity, respectively when using
     randomization. If pos_fname and vel_fname are given, read initial
     conditions from those files.
 
     Loading from a file assumes xyz format for the positions.
 
-    If no filename is given, and randomize is False, arrange ions in
-    a chain intially with randomized velocities (limit set by vlim)."""
+    If no filename is given, and randomize is False, arrange ions in a
+    chain intially with randomized velocities (limit set by vlim).
+
+    """
     x0, v0 = np.zeros((N, 3)), np.zeros((N, 3))
     if pos_fname:
         x0 = np.loadtxt(pos_fname, skiprows=2, usecols=(1,2,3))*1e-6
@@ -153,8 +163,8 @@ def langevinRate(m_ion, m_gas, P, T, alpha):
     Ze = 4.8032043e-10
     return 2*pi*Ze*sqrt(alpha/mu)*P/(kB*1e7*T)
 
-def plotTrajectory(dt, t_max, N, traj_file="traj.dat",
-                   outfile=None, start=0, end=1000):
+def plot_trajectory(dt, t_max, N, traj_file="traj.dat",
+                    outfile=None, start=0, end=1000):
     """Plot the saved ion trajectory."""
     traj = np.fromfile(traj_file, dtype=c_float)
     t = (np.arange(0, t_max, dt)/1e-6)[start:]
@@ -175,10 +185,13 @@ def plotTrajectory(dt, t_max, N, traj_file="traj.dat",
     if not outfile:
         plt.show()
 
-def plotFourier(dt, t_max, N, traj_file="traj.dat",
-                outfile=None, start=0, end=1000):
-    """Plot the Fourier transform of the trajectory data to extract
-    motional frequencies."""
+def plot_fourier(dt, t_max, N, traj_file="traj.dat",
+                 outfile=None, start=0, end=1000):
+    """
+    Plot the Fourier transform of the trajectory data to extract
+    motional frequencies.
+
+    """
     traj = np.fromfile(traj_file, dtype=c_float)
     t = (np.arange(0, t_max, dt)/1e-6)[start:]
     traj.shape = (len(traj)/3,3)
@@ -196,7 +209,8 @@ def plotFourier(dt, t_max, N, traj_file="traj.dat",
     if not outfile:
         plt.show()
 
-def plotTemperature(N, m=138*amu, temp_file="temperature.txt", outfile=None):
+def plot_temperature(N, m=138*amu, temp_file="temperature.txt", outfile=None):
+    """Plot the temperature over time."""
     t, v = np.loadtxt(temp_file, unpack=True)
     t /= 1e-6
     T = m*v**2/(3*N*kB)
@@ -209,9 +223,12 @@ def plotTemperature(N, m=138*amu, temp_file="temperature.txt", outfile=None):
 
 def main(dll, dt, t_max,
          params_file=None, save_final_params=False, N=None, **kwargs):
-    """Set up initial conditions and run the simulation. Returns the
+    """
+    Set up initial conditions and run the simulation. Returns the
     input parameters used (useful for plotting routines after running
-    the simulation)."""
+    the simulation).
+
+    """
     # Load initial parameters from a file
     if params_file:
         pass # TODO
@@ -222,11 +239,11 @@ def main(dll, dt, t_max,
         if not N:
             N = 250
         if kwargs['all_lc']:
-            m, Z, lc = initIons(N, 138, 1)
+            m, Z, lc = init_ions(N, 138, 1)
             masses = np.array([138*amu])
         else:
             masses = np.array([138, 136])*amu
-            m, Z, lc = initIons(N, masses[0]/amu, 1, int(N*.1), masses[1]/amu, 1)
+            m, Z, lc = init_ions(N, masses[0]/amu, 1, int(N*.1), masses[1]/amu, 1)
         try: # use passed ion parameters if given
             masses = kwargs['masses']
             m = kwargs['m']
@@ -326,10 +343,10 @@ def main(dll, dt, t_max,
     T0 = 10e-3
     if kwargs.has_key('ipos_fname'):
         ipos = kwargs['ipos_fname']
-        x0, v0 = initialConditions(N, pos_fname=ipos)
+        x0, v0 = initial_conditions(N, pos_fname=ipos)
     else:
-        x0, v0 = initialConditions(N, randomize=True, rlim=r0/2.,
-                                   zlim=z0, vlim=sqrt(3*kB*T0/masses[0]/2.))
+        x0, v0 = initial_conditions(N, randomize=True, rlim=r0/2.,
+                                    zlim=z0, vlim=sqrt(3*kB*T0/masses[0]/2.))
     x0 = x0.flatten()
     v0 = v0.flatten()
     x0_p = x0.ctypes.data_as(double_p)
@@ -358,7 +375,7 @@ def main(dll, dt, t_max,
 ##########
 
 if __name__ == "__main__":
-    dll = loadLibrary()
+    dll = load_library()
     dt, t_max = 20e-9, 5e-3
     min_time = 1.5e-3
     traj_start = dt*100
@@ -373,8 +390,8 @@ if __name__ == "__main__":
     if False:
         t0 = time.time()
         Nsc = int(N*0.1)
-        m, Z, lc = initIons(N, masses[0]/amu, 1., 
-                            Nsc, masses[1]/amu, 1.)
+        m, Z, lc = init_ions(N, masses[0]/amu, 1., 
+                             Nsc, masses[1]/amu, 1.)
         for UEC in np.arange(10, 101, 10):
             prefix = "UEC%.0f" % UEC
             p = main(dll, dt, t_max, min_time=min_time,
@@ -406,11 +423,11 @@ if __name__ == "__main__":
                      use_stochastic=1,
                      T_steps=1200,
                      traj_start=traj_start)
-        #plotTrajectory(dt, t_max, N, start=traj_start/dt, end=-1)
-        #plotFourier(dt, t_max, N, start=traj_start/dt, end=-1)
+        #plot_trajectory(dt, t_max, N, start=traj_start/dt, end=-1)
+        #plot_fourier(dt, t_max, N, start=traj_start/dt, end=-1)
         #ionvis.display(fpos_fname="ipos.xyz")
         ionvis.display()#outfile='images/test.png')
-        #plotTemperature(N, 138*amu)
+        #plot_temperature(N, 138*amu)
         if False:
             #for N_ccd in range(5,0,-1):
             if all_lc:
