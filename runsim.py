@@ -24,10 +24,9 @@ import ctypes
 from ctypes import c_int, c_double, POINTER
 import numpy as np
 from numpy import pi, sqrt
-from numpy.random import random, uniform, normal, shuffle
-from numpy.fft import fft, fftshift
+from numpy.random import uniform, normal, shuffle
+from numpy.fft import fft
 from scipy.linalg import norm
-import scipy.optimize
 import scipy.constants as consts
 import matplotlib.pyplot as plt
 import ionvis
@@ -134,29 +133,31 @@ def initial_conditions(N, pos_fname=None,
     """
     x0, v0 = np.zeros((N, 3)), np.zeros((N, 3))
     if pos_fname:
-        x0 = np.loadtxt(pos_fname, skiprows=2, usecols=(1,2,3))*1e-6
-        v0 = np.zeros((N,3))
-        if x0.shape != (N,3) or v0.shape != (N,3):
+        x0 = np.loadtxt(pos_fname, skiprows=2, usecols=(1, 2, 3))*1e-6
+        v0 = np.zeros((N, 3))
+        if x0.shape != (N, 3) or v0.shape != (N, 3):
             raise ValueError("Initial conditions do not have the right number of ions.")
         shuffle(x0)
     elif randomize:
-        x0[:,:2] = uniform(-rlim, rlim, (N,2))
+        x0[:,:2] = uniform(-rlim, rlim, (N, 2))
         x0[:,2] = uniform(-zlim, zlim, (N,))
-        v0 = normal(0., vlim, (N,3))
+        v0 = normal(0., vlim, (N, 3))
         #v0 = zeros((N,3))
     else:
-        x0[:,:2] = uniform(-rlim, rlim, (N,2))
+        x0[:,:2] = uniform(-rlim, rlim, (N, 2))
         x0[:,2] = np.linspace(-zlim, zlim, N)
-        v0 = uniform(-vlim, vlim, (N,3))
+        v0 = uniform(-vlim, vlim, (N, 3))
         shuffle(x0)
     return x0, v0
 
-def langevinRate(m_ion, m_gas, P, T, alpha):
-    """Compute the Langevin collision rate between an ion of mass
-    m_ion and neutrals of mass m_gas at pressure P, temperature T, and
+def langevin_rate(m_ion, m_gas, P, T, alpha):
+    """
+    Compute the Langevin collision rate between an ion of mass m_ion
+    and neutrals of mass m_gas at pressure P, temperature T, and
     polarizability alpha. Masses are given in amu, pressure in torr,
     temperature in K and alpha in angstrom**3. This assumes a charge
-    of +e on the ion for now."""
+    of +e on the ion for now.
+    """
     mu = amu*1000*m_ion*m_gas/(m_ion + m_gas)
     P = P*1333.2239
     alpha = alpha*1e-24
@@ -168,17 +169,17 @@ def plot_trajectory(dt, t_max, N, traj_file="traj.dat",
     """Plot the saved ion trajectory."""
     traj = np.fromfile(traj_file, dtype=c_float)
     t = (np.arange(0, t_max, dt)/1e-6)[start:]
-    traj.shape = (len(traj)/3,3)
+    traj.shape = (len(traj)/3, 3)
     x, y, z = traj[:,0], traj[:,1], traj[:,2]
     plt.figure()
-    plt.subplot(2,1,1)
+    plt.subplot(2, 1, 1)
     plt.hold(True)
     plt.plot(t[:end], x[:end], '-', label='$x$')
     plt.plot(t[:end], y[:end], '-', label='$y$')
     plt.ylabel('$x, y$ [mm]')
     plt.legend()
     plt.hold(False)
-    plt.subplot(2,1,2)
+    plt.subplot(2, 1, 2)
     plt.plot(t[:end], z[:end], '-')
     plt.xlabel(r'$t$ [$\mu$s]')
     plt.ylabel(r'$z$ [mm]')
@@ -194,17 +195,17 @@ def plot_fourier(dt, t_max, N, traj_file="traj.dat",
     """
     traj = np.fromfile(traj_file, dtype=c_float)
     t = (np.arange(0, t_max, dt)/1e-6)[start:]
-    traj.shape = (len(traj)/3,3)
+    traj.shape = (len(traj)/3, 3)
     x, y, z = traj[:,0], traj[:,1], traj[:,2]
     plt.figure()
-    plt.subplot(2,1,1)
+    plt.subplot(2, 1, 1)
     plt.hold(True)
     plt.plot(fft(x[:end]), '-', label='$x$')
     plt.plot(fft(y[:end]), '-', label='$y$')
     plt.hold(False)
     plt.legend()
     plt.hold(False)
-    plt.subplot(2,1,2)
+    plt.subplot(2, 1, 2)
     plt.plot(fft(z[:end]), '-')
     if not outfile:
         plt.show()
@@ -243,7 +244,8 @@ def main(dll, dt, t_max,
             masses = np.array([138*amu])
         else:
             masses = np.array([138, 136])*amu
-            m, Z, lc = init_ions(N, masses[0]/amu, 1, int(N*.1), masses[1]/amu, 1)
+            m, Z, lc = init_ions(N, masses[0]/amu, 1,
+                                 int(N*.1), masses[1]/amu, 1)
         try: # use passed ion parameters if given
             masses = kwargs['masses']
             m = kwargs['m']
@@ -258,7 +260,7 @@ def main(dll, dt, t_max,
         lc_p = lc.ctypes.data_as(int_p)
 
         # Laser parameters
-        khat = np.array([0,0,-1], dtype=np.float64)
+        khat = np.array([0, 0, -1], dtype=np.float64)
         khat /= norm(khat)
         khat_p = khat.ctypes.data_as(double_p)
         lmda = 493.5e-9
@@ -277,7 +279,7 @@ def main(dll, dt, t_max,
         Vsec, wsec = 1, 2*pi*90e3
 
         # Background gas parameters
-        #gamma_col = langevinRate(138, 28, 5e-9, 298, 1.71)
+        #gamma_col = langevin_rate(138, 28, 5e-9, 298, 1.71)
         gamma_col = kwargs.get('gamma_col', 1.) #11.95 # K/s
         m_gas = 28*amu
         T_gas = 298.
@@ -384,7 +386,7 @@ if __name__ == "__main__":
     all_lc = False
     gcol, beta, F0 = 8., 4e-22, 5.0e-20 # F0 corresponds to s ~ 4
     V = 120.
-    N = 50
+    N = 25
     masses = np.array([138, 136])*amu
     N_ccd = len(masses)
     if False:
