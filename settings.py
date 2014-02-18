@@ -29,6 +29,22 @@ class SimParams(object):
     storage of parameters used and helps clean up the Python front end
     to the MD simulations.
 
+    Attributes
+    ----------
+    control : dict
+        Simulation control parameters.
+    ions : dict
+        Ion simulation parameters.
+    trap : dict
+        Trap simulation parameters.
+    stochastic : dict
+        Simulation parameters for stochastic forces.
+    laser : dict
+        Laser simulation parameters.
+    cxx_params : Params
+        ctypes Struct object for simulation parameters to pass to the
+        C++ library.
+
     """
 
     def __init__(self, init_file="default.json"):
@@ -40,16 +56,14 @@ class SimParams(object):
 
         """
         self.load(init_file)
+        self.cxx_params = None
 
-    def set_control(self, use_rfmm=False, use_coulomb=True,
-                    use_laser=True, use_stochastic=False,
-                    sim_ccd=True, plot_trajectory=False,
-                    plot_fourier=False, display=True):
+    def set_control(self, **kwargs):
         """
         Set simulation control parameters.
 
-        Parameters
-        ----------
+        Keyword arguments
+        -----------------
         use_rfmm : bool
             Use RF micromotion in the simulation (not yet
             implemented) if True.
@@ -71,6 +85,13 @@ class SimParams(object):
             Use MayaVI to display the final ion positions if True.
 
         """
+        self.control['use_rfmm'] = kwargs.get('use_rfmm', False)
+        self.control['use_coulomb'] = kwargs.get('use_colomb', True)
+        self.control['use_laser'] = kwargs.get('use_laser', True)
+        self.control['sim_ccd'] = kwargs.get('sim_ccd', True)
+        self.control['plot_trajectory'] = kwargs.get('plot_trajectory', False)
+        self.control['plot_fourier'] = kwargs.get('plot_fourier', False)
+        self.control['display'] = kwargs.get('display', True)
 
     def set_ions(self, m, Z, lc):
         """
@@ -87,17 +108,19 @@ class SimParams(object):
             laser cooling and False indicates no laser cooling.
 
         """
-        self.ions['m'] = m
-        self.ions['Z'] = Z
-        self.ions['lc'] = lc
+        if len(m) is len(Z) and len(Z) is len(lc):
+            self.ions['m'] = m
+            self.ions['Z'] = Z
+            self.ions['lc'] = lc
+        else:
+            raise ValueError("m, Z, and lc must have the same length.")
 
-    def set_trap(self, r0, z0, kappa, f_RF,
-                 V, U, UEC):
+    def set_trap(self, **kwargs):
         """
         Set trap parameters.
 
-        Parameters
-        ----------
+        Keyword arguments
+        -----------------
         r0 : float
             Trap radius.
         z0 : float
@@ -112,21 +135,20 @@ class SimParams(object):
             End cap voltage.
 
         """
-        self.trap['r0'] = r0
-        self.trap['z0'] = z0
-        self.trap['kappa'] = kappa
-        self.trap['f_RF'] = f_RF
-        self.trap['V'] = V
-        self.trap['U'] = U
-        self.trap['UEC'] = UEC
+        self.trap['r0'] = kwargs.get('r0', 3e-3)
+        self.trap['z0'] = kwargs.get('z0', 25e-3)
+        self.trap['kappa'] = kwargs.get('kappa', 1e-4)
+        self.trap['f_RF'] = kwargs.get('f_RF', 4.7e6)
+        self.trap['V'] = kwargs.get('V', 100)
+        self.trap['U'] = kwargs.get('U', 0)
+        self.trap['UEC'] = kwargs.get('UEC', 30)
 
-    def set_laser(self, khat, lmbda, Gamma_Hz, delta_Gamma,
-                  s, beta, F0):
+    def set_laser(self, **kwargs):
         """
         Set laser parameters.
 
-        Parameters
-        ----------
+        Keyword arguments
+        -----------------
         khat : length 3 list
             Unit vector pointing in the direction of laser
             propagation.
@@ -144,15 +166,15 @@ class SimParams(object):
             Constant laser radiation pressure force.
         
         """
-        self.laser['khat'] = khat
-        self.laser['lmbda'] = lmbda
-        self.laser['Gamma_Hz'] = Gamma_Hz
-        self.laser['delta_Gamma'] = delta_gamma
-        self.laser['s'] = s
-        self.laser['beta'] = beta
-        self.laser['F0'] = F0
+        self.laser['khat'] = kwargs.get('khat', [0., 0., 1.])
+        self.laser['lmbda'] = kwargs.get('lmbda', 397e-9)
+        self.laser['Gamma_Hz'] = kwargs.get('Gamma_Hz', 20e6)
+        self.laser['delta_Gamma'] = kwargs.get('delta_gamma', -10.)
+        self.laser['s'] = kwargs.get('s', 5.0)
+        self.laser['beta'] = kwargs.get('beta', 2e-22)
+        self.laser['F0'] = kwargs.get('F0', 1.3e-19)
 
-    def set_stochastic(self, gamma_col, m_gas_amu, T_gas):
+    def set_stochastic(self, gamma_col=1.0, m_gas_amu=28., T_gas=298.):
         """
         Set stochastic force parameters.
 
@@ -170,7 +192,7 @@ class SimParams(object):
         self.stochastic['m_gas_amu'] = m_gas_amu
         self.stochastic['T_gas'] = T_gas
 
-    def set_ccd(self, ccd_bins, ccd_extent):
+    def set_ccd(self, ccd_bins=768, ccd_extent=1024):
         """
         Set simulated CCD parameters.
 

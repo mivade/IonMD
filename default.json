@@ -20,16 +20,16 @@
 	    "z0": 2e-2,
 	    "kappa": 1e-3,
 	    "f_RF": 4.7e6,
-            "V": 120,
+            "V": 120.0,
             "U": 0,
-	    "UEC": 50
+	    "UEC": 50.0
 	},
 	"laser": {
 	    "khat": [0, 0, 1],
 	    "lmbda": 397e-9,
 	    "Gamma_Hz": 20e6,
-	    "delta_Gamma": -10,
-	    "s": 5,
+	    "delta_Gamma": -10.0,
+	    "s": 5.0,
 	    "beta": 2e-22,
 	    "F0": 1.3e-19
 	},
