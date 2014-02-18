@@ -22,14 +22,98 @@ along with IonMD.  If not, see <http://www.gnu.org/licenses/>.
 import tarfile
 import os.path
 import numpy as np
+from numpy.fft import fft
+import scipy.constants as consts
 import ctypes
 import matplotlib.pyplot as plt
 import Image, ImageEnhance
 from mayavi import mlab
 
-# color order = red, forest green, cyan, gold
-#colors = [(1,0,0), (.13,.55,.13), (0,1,1), (1,.84,0)]
+# TODO: PEP8 renaming of functions
+# TODO: Conversion to use settings.SimParams instead of passing
+#       arguments one by one
+
+# Physical constants
+amu = consts.u
+q_e = consts.e
+kB = consts.k
+
+# color order = red, green, blue, cyan, gold
 colors = [(1,0,0), (0,1,0), (0,0,1), (0,1,1), (1,.84,0)]
+
+# Utility functions
+# -----------------
+
+def toRGB(data, channels):
+    """Convert 2D grayscale data to 2D 3 channel 'RGB' data."""
+    new_data = np.zeros((data.shape[0],data.shape[1],3))
+    for i in range(3):
+        new_data[:,:,i] = data*channels[i]
+    return new_data
+
+# Basic plotting
+# --------------
+
+def plot_trajectory(dt, t_max, N, traj_file="traj.dat",
+                    outfile=None, start=0, end=1000):
+    """Plot the saved ion trajectory."""
+    traj = np.fromfile(traj_file, dtype=ctypes.c_float)
+    t = (np.arange(0, t_max, dt)/1e-6)[start:]
+    traj.shape = (len(traj)/3, 3)
+    x, y, z = traj[:,0], traj[:,1], traj[:,2]
+    plt.figure()
+    plt.subplot(2, 1, 1)
+    plt.hold(True)
+    plt.plot(t[:end], x[:end], '-', label='$x$')
+    plt.plot(t[:end], y[:end], '-', label='$y$')
+    plt.ylabel('$x, y$ [mm]')
+    plt.legend()
+    plt.hold(False)
+    plt.subplot(2, 1, 2)
+    plt.plot(t[:end], z[:end], '-')
+    plt.xlabel(r'$t$ [$\mu$s]')
+    plt.ylabel(r'$z$ [mm]')
+    if not outfile:
+        plt.show()
+
+def plot_fourier(dt, t_max, N, traj_file="traj.dat",
+                 outfile=None, start=0, end=1000):
+    """
+    Plot the Fourier transform of the trajectory data to extract
+    motional frequencies.
+
+    """
+    traj = np.fromfile(traj_file, dtype=ctypes.c_float)
+    #t = (np.arange(0, t_max, dt)/1e-6)[start:]
+    traj.shape = (len(traj)/3, 3)
+    x, y, z = traj[:,0], traj[:,1], traj[:,2]
+    plt.figure()
+    plt.subplot(2, 1, 1)
+    plt.hold(True)
+    plt.plot(fft(x[:end]), '-', label='$x$')
+    plt.plot(fft(y[:end]), '-', label='$y$')
+    plt.hold(False)
+    plt.legend()
+    plt.hold(False)
+    plt.subplot(2, 1, 2)
+    plt.plot(fft(z[:end]), '-')
+    if not outfile:
+        plt.show()
+
+def plot_temperature(N, m=138*amu, temp_file="temperature.txt", outfile=None):
+    """Plot the temperature over time."""
+    t, v = np.loadtxt(temp_file, unpack=True)
+    t /= 1e-6
+    T = m*v**2/(3*N*kB)
+    plt.figure()
+    plt.plot(t, T)
+    plt.xlabel(r'$t$ [$\mu$s]')
+    plt.ylabel(r'T [???]')
+    if not outfile:
+        plt.show()
+
+# 3D display functions
+# --------------------
 
 def display(fpos_fname='fpos.xyz', m_lc=138, scale=25, outfile=None):
     scale = scale
@@ -55,12 +139,8 @@ def display(fpos_fname='fpos.xyz', m_lc=138, scale=25, outfile=None):
     else:
         mlab.show()
 
-def toRGB(data, channels):
-    """Convert 2D grayscale data to 2D 3 channel 'RGB' data."""
-    new_data = np.zeros((data.shape[0],data.shape[1],3))
-    for i in range(3):
-        new_data[:,:,i] = data*channels[i]
-    return new_data
+# CCD simulation
+# --------------
 
 def simCCD(ccd_file, N_ccd, bins, extents,
            outfile=None, show=False, brightness=1, imgcmd="eog"):
