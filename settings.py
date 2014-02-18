@@ -83,6 +83,8 @@ class SimParams(object):
             is done if True.
         display : bool
             Use MayaVI to display the final ion positions if True.
+        num_threads : int
+            Number of threads to use for multithreaded calculations.
 
         """
         self.control['use_rfmm'] = kwargs.get('use_rfmm', False)
@@ -92,6 +94,7 @@ class SimParams(object):
         self.control['plot_trajectory'] = kwargs.get('plot_trajectory', False)
         self.control['plot_fourier'] = kwargs.get('plot_fourier', False)
         self.control['display'] = kwargs.get('display', True)
+        self.control['num_threads'] = kwargs.get('num_threads', 1)
 
     def set_ions(self, m, Z, lc):
         """
@@ -235,6 +238,49 @@ class SimParams(object):
         which can be passed to the C++ module.
 
         """
+        if cxx_params is None:
+            TODO = 0
+            cxx_params = Params(N=self.ions['N'],
+                N_masses=TODO,
+                m=TODO, Z=TODO, masses=TODO, lc=TODO,
+                khat=TODO,
+                lmbda=self.ions['lmbda'], r_l=0.,
+                delta=2*pi*self.laser['delta_gamma']*self.laser['Gamma_Hz'],
+                s=self.laser['s'],
+                Gamma=2*pi*self.laser['Gamma_Hz'],
+                beta=self.laser['beta'],
+                F0=self.laser['F0'],
+                r0=self.trap['r0'], z0=self.trap['z0'],
+                Omega=2*pi*self.trap['f_RF'],
+                V=self.trap['V'], U=self.trap['U'], UEC=self.trap['UEC'],
+                kappa=self.trap['kappa'],
+                Vsec=0., w=0., # TODO
+                gamma_col=self.stochastic['gamma_col'],
+                m_gas=self.stochastic['m_gas'],
+                T_gas=self.stochastic['T_gas'],
+                sim_ccd=self.control['sim_ccd'],
+                ccd_bins=self.ccd['ccd_bins'],
+                ccd_extent=self.ccd['ccd_extent'],
+                dt=TODO, t_max=TODO, min_time=TODO,
+                abort_bounds=self.trap['r0'],
+                t_steps=len(arange(0, t_max, dt)),
+                use_rfmm=self.control['use_rfmm'],
+                use_coulomb=self.control['use_coulomb'],
+                use_laser=self.control['use_laser'],
+                use_secular=False,
+                use_stochastic=self.control['use_stochastic'],
+                use_abort=True,
+                num_threads=self.control['num_threads'],
+                quiet=0, # TODO
+                com_fname='com_traj.dat', # TODO
+                traj_fname='traj.dat', # TODO
+                fpos_fname='fpos.xyz', # TODO
+                ccd_fname='ccd', # TODO
+                temp_fname='temperature.txt', # TODO
+                record_traj=1, # TODO
+                traj_start=2e-6, # TODO
+                T_steps=1200) # TODO
+        return cxx_params
 
 if __name__ == "__main__":
     params = SimParams()

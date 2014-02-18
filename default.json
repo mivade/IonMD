@@ -7,7 +7,8 @@
 	"sim_ccd": true,
         "plot_trajectory": false,
         "plot_fourier": false,
-        "display": true
+        "display": true,
+	"num_threads": 4
     },
     "params": {
 	"ions": {

@@ -20,12 +20,13 @@ along with IonMD.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import time, datetime, shutil
-#import cPickle as pickle
-from ctypes import *
-from numpy import *
+import ctypes
+from ctypes import c_int, c_double, POINTER
+import numpy as np
+from numpy import pi, sqrt
 from numpy.random import random, uniform, normal, shuffle
-from scipy.linalg import norm
 from numpy.fft import fft, fftshift
+from scipy.linalg import norm
 import scipy.optimize
 import scipy.constants as consts
 import matplotlib.pyplot as plt
@@ -53,7 +54,7 @@ double_pp = POINTER(POINTER(c_double))
 def loadLibrary():
     """Loads the C++ library and defines the functions callable
     through Python."""
-    dll = CDLL("./ionmd.so")
+    dll = ctypes.CDLL("./ionmd.so")
     dll.simulate.restype = c_int
     dll.simulate.argtypes = [double_p, double_p, POINTER(Params)]
     dll.printIonStatistics.restype = None
@@ -88,7 +89,7 @@ def initIons(N, m_lc, Z_lc, N_sc=None, m_sc=None, Z_sc=None):
     sympathetically cooled::
 
         m, Z, lc = initIons(10, 138, 1, [1,1,1], [135,136,137], [1,1,1])"""
-    m, Z, lc = zeros(N), zeros(N), zeros(N, dtype=c_int)
+    m, Z, lc = np.zeros(N), np.zeros(N), np.zeros(N, dtype=c_int)
     if not N_sc:
         m += m_lc*amu
         Z += Z_lc*q_e
@@ -110,8 +111,8 @@ def initIons(N, m_lc, Z_lc, N_sc=None, m_sc=None, Z_sc=None):
         N_i = N_lc
         for i in range(len(N_sc)):
             try:
-                m[N_i:(N_i+N_sc[i])] = m_sc[i]*amu
-                Z[N_i:(N_i+N_sc[i])] = Z_sc[i]*q_e
+                m[N_i:(N_i + N_sc[i])] = m_sc[i]*amu
+                Z[N_i:(N_i + N_sc[i])] = Z_sc[i]*q_e
                 N_i += N_sc[i]
             except IndexError:
                 raise IndexError("N_sc must have the same dimensions as m_sc and Z_sc!")
@@ -129,10 +130,10 @@ def initialConditions(N, pos_fname=None,
 
     If no filename is given, and randomize is False, arrange ions in
     a chain intially with randomized velocities (limit set by vlim)."""
-    x0, v0 = zeros((N,3)), zeros((N,3))
+    x0, v0 = np.zeros((N, 3)), np.zeros((N, 3))
     if pos_fname:
-        x0 = loadtxt(pos_fname, skiprows=2, usecols=(1,2,3))*1e-6
-        v0 = zeros((N,3))
+        x0 = np.loadtxt(pos_fname, skiprows=2, usecols=(1,2,3))*1e-6
+        v0 = np.zeros((N,3))
         if x0.shape != (N,3) or v0.shape != (N,3):
             raise ValueError("Initial conditions do not have the right number of ions.")
         shuffle(x0)
@@ -143,7 +144,7 @@ def initialConditions(N, pos_fname=None,
         #v0 = zeros((N,3))
     else:
         x0[:,:2] = uniform(-rlim, rlim, (N,2))
-        x0[:,2] = linspace(-zlim, zlim, N)
+        x0[:,2] = np.linspace(-zlim, zlim, N)
         v0 = uniform(-vlim, vlim, (N,3))
         shuffle(x0)
     return x0, v0
@@ -163,8 +164,8 @@ def langevinRate(m_ion, m_gas, P, T, alpha):
 def plotTrajectory(dt, t_max, N, traj_file="traj.dat",
                    outfile=None, start=0, end=1000):
     """Plot the saved ion trajectory."""
-    traj = fromfile(traj_file, dtype=c_float)
-    t = (arange(0, t_max, dt)/1e-6)[start:]
+    traj = np.fromfile(traj_file, dtype=c_float)
+    t = (np.arange(0, t_max, dt)/1e-6)[start:]
     traj.shape = (len(traj)/3,3)
     x, y, z = traj[:,0], traj[:,1], traj[:,2]
     plt.figure()
@@ -186,8 +187,8 @@ def plotFourier(dt, t_max, N, traj_file="traj.dat",
                 outfile=None, start=0, end=1000):
     """Plot the Fourier transform of the trajectory data to extract
     motional frequencies."""
-    traj = fromfile(traj_file, dtype=c_float)
-    t = (arange(0, t_max, dt)/1e-6)[start:]
+    traj = np.fromfile(traj_file, dtype=c_float)
+    t = (np.arange(0, t_max, dt)/1e-6)[start:]
     traj.shape = (len(traj)/3,3)
     x, y, z = traj[:,0], traj[:,1], traj[:,2]
     plt.figure()
@@ -204,7 +205,7 @@ def plotFourier(dt, t_max, N, traj_file="traj.dat",
         plt.show()
 
 def plotTemperature(N, m=138*amu, temp_file="temperature.txt", outfile=None):
-    t, v = loadtxt(temp_file, unpack=True)
+    t, v = np.loadtxt(temp_file, unpack=True)
     t /= 1e-6
     T = m*v**2/(3*N*kB)
     plt.figure()
@@ -230,9 +231,9 @@ def main(dll, dt, t_max,
             N = 250
         if kwargs['all_lc']:
             m, Z, lc = initIons(N, 138, 1)
-            masses = array([138*amu])
+            masses = np.array([138*amu])
         else:
-            masses = array([138, 136])*amu
+            masses = np.array([138, 136])*amu
             m, Z, lc = initIons(N, masses[0]/amu, 1, int(N*.1), masses[1]/amu, 1)
         try: # use passed ion parameters if given
             masses = kwargs['masses']
@@ -248,7 +249,7 @@ def main(dll, dt, t_max,
         lc_p = lc.ctypes.data_as(int_p)
 
         # Laser parameters
-        khat = array([0,0,-1], dtype=float64)
+        khat = np.array([0,0,-1], dtype=np.float64)
         khat /= norm(khat)
         khat_p = khat.ctypes.data_as(double_p)
         lmda = 493.5e-9
@@ -311,7 +312,7 @@ def main(dll, dt, t_max,
                    ccd_bins=ccd_bins, ccd_extent=ccd_extent,
                    dt=dt, t_max=t_max, min_time=min_time,
                    abort_bounds=abort_bounds,
-                   t_steps=len(arange(0, t_max, dt)),
+                   t_steps=len(np.arange(0, t_max, dt)),
                    use_rfmm=use_rfmm,
                    use_coulomb=use_coulomb,
                    use_laser=use_laser,
@@ -376,14 +377,14 @@ if __name__ == "__main__":
     gcol, beta, F0 = 8., 4e-22, 5.0e-20 # F0 corresponds to s ~ 4
     V = 120.
     N = 50
-    masses = array([138, 136])*amu
+    masses = np.array([138, 136])*amu
     N_ccd = len(masses)
     if False:
         t0 = time.time()
         Nsc = int(N*0.1)
         m, Z, lc = initIons(N, masses[0]/amu, 1., 
                             Nsc, masses[1]/amu, 1.)
-        for UEC in arange(10, 101, 10):
+        for UEC in np.arange(10, 101, 10):
             prefix = "UEC%.0f" % UEC
             p = main(dll, dt, t_max, min_time=min_time,
                      N=N, all_lc=all_lc, print_params=False,
