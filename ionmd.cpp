@@ -42,13 +42,14 @@ gsl_rng *rng = gsl_rng_alloc(rng_T);
 //--UTILITY FUNCTIONS--//
 //---------------------//
 
-void printIonStatistics(Params *p) {
+void print_ion_statistics(Params *p) {
     for (int i = 0; i < p->N; i++) {
-        printf("Ion %d: m = %.1f, Z = %.1f\n", i+1, p->m[i]/amu, p->Z[i]/q_e);
+        printf("Ion %d: m = %.1f, Z = %.1f, lc = %d\n",
+	       i + 1, p->m[i]/amu, p->Z[i]/q_e, p->lc[i]);
     }
 }
 
-void printParams(Params *p) {
+void print_params(Params *p) {
     printf("Total number of ions: %d\n", p->N);
     printf("Time parameters:\n");
     printf("   dt = %.1e, t_max = %.1e, t_steps = %d\n\n", p->dt, p->t_max, p->t_steps);
@@ -72,7 +73,7 @@ void printParams(Params *p) {
     return;
 }
 
-void printPositions(Ion *ion) {
+void print_positions(Ion *ion) {
     printf("%e %e %e\n", ion->x[0], ion->x[1], ion->x[2]);
 }
 

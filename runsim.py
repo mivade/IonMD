@@ -55,10 +55,10 @@ def load_library():
     dll = ctypes.CDLL("./ionmd.so")
     dll.simulate.restype = c_int
     dll.simulate.argtypes = [_DOUBLE_P, _DOUBLE_P, POINTER(CxxParams)]
-    dll.printIonStatistics.restype = None
-    dll.printIonStatistics.argtypes = [POINTER(CxxParams)]
-    dll.printParams.restype = None
-    dll.printParams.argtypes = [POINTER(CxxParams)]
+    dll.print_ion_statistics.restype = None
+    dll.print_ion_statistics.argtypes = [POINTER(CxxParams)]
+    dll.print_params.restype = None
+    dll.print_params.argtypes = [POINTER(CxxParams)]
     return dll
 
 def init_ions(N, m_lc, Z_lc, N_sc=None, m_sc=None, Z_sc=None):
@@ -80,7 +80,8 @@ def init_ions(N, m_lc, Z_lc, N_sc=None, m_sc=None, Z_sc=None):
     To create 10 ions, 7 laser cooled, 3 of different masses that are
     sympathetically cooled::
 
-        m, Z, lc = init_ions(10, 138, 1, [1,1,1], [135,136,137], [1,1,1])
+        m, Z, lc = init_ions(10, 138, 1, [1, 1, 1],
+                             [135, 136, 137], [1, 1, 1])
 
     """
     m, Z, lc = np.zeros(N), np.zeros(N), np.zeros(N, dtype=c_int)
@@ -109,7 +110,8 @@ def init_ions(N, m_lc, Z_lc, N_sc=None, m_sc=None, Z_sc=None):
                 Z[N_i:(N_i + N_sc[i])] = Z_sc[i]*q_e
                 N_i += N_sc[i]
             except IndexError:
-                raise IndexError("N_sc must have the same dimensions as m_sc and Z_sc!")
+                raise IndexError("N_sc must have the same dimensions as " + \
+                                 "m_sc and Z_sc!")
     return m, Z, lc
 
 def initial_conditions(N, pos_fname=None,
@@ -132,7 +134,8 @@ def initial_conditions(N, pos_fname=None,
         x0 = np.loadtxt(pos_fname, skiprows=2, usecols=(1, 2, 3))*1e-6
         v0 = np.zeros((N, 3))
         if x0.shape != (N, 3) or v0.shape != (N, 3):
-            raise ValueError("Initial conditions do not have the right number of ions.")
+            raise ValueError("Initial conditions do not have the right " + \
+                             "number of ions.")
         shuffle(x0)
     elif randomize:
         x0[:,:2] = uniform(-rlim, rlim, (N, 2))
@@ -160,14 +163,22 @@ def langevin_rate(m_ion, m_gas, P, T, alpha):
     Ze = 4.8032043e-10
     return 2*pi*Ze*sqrt(alpha/mu)*P/(kB*1e7*T)
 
-def run_simulation(dll, sim_settings, **kwargs):
-    """Run the simulation."""
+def run_simulation(sim_settings, **kwargs):
+    """
+    Run the simulation.
+
+    kwargs are a holdover from the older, messier version of
+    runsim.py. It may still be reimplemented later for doing some
+    simple changes, but most likely everything will be transitioned
+    over to being contained in sim_settings.
+
+    """
+    dll = load_library()
+    
     # Check that the parameters were correctly given.
     if not isinstance(sim_settings, SimParams):
         raise TypeError("sim_settings must be an instance of " + \
                         "settings.simParams.")
-    if not isinstance(dll, ctypes.CDLL):
-        raise TypeError("dll must be an instance of ctypes.CDLL.")
 
     # C++ settings struct
     p = sim_settings.to_cxx_format()
@@ -192,14 +203,13 @@ def run_simulation(dll, sim_settings, **kwargs):
 
     # Run the simulation
     print ":::", time.ctime(), ":::"
-    if kwargs.get('print_params', False):
-        print "=== Ion statistics ==="
-        if N <= 10:
-            dll.printIonStatistics(p)
-        else:
-            print "Lots of ions."
-        print "\n=== Simulation parameters ==="
-        dll.printParams(p)
+    print "=== Ion statistics ==="
+    if N <= 10:
+        dll.print_ion_statistics(p)
+    else:
+        print "Lots of ions."
+    print "\n=== Simulation parameters ==="
+    dll.print_params(p)
     print "\n=== Begin simulation ==="
     t0 = time.time()
     dll.simulate(x0_p, v0_p, p)
@@ -212,23 +222,10 @@ def run_simulation(dll, sim_settings, **kwargs):
 ##########
 
 if __name__ == "__main__":
-    dll = load_library()
     sim_settings = SimParams("default.json")
-
-    run_simulation(dll, sim_settings)
+    run_simulation(sim_settings)
     #ionvis.plot_trajectory(dt, t_max, N, start=traj_start/dt, end=-1)
     #ionvis.plot_fourier(dt, t_max, N, start=traj_start/dt, end=-1)
     #ionvis.display(fpos_fname="ipos.xyz")
-    ionvis.display()#outfile='images/test.png')
     #plot_temperature(N, 138*amu)
-    if False:
-        pass
-        #for N_ccd in range(5,0,-1):
-        #if all_lc:
-        #    N_ccd = 1
-        #else:
-        #    N_ccd = 2
-        #ionvis.simCCD("ccd", N_ccd, ccd_bins, ccd_extent,
-        #              outfile="images/CCD_latest.png",
-        #              show=True, brightness=2)
-
+    #ionvis.display()#outfile='images/test.png')

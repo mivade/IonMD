@@ -289,15 +289,18 @@ class SimParams(object):
         Return a Params representation of the simulation settings
         which can be passed to the C++ module.
 
-        Possible bug: Might not to explicitly tell np.array the dtypes
-        when creating pointers.
+        Possible bug: Might need to explicitly tell np.array the
+        dtypes when creating pointers.
 
         """
-        m_p = (np.array(self.ions['m'])*_AMU).ctypes.data_as(_DOUBLE_P)
-        Z_p = (np.array(self.ions['Z'])*_ECHARGE).ctypes.data_as(_DOUBLE_P)
+        m = np.array(self.ions['m'])*_AMU
+        Z = np.array(self.ions['Z'])*_ECHARGE
+        lc = np.array(self.ions['lc'], dtype=ctypes.c_int)
+        m_p = m.ctypes.data_as(_DOUBLE_P)
+        Z_p = Z.ctypes.data_as(_DOUBLE_P)
         masses = np.unique(self.ions['m'])
         masses_p = masses.ctypes.data_as(_DOUBLE_P)
-        lc_p = np.array(self.ions['lc']).ctypes.data_as(_INT_P)
+        lc_p = lc.ctypes.data_as(_INT_P)
         khat_p = np.array(self.laser['khat']).ctypes.data_as(_DOUBLE_P)
         
         self.cxx_params = Params(
@@ -341,7 +344,7 @@ class SimParams(object):
             ccd_fname=self.files['ccd_fname'],
             temp_fname=self.files['temp_fname'],
             record_traj=1, # TODO
-            traj_start=2e-6, # TODO
+            traj_start=self.control['dt']*100, # TODO
             T_steps=1200) # TODO
         return self.cxx_params
 

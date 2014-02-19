@@ -81,23 +81,16 @@ extern "C" {
     // Utility functions
     // -----------------
 
-    void printIonStatistics(Params *p);
-    void printParams(Params *p);
-    void printPositions(Ion *ion);
+    void print_ion_statistics(Params *p);
+    void print_params(Params *p);
+    void print_positions(Ion *ion);
 
     // Ion functions
     // -------------
 
     Ion *initIon(double *x0, double *v0, int index, Params *p);
-    //void minimize(Ion **ions, Params *p);
     void simCCDPoint(Ion *ion, gsl_histogram2d **ccd, Params *p);
     void updateIon(Ion *ion, Ion **ions, double t, mat Fcoullist, Params *p);
-    // void FTrap(Ion *ion, double t, Params *p, vec *F);
-    // void FLaser(Ion *ion, Params *p, vec *F);
-    // void FCoulomb(Ion *ion, Ion **ions, Params *p, vec *F);
-    // void FSecular(Ion *ion, double t, Params *p, vec *F);
-    // void FStochastic(Ion *ion, Params *p, vec *F);
-    // void allCoulomb(Ion **ions, Params *p, mat *Flist);
     vec FTrap(Ion *ion, double t, Params *p);
     vec FLaser(Ion *ion, Params *p);
     vec FCoulomb(Ion *ion, Ion **ions, Params *p);
