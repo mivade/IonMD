@@ -20,7 +20,7 @@ along with IonMD.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
 import json
 import numpy as np
-from numpy import pi
+from numpy import pi, ctypeslib
 from params import Params
 import ctypes
 import scipy.constants as consts
@@ -29,6 +29,18 @@ _DOUBLE_P = ctypes.POINTER(ctypes.c_double)
 _INT_P = ctypes.POINTER(ctypes.c_int)
 _AMU = consts.u
 _ECHARGE = consts.e
+
+def array_to_pointer(py_array, c_type):
+    """
+    Convert the Python array py_array into the ctypes pointer of type
+    c_type. This is directly from the solution given here__ and was
+    implemented because of some unexplained problems using numpy's
+    py_arry.ctypes.data_as function.
+
+    __: http://stackoverflow.com/a/4145859
+
+    """
+    return (c_type*len(py_array))(*py_array)
 
 class SimParams(object):
     """
@@ -289,20 +301,19 @@ class SimParams(object):
         Return a Params representation of the simulation settings
         which can be passed to the C++ module.
 
-        Possible bug: Might need to explicitly tell np.array the
-        dtypes when creating pointers.
-
         """
         m = np.array(self.ions['m'])*_AMU
+        masses = np.unique(m)
         Z = np.array(self.ions['Z'])*_ECHARGE
         lc = np.array(self.ions['lc'], dtype=ctypes.c_int)
-        m_p = m.ctypes.data_as(_DOUBLE_P)
-        Z_p = Z.ctypes.data_as(_DOUBLE_P)
-        masses = np.unique(self.ions['m'])
-        masses_p = masses.ctypes.data_as(_DOUBLE_P)
-        lc_p = lc.ctypes.data_as(_INT_P)
-        khat_p = np.array(self.laser['khat']).ctypes.data_as(_DOUBLE_P)
-        
+        khat = np.array(self.laser['khat'], dtype=ctypes.c_double)
+
+        m_p = array_to_pointer(m, ctypes.c_double)
+        masses_p = array_to_pointer(masses, ctypes.c_double)
+        Z_p = array_to_pointer(Z, ctypes.c_double)
+        lc_p = array_to_pointer(lc, ctypes.c_int)
+        khat_p = array_to_pointer(khat, ctypes.c_double)
+                
         self.cxx_params = Params(
             N=len(self.ions['m']),
             N_masses=len(masses),
@@ -315,9 +326,9 @@ class SimParams(object):
             beta=self.laser['beta'],
             F0=self.laser['F0'],
             r0=self.trap['r0'], z0=self.trap['z0'],
+            kappa=self.trap['kappa'],
             Omega=2*pi*self.trap['f_RF'],
             V=self.trap['V'], U=self.trap['U'], UEC=self.trap['UEC'],
-            kappa=self.trap['kappa'],
             Vsec=0., w=0., # TODO
             gamma_col=self.stochastic['gamma_col'],
             m_gas=self.stochastic['m_gas_amu']*_AMU,

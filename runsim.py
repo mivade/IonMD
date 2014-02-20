@@ -19,6 +19,8 @@ You should have received a copy of the GNU General Public License
 along with IonMD.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from __future__ import print_function
+from __future__ import division
 import time, datetime
 import ctypes
 from ctypes import c_int, c_double, POINTER
@@ -190,7 +192,7 @@ def run_simulation(sim_settings, **kwargs):
     r0 = p.r0
     z0 = p.z0
     m = sim_settings.ions['m'][0]*amu
-    if kwargs.has_key('ipos_fname'):
+    if 'ipos_fname' in kwargs:
         ipos = kwargs['ipos_fname']
         x0, v0 = initial_conditions(N, pos_fname=ipos)
     else:
@@ -202,30 +204,30 @@ def run_simulation(sim_settings, **kwargs):
     v0_p = v0.ctypes.data_as(_DOUBLE_P)
 
     # Run the simulation
-    print ":::", time.ctime(), ":::"
-    print "=== Ion statistics ==="
+    print(":::", time.ctime(), ":::")
+    print("=== Ion statistics ===")
     if N <= 10:
         dll.print_ion_statistics(p)
     else:
-        print "Lots of ions."
-    print "\n=== Simulation parameters ==="
+        print("Lots of ions.")
+    print("\n=== Simulation parameters ===")
     dll.print_params(p)
-    print "\n=== Begin simulation ==="
+    print("\n=== Begin simulation ===")
     t0 = time.time()
     dll.simulate(x0_p, v0_p, p)
-    print "Finish on", time.ctime()
+    print("Finish on", time.ctime())
     t_total = time.time() - t0
-    print "Total run time: %s" % str(datetime.timedelta(seconds=t_total))
+    print("Total run time: %s" % str(datetime.timedelta(seconds=t_total)))
 
 ##########
 ## MAIN ##
 ##########
 
 if __name__ == "__main__":
-    sim_settings = SimParams("default.json")
-    run_simulation(sim_settings)
+    parameters = SimParams("default.json")
+    run_simulation(parameters)
     #ionvis.plot_trajectory(dt, t_max, N, start=traj_start/dt, end=-1)
     #ionvis.plot_fourier(dt, t_max, N, start=traj_start/dt, end=-1)
     #ionvis.display(fpos_fname="ipos.xyz")
     #plot_temperature(N, 138*amu)
-    #ionvis.display()#outfile='images/test.png')
+    ionvis.display()#outfile='images/test.png')

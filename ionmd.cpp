@@ -30,7 +30,7 @@ using arma::vec;
 using arma::dot;
 using arma::mat;
 
-#define dbg(wat) (std::cout << wat << "\n")
+#define dbg(wat) (cout << wat << "\n")
 #define err(e) (cerr << "ERROR: " << e << endl)
 const vec xhat = {-sqrt(2)/2, sqrt(2)/2, 0}, yhat = {0,0,1};
 
@@ -43,6 +43,7 @@ gsl_rng *rng = gsl_rng_alloc(rng_T);
 //---------------------//
 
 void print_ion_statistics(Params *p) {
+    cout << "khat address = " << &p->khat << endl;
     for (int i = 0; i < p->N; i++) {
         printf("Ion %d: m = %.1f, Z = %.1f, lc = %d\n",
 	       i + 1, p->m[i]/amu, p->Z[i]/q_e, p->lc[i]);

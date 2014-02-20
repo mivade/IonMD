@@ -23,7 +23,7 @@
 //-------------------------//
 
 // Parameters to pass from the simulation control scripts
-typedef struct Params {
+struct Params {
     // Ion parameters
     int N,		// total number of ions
 	N_masses;	// number of unique masses
@@ -83,6 +83,6 @@ typedef struct Params {
     int record_traj;	// record trajectories?
     double traj_start;	// time to start recording trajectory data
     int T_steps;	// number of steps for averaging velocities
-} Params;
+};
 
 #endif
