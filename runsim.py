@@ -23,7 +23,6 @@ from __future__ import print_function
 from __future__ import division
 import time, datetime
 import ctypes
-from ctypes import c_int, c_double, POINTER
 import numpy as np
 from numpy import pi, sqrt
 from numpy.random import uniform, normal, shuffle
@@ -31,6 +30,7 @@ import scipy.constants as consts
 import ionvis
 from params import Params as CxxParams
 from settings import SimParams
+from paultrap import PaulTrap
 
 ###############
 ## CONSTANTS ##
@@ -42,7 +42,7 @@ q_e = consts.e
 kB = consts.k
 
 # ctypes constants
-_DOUBLE_P = POINTER(c_double)
+_DOUBLE_P = ctypes.POINTER(ctypes.c_double)
 
 ###############
 ## FUNCTIONS ##
@@ -54,13 +54,13 @@ def load_library():
     Python.
 
     """
-    dll = ctypes.CDLL("./ionmd.so")
-    dll.simulate.restype = c_int
-    dll.simulate.argtypes = [_DOUBLE_P, _DOUBLE_P, POINTER(CxxParams)]
+    dll = ctypes.CDLL("./libionmd.so")
+    dll.simulate.restype = ctypes.c_int
+    dll.simulate.argtypes = [_DOUBLE_P, _DOUBLE_P, ctypes.POINTER(CxxParams)]
     dll.print_ion_statistics.restype = None
-    dll.print_ion_statistics.argtypes = [POINTER(CxxParams)]
+    dll.print_ion_statistics.argtypes = [ctypes.POINTER(CxxParams)]
     dll.print_params.restype = None
-    dll.print_params.argtypes = [POINTER(CxxParams)]
+    dll.print_params.argtypes = [ctypes.POINTER(CxxParams)]
     return dll
 
 def init_ions(N, m_lc, Z_lc, N_sc=None, m_sc=None, Z_sc=None):
@@ -77,7 +77,7 @@ def init_ions(N, m_lc, Z_lc, N_sc=None, m_sc=None, Z_sc=None):
     To create 10 ions, 7 of which are laser cooled, and 3 of which are
     the same sympathetically cooled mass::
 
-         m, Z, lc = init_ions(10, 138, 1, 3, 136, 1)
+        m, Z, lc = init_ions(10, 138, 1, 3, 136, 1)
 
     To create 10 ions, 7 laser cooled, 3 of different masses that are
     sympathetically cooled::
@@ -86,30 +86,30 @@ def init_ions(N, m_lc, Z_lc, N_sc=None, m_sc=None, Z_sc=None):
                              [135, 136, 137], [1, 1, 1])
 
     """
-    m, Z, lc = np.zeros(N), np.zeros(N), np.zeros(N, dtype=c_int)
+    m, Z, lc = np.zeros(N), np.zeros(N), np.zeros(N, dtype=ctypes.c_int)
     if not N_sc:
-        m += m_lc*amu
-        Z += Z_lc*q_e
+        m += m_lc
+        Z += Z_lc
         lc += 1
     elif not isinstance(N_sc, (list, tuple)):
         if N_sc >= N:
             raise ValueError("N_sc must be < N.")
         N_lc = N - N_sc
-        m[:N_lc] = m_lc*amu
-        m[N_lc:] = m_sc*amu
-        Z[:N_lc] = Z_lc*q_e
-        Z[N_lc:] = Z_sc*q_e
+        m[:N_lc] = m_lc
+        m[N_lc:] = m_sc
+        Z[:N_lc] = Z_lc
+        Z[N_lc:] = Z_sc
         lc[:N_lc] = 1
     else:
         N_lc = N - sum(N_sc)
-        m[:N_lc] = m_lc*amu
-        Z[:N_lc] = Z_lc*q_e
+        m[:N_lc] = m_lc
+        Z[:N_lc] = Z_lc
         lc[:N_lc] = 1
         N_i = N_lc
         for i in range(len(N_sc)):
             try:
-                m[N_i:(N_i + N_sc[i])] = m_sc[i]*amu
-                Z[N_i:(N_i + N_sc[i])] = Z_sc[i]*q_e
+                m[N_i:(N_i + N_sc[i])] = m_sc[i]
+                Z[N_i:(N_i + N_sc[i])] = Z_sc[i]
                 N_i += N_sc[i]
             except IndexError:
                 raise IndexError("N_sc must have the same dimensions as " + \
@@ -225,9 +225,29 @@ def run_simulation(sim_settings, **kwargs):
 
 if __name__ == "__main__":
     parameters = SimParams("default.json")
+    m, Z, lc = init_ions(100, 40, 1, 15, 42, 1)
+    parameters.set_ions(m, Z, lc)
+    
+    trap = PaulTrap(parameters.trap['r0'], parameters.trap['f_RF'])
+    q, a = trap.get_mathieu_qa(parameters.ions['m'][0]*amu,
+                               parameters.trap['V'],
+                               parameters.trap['U'],
+                               parameters.ions['Z'][0])
+    print("q =", q, ", a =", a)
+    
     run_simulation(parameters)
-    #ionvis.plot_trajectory(dt, t_max, N, start=traj_start/dt, end=-1)
-    #ionvis.plot_fourier(dt, t_max, N, start=traj_start/dt, end=-1)
-    #ionvis.display(fpos_fname="ipos.xyz")
-    #plot_temperature(N, 138*amu)
-    ionvis.display()#outfile='images/test.png')
+
+    dt = parameters.control['dt']
+    t_max = parameters.control['t_max']
+    N = len(parameters.ions['m'])
+    
+    if parameters.control['plot_trajectory']:
+        ionvis.plot_trajectory(dt, t_max, N)
+    if parameters.control['plot_fourier']:
+        pass
+        #ionvis.plot_fourier(dt, t_max, N, start=traj_start/dt, end=-1)
+    if parameters.control['plot_temperature']:
+        pass
+        #plot_temperature(N, 138*amu)
+    if parameters.control['display']:
+        ionvis.display()

@@ -115,7 +115,7 @@ def plot_temperature(N, m=138*amu, temp_file="temperature.txt", outfile=None):
 # 3D display functions
 # --------------------
 
-def display(fpos_fname='fpos.xyz', m_lc=138, scale=25, outfile=None):
+def display(fpos_fname='fpos.xyz', scale=25, outfile=None):
     scale = scale
     ions, x, y, z = np.loadtxt(fpos_fname, skiprows=2, unpack=True)
     xlist = []

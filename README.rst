@@ -99,14 +99,14 @@ VM).
 Usage
 =====
 
-Simulations are run through the `runsim.py` file which passes
+Simulations are run through the ``runsim.py`` file which passes
 simulation parameters to the C++ library which performs the actual
 computations. Parameters are now entered in a configuration file using
-the JSON_ format. See `default.json` for an example of what these
+the JSON_ format. See ``default.json`` for an example of what these
 files should look like. Note that parameters can also be changed
-programmatically by manually altering a `SimParams` object. This is
+programmatically by manually altering a ``SimParams`` object. This is
 useful e.g. for iterating through a series of parameters. See
-`settings.py` for more information.
+``settings.py`` for more information.
 
 If modifying the C++ code, the included Makefile should be sufficient
 if using a standard Linux environment with g++.
@@ -119,8 +119,8 @@ Data Output
 Large data files containing, e.g., trajectories are written in low
 level binary format. This means that they may not be portable to
 another computer, but within a machine, there should be no
-issues. Data can be easily read with numpy.fromfile. See the `simCCD`
-function in `ionvis.py` for an example.
+issues. Data can be easily read with numpy.fromfile. See the
+``simCCD`` function in ``ionvis.py`` for an example.
 
 Simulated CCD data gives mass in amu and position data in
 microns. Trajectory data gives time in microseconds and position in

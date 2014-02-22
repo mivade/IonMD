@@ -20,6 +20,7 @@ along with IonMD.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
 import json
 import numpy as np
+import numpy.linalg as la
 from numpy import pi, ctypeslib
 from params import Params
 import ctypes
@@ -113,6 +114,9 @@ class SimParams(object):
         plot_fourier : bool
             Plot the Fourier transform of the COM when the simulation
             is done if True.
+        plot_temperature : bool
+            Plot the COM temperature as a function of time following
+            simulation completion if True.
         display : bool
             Use MayaVI to display the final ion positions if True.
         num_threads : int
@@ -128,6 +132,7 @@ class SimParams(object):
         self.control['min_time'] = kwargs.get(1.5e-3)
         self.control['plot_trajectory'] = kwargs.get('plot_trajectory', False)
         self.control['plot_fourier'] = kwargs.get('plot_fourier', False)
+        self.control['plot_temperature'] = kwargs.get('plot_temperature', False)
         self.control['display'] = kwargs.get('display', True)
         self.control['num_threads'] = kwargs.get('num_threads', 1)
 
@@ -215,8 +220,9 @@ class SimParams(object):
         Keyword arguments
         -----------------
         khat : length 3 list
-            Unit vector pointing in the direction of laser
-            propagation.
+            Vector pointing in the direction of laser
+            propagation. This gets normalized upon reading the value,
+            so it is not necessary to pass a unit vector.
         lmbda : float
             Cooling laser wavelength.
         Gamma_Hz : float
@@ -232,6 +238,7 @@ class SimParams(object):
         
         """
         self.laser['khat'] = kwargs.get('khat', [0., 0., 1.])
+        self.laser['khat'] /= la.norm(self.laser['khat'])
         self.laser['lmbda'] = kwargs.get('lmbda', 397e-9)
         self.laser['Gamma_Hz'] = kwargs.get('Gamma_Hz', 20e6)
         self.laser['delta_Gamma'] = kwargs.get('delta_gamma', -10.)
@@ -307,6 +314,7 @@ class SimParams(object):
         Z = np.array(self.ions['Z'])*_ECHARGE
         lc = np.array(self.ions['lc'], dtype=ctypes.c_int)
         khat = np.array(self.laser['khat'], dtype=ctypes.c_double)
+        khat /= la.norm(khat)
 
         m_p = array_to_pointer(m, ctypes.c_double)
         masses_p = array_to_pointer(masses, ctypes.c_double)

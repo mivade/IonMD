@@ -43,7 +43,6 @@ gsl_rng *rng = gsl_rng_alloc(rng_T);
 //---------------------//
 
 void print_ion_statistics(Params *p) {
-    cout << "khat address = " << &p->khat << endl;
     for (int i = 0; i < p->N; i++) {
         printf("Ion %d: m = %.1f, Z = %.1f, lc = %d\n",
 	       i + 1, p->m[i]/amu, p->Z[i]/q_e, p->lc[i]);
@@ -55,7 +54,7 @@ void print_params(Params *p) {
     printf("Time parameters:\n");
     printf("   dt = %.1e, t_max = %.1e, t_steps = %d\n\n", p->dt, p->t_max, p->t_steps);
     printf("Laser parameters:\n");
-    printf("   lambda = %.1f, delta = %.1e*Gamma, Gamma = 2*pi*%.1e, s = %.1f\n", p->lmbda/1e-9, p->delta/p->Gamma, p->Gamma/(2*pi), p->s);
+    printf("   lambda = %.1f nm, delta = %.1e*Gamma, Gamma = 2*pi*%.1e, s = %.1f\n", p->lmbda/1e-9, p->delta/p->Gamma, p->Gamma/(2*pi), p->s);
     printf("   khat = [%.1f, %.1f, %.1f]\n\n", p->khat[0], p->khat[1], p->khat[2]);
     printf("Trap parameters:\n");
     printf("   V = %.1f, U = %.1f, UEC = %.1f\n   r0 = %.2e, z0 = %2e, kappa = %.1e\n", p->V, p->U, p->UEC, p->r0, p->z0, p->kappa);

@@ -6,10 +6,11 @@
 	"use_stochastic": false,
 	"sim_ccd": true,
 	"dt": 20e-9,
-	"t_max": 5e-3,
-	"min_time": 1.5e-3,
-        "plot_trajectory": false,
+	"t_max": 3e-3,
+	"min_time": 1.25e-3,
+        "plot_trajectory": true,
         "plot_fourier": false,
+	"plot_temperature": false,
         "display": true,
 	"num_threads": 4
     },
@@ -22,27 +23,27 @@
     },
     "params": {
 	"ions": {
-	    "m": [138, 138, 138, 138, 138, 136, 136],
-	    "Z": [1, 1, 1, 1, 1, 1, 1],
-	    "lc": [1, 1, 1, 1, 1, 0, 0]
+	    "m": [40, 40, 40, 40],
+	    "Z": [1, 1, 1, 1],
+	    "lc": [1, 1, 1, 1]
 	},
 	"trap": {
-	    "r0": 3.18e-3,
-	    "z0": 17.5e-3,
-	    "kappa": 9e-3,
-	    "f_RF": 2.7e6,
-            "V": 120.0,
+	    "r0": 3.50e-3,
+	    "z0": 2.70e-3,
+	    "kappa": 0.248,
+	    "f_RF": 4.7e6,
+            "V": 1000.0,
             "U": 0,
-	    "UEC": 300.0
+	    "UEC": 30.0
 	},
 	"laser": {
-	    "khat": [0, 0, 1],
-	    "lmbda": 493.5e-9,
-	    "Gamma_Hz": 15e6,
-	    "delta_Gamma": -2.0,
-	    "s": 3.0,
-	    "beta": 4e-22,
-	    "F0": 5.0e-20
+	    "khat": [1, 1, 0],
+	    "lmbda": 396.8e-9,
+	    "Gamma_Hz": 20.7e6,
+	    "delta_Gamma": -10.0,
+	    "s": 10.0,
+	    "beta": 6e-22,
+	    "F0": 2.0e-20
 	},
 	"stochastic": {
 	    "gamma_col": 1.0,

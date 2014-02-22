@@ -5,11 +5,14 @@ CXXFLAGS = -Wall -O3 -fPIC -flto -fopenmp -march=native -g -std=c++11
 LIBS = -lm -lgsl -lgslcblas -larmadillo #-llapack -lblas
 SRCS = *.cpp
 HDRS = *.hpp
-OBJS = minimize.o
+OBJS = minimize.o ionmd.o
 RESTFLAGS = --math-output="MathJax" --cloak-email-addresses
 
-ionmd.so: $(SRCS) $(HDRS) params.py README.html minimize.o
-	$(CXX) $(CXXFLAGS) -shared $(OBJS) $(LIBS) ionmd.cpp -oionmd.so
+libionmd.so: $(SRCS) $(HDRS) $(OBJS) params.py
+	$(CXX) $(CXXFLAGS) -shared $(OBJS) $(LIBS) -olibionmd.so
+
+ionmd.o: ionmd.cpp ionmd.hpp minimize.hpp
+	$(CXX) $(CXXFLAGS) -c ionmd.cpp -oionmd.o
 
 minimize.o: minimize.cpp minimize.hpp
 	$(CXX) $(CXXFLAGS) -c minimize.cpp -ominimize.o
