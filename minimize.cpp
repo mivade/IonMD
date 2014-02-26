@@ -28,17 +28,20 @@ using std::cout;
 using std::cerr;
 using std::endl;
 using arma::vec;
+using arma::mat;
+
+const double KBOLTZMANN = 1.3806503e-23;
 
 void minimize(Ion **ions, Params *p) {
     double t = 0;
     mat Fclist(3, p->N);
+    int i, j;
 
     // Store settings
     int use_rfmm = p->use_rfmm,
 	use_coulomb = p->use_coulomb,
 	use_laser = p->use_laser,
-	use_stochastic = p->use_stochastic,
-	i, j;
+	use_stochastic = p->use_stochastic;
 
     // Turn off everything but Coulomb, trap, and laser
     p->use_rfmm = 0;
@@ -47,17 +50,17 @@ void minimize(Ion **ions, Params *p) {
     p->use_stochastic = 0;
 
     // Begin minimization
+    // TODO: better end decision
     p->minimizing = 1;
-    while(true) {	// TODO: better end decision
+    for(t = 0; t < p->min_time; t += p->dt) {
 	Fclist = allCoulomb(ions, p);
-	for(i=0; i<p->N; i++) {
+	for(i = 0; i < p->N; i++) {
 	    updateIon(ions[i], ions, t, Fclist, p);
 	}
-	if(t >= p->min_time)
-	    break;
-	t += p->dt;
     }
-    for(i=0; i<p->N; i++) {
+
+    // Reset initial velocities and accelerations
+    for(i = 0; i < p-> N; i++) {
 	for(j=0; j<3; j++) {
 	    ions[i]->v[j] = 0;
 	    ions[i]->a[j] = 0;
@@ -72,7 +75,7 @@ void minimize(Ion **ions, Params *p) {
     p->use_stochastic = use_stochastic;
 
     // Write initial positions
-    writeInitPos(ions, p);
+    write_init_pos(ions, p);
 }
 
 /*void minimize(double *x0, Ion **ions, Params *p) {
@@ -111,10 +114,10 @@ void minimize(Ion **ions, Params *p) {
     printf("Finished minimization in %d function calls.\n", min_data->fcalls);
     cout << "Minimum energy: " << Umin << endl;
     delete min_data;
-    writeInitPos(ions, p);
+    write_init_pos(ions, p);
     }*/
 
-void writeInitPos(Ion **ions, Params *p) {
+void write_init_pos(Ion **ions, Params *p) {
     FILE *init_pos_file = fopen("ipos.xyz", "w");
     fprintf(init_pos_file, "%d\nInitial positions in microns\n", p->N);
     for(int i=0; i<p->N; i++) {
@@ -145,6 +148,7 @@ double minfunc(const vector<double> &x, vector<double> &grad, void *_data) {
     return U;
     }*/
 
+/*
 double UTrap(int i, Ion **ions, Params *p) {
     double C, D, U;
     C = ions[i]->Z*pow(p->V,2)/(ions[i]->m*pow(p->Omega,2)*pow(p->r0,4));
@@ -183,3 +187,4 @@ double UCoulomb(int i, Ion **ions, Params *p) {
     }
     return U;
 }
+*/

@@ -62,7 +62,7 @@ class PaulTrap:
         V : float
             RF voltage V as defined in P. K. Ghosh, *Ion Traps*
             (Oxford University Press, Oxford, 1995).
-        Z : float, optional
+        Z : int, optional
             Ionization state (i.e., ``Z = 1`` means an ion with charge
             ``Z*e``).
 
@@ -87,7 +87,7 @@ class PaulTrap:
         U : float
             RF DC offset voltage U as defined in P. K. Ghosh, *Ion
             Traps* (Oxford University Press, Oxford, 1995).
-        Z : float, optional
+        Z : int, optional
             Ionization state (i.e., ``Z = 1`` means an ion with charge
             ``Z*e``).
 
@@ -115,7 +115,7 @@ class PaulTrap:
         U : float
             RF DC offset voltage U as defined in P. K. Ghosh, *Ion
             Traps* (Oxford University Press, Oxford, 1995).
-        Z : float, optional
+        Z : int, optional
             Ionization state (i.e., ``Z = 1`` means an ion with charge
             ``Z*e``).
 
@@ -147,13 +147,13 @@ class PaulTrap:
         U : float
             RF DC offset voltage U as defined in P. K. Ghosh, *Ion
             Traps* (Oxford University Press, Oxford, 1995).
-        Z : float, optional
+        Z : int, optional
             Ionization state (i.e., ``Z = 1`` means an ion with charge
             ``Z*e``).
 
         Returns
         -------
-        w_0 : float
+        float
             Nominal radial secular (angular) frequency.
 
         """
@@ -170,7 +170,7 @@ class PaulTrap:
 
         Returns
         -------
-        w_z : float
+        float
             Axial secular (angular) frequency.
 
         """
@@ -197,13 +197,13 @@ class PaulTrap:
             Traps* (Oxford University Press, Oxford, 1995).
         UEC : float
             End cap electrode voltage.
-        Z : float, optional
+        Z : int, optional
             Ionization state (i.e., ``Z = 1`` means an ion with charge
             ``Z*e``).
 
         Returns
         -------
-        w_r : float
+        float
             Radial secular (angular) frequency.
 
         """

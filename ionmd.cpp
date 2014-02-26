@@ -50,12 +50,19 @@ void print_ion_statistics(Params *p) {
 }
 
 void print_params(Params *p) {
+    // Note that at present the following parameters do nothing:
+    // lambda, delta, Gamma. This is because a constant force is used
+    // now instead of calculating the laser force on the fly.
     printf("Total number of ions: %d\n", p->N);
     printf("Time parameters:\n");
-    printf("   dt = %.1e, t_max = %.1e, t_steps = %d\n\n", p->dt, p->t_max, p->t_steps);
+    printf("   dt = %.1e, t_max = %.1e, t_steps = %d\n\n",
+	   p->dt, p->t_max, p->t_steps);
     printf("Laser parameters:\n");
-    printf("   lambda = %.1f nm, delta = %.1e*Gamma, Gamma = 2*pi*%.1e, s = %.1f\n", p->lmbda/1e-9, p->delta/p->Gamma, p->Gamma/(2*pi), p->s);
-    printf("   khat = [%.1f, %.1f, %.1f]\n\n", p->khat[0], p->khat[1], p->khat[2]);
+    printf("   lambda = %.1f nm, delta = %.1e*Gamma, Gamma = 2*pi*%.1e\n",
+	   p->lmbda/1e-9, p->delta/p->Gamma, p->Gamma/(2*pi));
+    printf("   F0 = %.2e, beta = %.2e\n", p->F0, p->beta);
+    printf("   khat = [%.2f, %.2f, %.2f]\n\n",
+	   p->khat[0], p->khat[1], p->khat[2]);
     printf("Trap parameters:\n");
     printf("   V = %.1f, U = %.1f, UEC = %.1f\n   r0 = %.2e, z0 = %2e, kappa = %.1e\n", p->V, p->U, p->UEC, p->r0, p->z0, p->kappa);
     printf("   Vsec = %.1f, w = 2*pi*%.1f\n\n", p->Vsec, p->w/(2*pi));
@@ -119,7 +126,6 @@ void simCCDPoint(Ion *ion, gsl_histogram2d **ccd, Params *p) {
 }
 
 void updateIon(Ion *ion, Ion **ions, double t, mat Fcoullist, Params *p) {
-    // TODO: These all need to be length 3
     vec F, Ft, Fl, Fc, Fsec, Fs, a;
     ion->x += ion->v*p->dt + 0.5*ion->a*pow(p->dt, 2);
     F = FTrap(ion, t, p);
@@ -188,30 +194,28 @@ vec FLaser(Ion *ion, Params *p) {
 }
 
 // Coulomb interaction
-// (result stored in F)
-//void FCoulomb(Ion *ion, Ion **ions, Params *p, vec *F) { 
 vec FCoulomb(Ion *ion, Ion **ions, Params *p) {
-    vec r = vec(3), F(3);
+    vec r(3);
+    vec F(3);
     r.zeros();
     F.zeros();
     double r_mag = 0;
-    int i = ion->index, j, k;
-    //#pragma omp parallel for
+    int i = ion->index;
+    int j;
+    #pragma omp parallel for
     for(j = 0; j < p->N; j++) {
         if(i == j)
             continue;
 	r = ion->x - ions[j]->x;
         r_mag = sqrt(dot(r, r));
-        for(k = 0; k < 3; k++)
-	    F[k] += OOFPEN*ion->Z*ions[j]->Z*r[k]/pow(r_mag, 3);
-	// F += OOFPEN*ion->Z*ions[j]->Z*r/pow(r_mag, 3);
+        //for(k = 0; k < 3; k++)
+	//    F[k] += OOFPEN*ion->Z*ions[j]->Z*r[k]/pow(r_mag, 3);
+	F += OOFPEN*ion->Z*ions[j]->Z*r/pow(r_mag, 3);
     }
     return F;
 }
 
 // Secular excitations
-// (result stored in F)
-//void FSecular(Ion *ion, double t, Params *p, vec *F) {
 vec FSecular(Ion *ion, double t, Params *p) {
     vec F(3);
     F.zeros();
@@ -220,8 +224,6 @@ vec FSecular(Ion *ion, double t, Params *p) {
 }
 
 // Stochastic processes, e.g. collisions with background gases
-// (result stored in F)
-//void FStochastic(Ion *ion, Params *p, vec *F) {
 vec FStochastic(Ion *ion, Params *p) {
     double v;
     vec F(3);
@@ -240,15 +242,14 @@ vec FStochastic(Ion *ion, Params *p) {
 // Precomputes all Coulomb interactions (that way they can be applied
 // all at once instead of having one ion updated before the Coulomb
 // interaction is computed for the rest).
-// (result stored in Flist)
-//void allCoulomb(Ion **ions, Params *p, mat *Flist) { 
 mat allCoulomb(Ion **ions, Params *p) {
     int i;
     mat Flist(3, p->N);
     #pragma omp parallel for
-    for(i=0; i<p->N; i++) {
+    for(i = 0; i < p->N; i++) {
         //FCoulomb(ions[i], ions, p, &Flist[i*3]); //Alternately: Flist+i*3
 	Flist.col(i) = FCoulomb(ions[i], ions, p);
+	//cout << Flist.col(i) << endl;
     }
     return Flist;
 }
@@ -296,8 +297,9 @@ int simulate(double *x0, double *v0, Params *p) {
     // Do minimization routine
     printf("Minimizing...\n");
     minimize(ions, p);
-    //p->minimizing = 0;
     //minimize(x0, ions, p);
+    if(p->quit_after_minimizing)
+	return 1;
 
     // Reset initial velocities
     for(i=0; i<p->N; i++) {
@@ -330,6 +332,7 @@ int simulate(double *x0, double *v0, Params *p) {
             if(p->record_traj) {
                 if(t > p->traj_start) {
 		    for(j=0; j<3; j++) {
+			// TODO: what is going on here?
 			tmp = (float)(ions[i]->x[j]/1e-3);
 			xcom[j] += (float)ions[i]->m*tmp/M;
 			if(i == 0)
@@ -356,8 +359,9 @@ int simulate(double *x0, double *v0, Params *p) {
 
 	    // Check bounds
 	    if(p->use_abort) {
-		for(j=0; j<2; j++) {
-		    if(abs(ions[i]->x[j]) >= p->abort_bounds || ions[i]->x[j] != ions[i]->x[j]) {
+		for(j = 0; j < 2; j++) {
+		    if(abs(ions[i]->x[j]) >= p->abort_bounds || \
+		       ions[i]->x[j] != ions[i]->x[j]) {
 			err("Ion out of bounds! Aborting...");
 			fprintf(stderr, "x[%i] = %.3e\n",
 				j, ions[i]->x[j]);
@@ -368,8 +372,8 @@ int simulate(double *x0, double *v0, Params *p) {
 	    }
         }
 	if(p->record_traj) {
-	    for(j=0; j<3; j++) {
-		float tmp = float(xcom[j]);
+	    for(j = 0; j < 3; j++) {
+		tmp = float(xcom[j]);
 		fwrite(&tmp, sizeof(float), 1, com_file);
 	    }
 	}

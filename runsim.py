@@ -169,10 +169,12 @@ def run_simulation(sim_settings, **kwargs):
     """
     Run the simulation.
 
-    kwargs are a holdover from the older, messier version of
-    runsim.py. It may still be reimplemented later for doing some
-    simple changes, but most likely everything will be transitioned
-    over to being contained in sim_settings.
+    Keyword Arguments
+    -----------------
+    quit_after_minimizing : bool
+        If True, quit execution after running the minimization
+        procedure. Mostly useful for debugging purposes to verify
+        things like time step size are sufficiently small.
 
     """
     dll = load_library()
@@ -180,10 +182,14 @@ def run_simulation(sim_settings, **kwargs):
     # Check that the parameters were correctly given.
     if not isinstance(sim_settings, SimParams):
         raise TypeError("sim_settings must be an instance of " + \
-                        "settings.simParams.")
+                        "settings.SimParams.")
 
     # C++ settings struct
     p = sim_settings.to_cxx_format()
+    try:
+        p.quit_after_minimizing = ctypes.c_int(kwargs['quit_after_minimizing'])
+    except KeyError:
+        p.quit_after_minimizing = 0
 
     # Initial conditions
     # TODO: clean this up, maybe allow for settings
@@ -200,6 +206,7 @@ def run_simulation(sim_settings, **kwargs):
                                     zlim=z0, vlim=sqrt(3*kB*T0/m/2.))
     x0 = x0.flatten()
     v0 = v0.flatten()
+    print(x0, v0)
     x0_p = x0.ctypes.data_as(_DOUBLE_P)
     v0_p = v0.ctypes.data_as(_DOUBLE_P)
 
@@ -225,7 +232,11 @@ def run_simulation(sim_settings, **kwargs):
 
 if __name__ == "__main__":
     parameters = SimParams("default.json")
-    m, Z, lc = init_ions(100, 40, 1, 15, 42, 1)
+    #m, Z, lc = init_ions(20, 40, 1, 2, 42, 1)
+    N = 20
+    m = N*[40]
+    Z = N*[1]
+    lc = N*[1]
     parameters.set_ions(m, Z, lc)
     
     trap = PaulTrap(parameters.trap['r0'], parameters.trap['f_RF'])
@@ -234,13 +245,20 @@ if __name__ == "__main__":
                                parameters.trap['U'],
                                parameters.ions['Z'][0])
     print("q =", q, ", a =", a)
-    
-    run_simulation(parameters)
+
+    parameters.control['display'] = False
+    run_simulation(parameters, quit_after_minimizing=False)
 
     dt = parameters.control['dt']
     t_max = parameters.control['t_max']
     N = len(parameters.ions['m'])
-    
+
+    if parameters.control['sim_ccd']:
+        ionvis.sim_ccd(parameters.files['ccd_fname'],
+                       len(np.unique(parameters.ions['m'])),
+                       parameters.ccd['ccd_bins'],
+                       parameters.ccd['ccd_extent'],
+                       show=True, brightness=2)
     if parameters.control['plot_trajectory']:
         ionvis.plot_trajectory(dt, t_max, N)
     if parameters.control['plot_fourier']:
@@ -250,4 +268,5 @@ if __name__ == "__main__":
         pass
         #plot_temperature(N, 138*amu)
     if parameters.control['display']:
-        ionvis.display()
+        #ionvis.display("ipos.xyz")
+        ionvis.display("fpos.xyz", scale=1)

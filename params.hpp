@@ -22,7 +22,7 @@
 //--SIMULATION PARAMETERS--//
 //-------------------------//
 
-// Parameters to pass from the simulation control scripts
+// Parameters to pass from the simulation control scripts.
 struct Params {
     // Ion parameters
     int N,		// total number of ions
@@ -36,7 +36,6 @@ struct Params {
     double lmbda,	// wavelength
 	r_l,		// beam radius
 	delta,		// detuning
-	s,		// saturation parameter
 	Gamma,		// laser cooled ion's linewidth
 	beta,		// cooling parameter (for constant cooling rate)
 	F0;		// laser pressure force (~3.2E-20 kg m/s^2 for Ba+ at s = 1)
@@ -64,6 +63,7 @@ struct Params {
 			// out of bounds
     int minimizing;	// internal variable; 1 when performing
 			// minimization routine
+    int quit_after_minimizing;	// For debugging purposes.
     int t_steps,	// number of time steps (easy to give with Python)
 	use_rfmm,	// include RF micromotion
 	use_coulomb,	// include the Coulomb interaction

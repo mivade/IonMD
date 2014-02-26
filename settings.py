@@ -22,7 +22,7 @@ import json
 import numpy as np
 import numpy.linalg as la
 from numpy import pi, ctypeslib
-from params import Params
+import params
 import ctypes
 import scipy.constants as consts
 
@@ -229,8 +229,6 @@ class SimParams(object):
             Cooling transition linewidth in Hz.
         delta_Gamma : float
             Detuning in units of Gamma_Hz.
-        s : float
-            Saturation parameter I/I_s.
         beta : float
             Damping parameter for laser cooling.
         F0 : float
@@ -242,7 +240,6 @@ class SimParams(object):
         self.laser['lmbda'] = kwargs.get('lmbda', 397e-9)
         self.laser['Gamma_Hz'] = kwargs.get('Gamma_Hz', 20e6)
         self.laser['delta_Gamma'] = kwargs.get('delta_gamma', -10.)
-        self.laser['s'] = kwargs.get('s', 5.0)
         self.laser['beta'] = kwargs.get('beta', 2e-22)
         self.laser['F0'] = kwargs.get('F0', 1.3e-19)
 
@@ -322,14 +319,13 @@ class SimParams(object):
         lc_p = array_to_pointer(lc, ctypes.c_int)
         khat_p = array_to_pointer(khat, ctypes.c_double)
                 
-        self.cxx_params = Params(
+        self.cxx_params = params.Params(
             N=len(self.ions['m']),
             N_masses=len(masses),
             m=m_p, Z=Z_p, masses=masses_p, lc=lc_p,
             khat=khat_p,
             lmbda=self.laser['lmbda'], r_l=0.,
             delta=2*pi*self.laser['delta_Gamma']*self.laser['Gamma_Hz'],
-            s=self.laser['s'],
             Gamma=2*pi*self.laser['Gamma_Hz'],
             beta=self.laser['beta'],
             F0=self.laser['F0'],
