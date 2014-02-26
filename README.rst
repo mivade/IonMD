@@ -49,22 +49,24 @@ should work on any platform that can meet the following dependencies:
 
 * Python requirements
 
-  * Python 2.6 or 2.7
+  * Python_ 2.6 or 2.7 (Python 3.x compatibility is planned for the
+    future)
   * ctypeslib_
   * Numpy_
   * Scipy_
   * MayaVI_ (optional; for displaying ions in 3D)
-  * Matplotlib_ (optional; for plotting/simulating CCD images; tested
-    successfully with version 1.2.1, fails with Debian wheezy's
-    version)
-  * PIL_ (optional; for simulating CCD images)
+  * Matplotlib_ (optional; for plotting/simulating CCD images; version
+    >= 1.1.1)
+  * PIL_ or Pillow_ (optional; for simulating CCD images)
 
+.. _Python: http://python.org/
 .. _ctypeslib: https://pypi.python.org/pypi/ctypeslib/
 .. _Numpy: http://www.numpy.org/
 .. _Scipy: http://www.scipy.org/
 .. _MayaVI: http://code.enthought.com/projects/mayavi/
 .. _Matplotlib: http://matplotlib.org/
 .. _PIL: http://www.pythonware.com/products/pil/
+.. _Pillow: https://github.com/python-imaging/Pillow
 
 * C++ requirements
 
@@ -73,13 +75,6 @@ should work on any platform that can meet the following dependencies:
   * Armadillo_ and its dependencies (on Debian wheezy, this requires
     manually adding ``libboost-math-dev`` since it is not listed as a
     dependency).
-
-..  * `NLopt <http://ab-initio.mit.edu/wiki/index.php/NLopt>`_ (for
-    finding the potential energy minimum for good initial
-    conditions). Note that in the current implementation, this is not
-    actually used, but the code still exists for it. I plan to later
-    try using this along with nearest neighbor Coulomb potential
-    approximation which is why it's staying in.
 
 .. _Armadillo: http://arma.sourceforge.net/
 
@@ -145,6 +140,9 @@ Known Bugs
 ==========
 
 * Temperature calculation is... wrong.
+
+In general, see `issues
+<https://github.com/mivade/IonMD/issues?state=open>`_.
 
 Authors
 =======
