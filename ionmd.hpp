@@ -28,9 +28,8 @@ using arma::vec;
 using arma::dot;
 using arma::mat;
 
-//-------------//
-//--CONSTANTS--//
-//-------------//
+// Constants
+// =========
 
 const double pi = 4*std::atan(1);
 const double amu = 1.660538782e-27;
@@ -39,7 +38,9 @@ const double c = 2.99792458e8;
 const double OOFPEN = 8.9875518e+09;
 const double HBAR = 1.0545716e-34;
 const double kB = 1.3806503e-23;
-const double g_elastic = 0.017;	// elastic collision rate with 
+
+// Ion struct
+// ==========
 
 struct Ion {
     vec x, v, a;
@@ -49,14 +50,13 @@ struct Ion {
     int lc;			// 1 for laser cooled
 };
 
-//------------------------//
-//--FUNCTION DEFINITIONS--//
-//------------------------//
+// Functions
+// =========
 
 // Vector functions
 // ----------------
 
-inline void copyVector(vec a, double *b) {
+inline void copy_vector(vec a, double *b) {
     a[0] = b[0];
     a[1] = b[1];
     a[2] = b[2];
@@ -77,9 +77,14 @@ inline double dot(vec a, double *b) {
     return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
 }
 
+// Utility functions
+// -----------------
+
+void write_xyz_file(char *fname, Ion **ions, Params *p);
+
 extern "C" {
-    // Utility functions
-    // -----------------
+    // Parameter printing functions
+    // ----------------------------
 
     void print_ion_statistics(Params *p);
     void print_params(Params *p);

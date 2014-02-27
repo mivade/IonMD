@@ -33,9 +33,6 @@ void minimize(Ion **ions, Params *p);
 // Minimization main controlling function for nlopt
 void minimize(double *x0, Ion **ions, Params *p);
 
-// Writes initial positions to a file
-void write_init_pos(Ion **ions, Params *p);
-
 // Potential energy functions called by minfunc
 double UTrap(int i, Ion **ions, Params *p);
 double ULaser(int i, Ion **ions, Params *p);

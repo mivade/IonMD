@@ -75,7 +75,7 @@ void minimize(Ion **ions, Params *p) {
     p->use_stochastic = use_stochastic;
 
     // Write initial positions
-    write_init_pos(ions, p);
+    write_xyz_file((char *)"ipos.xyz", ions, p); 
 }
 
 /*void minimize(double *x0, Ion **ions, Params *p) {
@@ -116,17 +116,6 @@ void minimize(Ion **ions, Params *p) {
     delete min_data;
     write_init_pos(ions, p);
     }*/
-
-void write_init_pos(Ion **ions, Params *p) {
-    FILE *init_pos_file = fopen("ipos.xyz", "w");
-    fprintf(init_pos_file, "%d\nInitial positions in microns\n", p->N);
-    for(int i=0; i<p->N; i++) {
-	//printf("%e %e %e\n", ions[i]->x[0], ions[i]->x[1], ions[i]->x[2]);
-	fprintf(init_pos_file, "%d %e %e %e\n", int(ions[i]->m/amu),
-		ions[i]->x[0]/1e-6, ions[i]->x[1]/1e-6, ions[i]->x[2]/1e-6);
-    }
-    fclose(init_pos_file);
-}
 
 /*
 double minfunc(const vector<double> &x, vector<double> &grad, void *_data) {

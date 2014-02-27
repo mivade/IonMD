@@ -20,6 +20,7 @@
 #include <vector>
 #include <omp.h>
 #include <iostream>
+#include <fstream>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include "ionmd.hpp"
@@ -30,17 +31,27 @@ using arma::vec;
 using arma::dot;
 using arma::mat;
 
+// Debugging utilities
+// ===================
+
 #define dbg(wat) (cout << wat << "\n")
 #define err(e) (cerr << "ERROR: " << e << endl)
-const vec xhat = {-sqrt(2)/2, sqrt(2)/2, 0}, yhat = {0,0,1};
+
+// Globals
+// =======
 
 // Random number generator
 const gsl_rng_type *rng_T = gsl_rng_mt19937;
 gsl_rng *rng = gsl_rng_alloc(rng_T);
 
-//---------------------//
-//--UTILITY FUNCTIONS--//
-//---------------------//
+// x and y unit vectors
+const vec xhat = {-sqrt(2)/2, sqrt(2)/2, 0}, yhat = {0,0,1};
+
+// Functions
+// =========
+
+// Parameter printing functions
+// ----------------------------
 
 void print_ion_statistics(Params *p) {
     for (int i = 0; i < p->N; i++) {
@@ -84,17 +95,33 @@ void print_positions(Ion *ion) {
     printf("%e %e %e\n", ion->x[0], ion->x[1], ion->x[2]);
 }
 
-//-----------------//
-//--ION FUNCTIONS--//
-//-----------------//
+// Utility functions
+// -----------------
+
+void write_xyz_file(char *fname, Ion **ions, Params *p) {
+    ofstream xyz_file;
+    xyz_file.open(fname, ios::out);
+    xyz_file << p->N << endl << "Simulated ion crystal,"
+	     << " positions in microns." << endl;
+    for(int i = 0; i < p->N; i++) {
+	xyz_file << int(ions[i]->m/amu) << " ";
+	for(int j = 0; j < 3; j++)
+	    xyz_file << ions[i]->x[j]/1e-6 << " ";
+	xyz_file << endl;
+    }
+    xyz_file.close();
+}
+
+// Ion functions
+// -------------
 
 Ion *initIon(double *x0, double *v0, int i, Params *p) {
     Ion *ion = new Ion;
     ion->x = vec(3);
     ion->v = vec(3);
     ion->a = arma::zeros<vec>(3);
-    copyVector(ion->x, x0);
-    copyVector(ion->v, v0);
+    copy_vector(ion->x, x0);
+    copy_vector(ion->v, v0);
     ion->m = p->m[i];
     ion->Z = p->Z[i];
     ion->index = i;
@@ -144,9 +171,8 @@ void updateIon(Ion *ion, Ion **ions, double t, mat Fcoullist, Params *p) {
     ion->a = a;
 }
 
-//----------//
-//--FORCES--//
-//----------//
+// Forces
+// ~~~~~~
 
 // Trap force
 // (result stored in F)
@@ -254,9 +280,8 @@ mat allCoulomb(Ion **ions, Params *p) {
     return Flist;
 }
 
-//--------------//
-//--SIMULATION--//
-//--------------//
+// Main simulation function
+// ------------------------
 
 int simulate(double *x0, double *v0, Params *p) {
     // RNG seeding
@@ -279,7 +304,7 @@ int simulate(double *x0, double *v0, Params *p) {
 
     // Initialize CCD
     gsl_histogram2d *ccd[p->N_masses];
-    for(i=0; i<p->N_masses; i++) {
+    for(i = 0; i < p->N_masses; i++) {
 	ccd[i] = gsl_histogram2d_alloc(p->ccd_bins, p->ccd_bins);
 	gsl_histogram2d_set_ranges_uniform(ccd[i],
 					   -p->ccd_extent, p->ccd_extent,
@@ -289,22 +314,23 @@ int simulate(double *x0, double *v0, Params *p) {
     // Initialize ions
     float M = 0;
     Ion **ions = new Ion*[p->N];
-    for(i=0; i<p->N; i++) {
+    for(i = 0; i < p->N; i++) {
         ions[i] = initIon(&x0[i*3], &v0[i*3], i, p);
 	M += (float)ions[i]->m;
     }
 
     // Do minimization routine
-    printf("Minimizing...\n");
+    cout << "Minimizing..." << endl;
     minimize(ions, p);
     //minimize(x0, ions, p);
     if(p->quit_after_minimizing)
 	return 1;
 
     // Reset initial velocities
-    for(i=0; i<p->N; i++) {
+    for(i = 0; i < p->N; i++) {
 	ions[i]->v.zeros();
-	//copyVector(ions[i]->v, &v0[i*3]);
+	// for(j = 0; j < 3; j++)
+	//     ions[i]->v[j] = v0[i + j];
     }
     
     // Data recording initialization
@@ -315,7 +341,7 @@ int simulate(double *x0, double *v0, Params *p) {
     // Run simulation
     int t_i = 0;
     int t_10 = (int)(p->t_max/p->dt)/10;
-    printf("Simulating...\n");
+    cout << "Simulating..." << endl;
     for(double t = 0; t < p->t_max; t += p->dt) {
         // Calculate Coulomb forces
         if (p->use_coulomb)
@@ -382,17 +408,12 @@ int simulate(double *x0, double *v0, Params *p) {
     }
 
     // Save data
-    FILE *fpos_file = fopen(p->fpos_fname, "w");
+    write_xyz_file(p->fpos_fname, ions, p);
     FILE *fvel_file = fopen("fvel.txt", "w");
-    fprintf(fpos_file, "%d\n", p->N);
-    fprintf(fpos_file, "Simulated ion crystal, positions in microns\n");
     for (i=0; i<p->N; i++) {
-        fprintf(fpos_file, "%d ", (int)(ions[i]->m/amu));
         for(j=0; j<3; j++) {
-            fprintf(fpos_file, "%e ", ions[i]->x[j]/1e-6);
             fprintf(fvel_file, "%e ", ions[i]->v[j]);
         }
-        fprintf(fpos_file, "\n");
         fprintf(fvel_file, "\n");
     }
     if(p->sim_ccd) {
@@ -408,7 +429,6 @@ int simulate(double *x0, double *v0, Params *p) {
     // Cleanup
     fclose(com_file);
     fclose(traj_file);
-    fclose(fpos_file);
     fclose(fvel_file);
     fclose(temp_file);
     for (i = 0; i < p->N; i++)
@@ -417,6 +437,6 @@ int simulate(double *x0, double *v0, Params *p) {
     for(i=0; i<p->N_masses; i++)
 	gsl_histogram2d_free(ccd[i]);
     if(p->use_abort && abort == 1)
-	return 0;
+	return 0; // TODO: error codes defined somewhere
     return 1;
 }
