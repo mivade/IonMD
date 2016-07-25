@@ -15,9 +15,36 @@
   along with IonMD.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef IONMD_HPP
-#define IONMD_HPP
+#ifndef ION_HPP
+#define ION_HPP
 
+#include <armadillo>
+#include "params.hpp"
 
+using arma::vec;
+using arma::dot;
+using arma::mat;
+
+struct Ion {
+    vec x, v, a;
+    double m, Z;  // mass and charge
+    int index;
+    bool doppler_coolable;  // can it be Doppler cooled?
+    Params *p;
+
+    Ion(Params *p, double m, double Z, vec x0);
+
+    void update(double t, mat forces);
+
+    // Pretty printing
+    void print_position();
+
+private:
+    vec doppler_force();
+    vec coulomb_force(mat forces);
+    vec secular_force();
+    vec micromotion_force(double t);
+    vec stochastic_force();
+};
 
 #endif

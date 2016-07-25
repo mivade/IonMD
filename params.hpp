@@ -5,7 +5,7 @@
   under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
-  
+
   IonMD is distributed in the hope that it will be useful, but WITHOUT
   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
@@ -18,12 +18,8 @@
 #ifndef PARAMS_HPP
 #define PARAMS_HPP
 
-//-------------------------//
-//--SIMULATION PARAMETERS--//
-//-------------------------//
-
 // Parameters to pass from the simulation control scripts
-typedef struct Params {
+struct Params {
     // Ion parameters
     int N,		// total number of ions
 	N_masses;	// number of unique masses
@@ -66,13 +62,16 @@ typedef struct Params {
 			// minimization routine
     int t_steps,	// number of time steps (easy to give with Python)
 	use_rfmm,	// include RF micromotion
-	use_coulomb,	// include the Coulomb interaction
 	use_laser,	// include laser cooling
 	use_secular,	// include secular excitation
-	use_stochastic,	// include stochastic processes
 	use_abort,	// abort if ions are out of bounds
 	num_threads,	// number of threads to use for multiprocessing
 	quiet;		// 1 to turn off progress reports, etc.
+
+    bool micromotion_enabled;
+    bool coulomb_enabled;
+    bool stochastic_enabled;
+    bool doppler_enabled;
 
     // Data recording
     char *traj_fname,	// trajectory file name
@@ -83,6 +82,6 @@ typedef struct Params {
     int record_traj;	// record trajectories?
     double traj_start;	// time to start recording trajectory data
     int T_steps;	// number of steps for averaging velocities
-} Params;
+};
 
 #endif
