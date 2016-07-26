@@ -10,12 +10,15 @@
 using std::cout;
 using arma::vec;
 using arma::mat;
+using namespace ionmd;
 
 std::default_random_engine rng;
 std::uniform_real_distribution<double> uniform(0, 1);
 
-Ion::Ion(Params *p, double m, double Z, vec x0) {
+Ion::Ion(SimParams *p, Trap *trap, lasers_t lasers, double m, double Z, vec x0) {
     this->p = p;
+    this->trap = trap;
+    this->doppler_lasers = lasers;
     this->m = m;
     this->Z = Z;
     this->x = x0;
@@ -48,21 +51,27 @@ void Ion::update(double t, mat forces) {
 vec Ion::doppler_force() {
     vec F(3);
     F.zeros();
-    double beta, F0;
-    beta = this->p->beta;
-    F0 = this->p->F0;
-    if(this->p->minimizing) {
-	beta = 1e-20; // unrealistically large damping for minimizing
-	if(this->doppler_coolable == 0) // don't use constant pressure term on non-lc'ed ions
-	    F0 = 0;
+    // double beta, F0;
+    // beta = this->p->beta;
+    // F0 = this->p->F0;
+
+    // if(this->p->minimizing) {
+    // 	beta = 1e-20; // unrealistically large damping for minimizing
+    // 	if(this->doppler_coolable == 0) // don't use constant pressure term on non-lc'ed ions
+    // 	    F0 = 0;
+    // }
+
+    for (auto laser: this->doppler_lasers) {
+	// use all lasers here
     }
-    for (int i = 0; i < 3; i++) {
-        F[i] = F0*p->khat[i] - beta*this->v[i];
-    }
+
+    // for (int i = 0; i < 3; i++) {
+    //     F[i] = F0*p->khat[i] - beta*this->v[i];
+    // }
     return F;
 }
 
-vec Ion::coulomb_force(mat forces) {
+vec Ion::coulomb_force(mat others) {
 }
 
 vec Ion::secular_force() {
@@ -70,8 +79,8 @@ vec Ion::secular_force() {
     vec F(3);
 
     //A = p->kappa*p->UEC/pow(p->z0,2);
-    A = this->Z*pow(p->V,2)/(this->m*pow(p->Omega,2)*pow(p->r0,4));
-    B = p->kappa*p->UEC/(2*pow(p->z0,2));
+    A = this->Z*pow(this->trap->V_rf, 2)/(this->m*pow(this->trap->omega_rf, 2)*pow(this->trap->r0, 4));
+    B = this->trap->kappa*this->trap->U_ec/(2*pow(this->trap->z0,2));
     F[0] = -2*this->Z*(A-B)*this->x[0];
     F[1] = -2*this->Z*(A-B)*this->x[1];
     F[2] = -4*this->Z*B*this->x[2];

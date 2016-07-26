@@ -1,24 +1,9 @@
-/*
-  This file is part of IonMD.
-
-  IonMD is free software: you can redistribute it and/or modify it
-  under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-
-  IonMD is distributed in the hope that it will be useful, but WITHOUT
-  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-  License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with IonMD.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
 #ifndef PARAMS_HPP
 #define PARAMS_HPP
 
-// Parameters to pass from the simulation control scripts
+#include <string>
+
+// TODO: remove in favor of SimParams struct below
 struct Params {
     // Ion parameters
     int N,		// total number of ions
@@ -83,5 +68,24 @@ struct Params {
     double traj_start;	// time to start recording trajectory data
     int T_steps;	// number of steps for averaging velocities
 };
+
+namespace ionmd {
+    struct SimParams {
+	// Simulation settings
+	double dt, t_max;  // time step, max time
+	unsigned int num_threads;  // Future improvement: parallelize/GPUify with OpenCL
+	unsigned int verbosity;
+
+	// Enable/disable some types of forces
+	bool micromotion_enabled;
+	bool coulomb_enabled;
+	bool stochastic_enabled;
+	bool doppler_enabled;
+
+	// Output
+	std::string output_filename;
+	bool record_trajectories;
+    };
+}
 
 #endif
