@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <armadillo>
+#include "ionmd.hpp"
 #include "laser.hpp"
 #include "trap.hpp"
 #include "params.hpp"
@@ -35,15 +36,22 @@ namespace ionmd {
 
 	Ion(SimParams *p, Trap *trap, lasers_t lasers, double m, double Z, vec x0);
 
-	void update(double t, mat others);
+	void update(double t, mat forces);
 
 	// Pretty printing
 	void print_position();
 
+	// For pre-computing the Coulomb force due to all other ions
+	vec coulomb(const std::vector<Ion> ions);
+
     private:
+	// Unique ID
+	int id;
+
+	// Forces
 	vec doppler_force();
-	vec coulomb_force(mat forces);
 	vec secular_force();
+	vec coulomb_force(mat forces);
 	vec micromotion_force(double t);
 	vec stochastic_force();
     };

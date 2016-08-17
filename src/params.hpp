@@ -5,6 +5,9 @@
 
 namespace ionmd {
     struct SimParams {
+	// Total number of ions
+	unsigned int num_ions;
+
 	// Simulation settings
 	double dt, t_max;  // time step, max time
 	unsigned int verbosity;

@@ -71,7 +71,7 @@ vec Ion::doppler_force() {
     return F;
 }
 
-vec Ion::coulomb_force(mat others) {
+vec Ion::coulomb_force(mat forces) {
 }
 
 vec Ion::secular_force() {
