@@ -3,6 +3,7 @@
 
 #include <string>
 
+
 namespace ionmd {
     struct SimParams {
 	// Total number of ions

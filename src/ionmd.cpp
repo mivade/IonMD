@@ -5,12 +5,10 @@
 #include <vector>
 #include <thread>
 
-#include "H5Cpp.h"
 #include <omp.h>
 
 #include <armadillo>
 
-#include "ionmd.hpp"
 #include "ion.hpp"
 #include "trap.hpp"
 
@@ -19,6 +17,7 @@ using arma::mat;
 using std::cout;
 using std::cerr;
 using namespace ionmd;
+
 
 /**
    Precomputes all Coulomb interactions (that way they can be applied
@@ -38,6 +37,7 @@ mat precompute_coulomb(std::vector<Ion> ions) {
     return Flist;
 }
 
+
 /**
    Main entry point to run simulations.
 
@@ -45,9 +45,9 @@ mat precompute_coulomb(std::vector<Ion> ions) {
    TODO: return codes
    TODO: messaging to interrupt
  */
-int simulate(const SimParams &p, const Trap &trap) {
+int simulate(const SimParams *p, const Trap *trap) {
     // Initialize RNG
-    std::mersenne_twister_engine rng;
+    std::mersenne_twister_engine<double> rng;
 
     // Set number of threads for multiprocessing
     // TOOD: convert to OpenCL and use GPU when available
@@ -55,7 +55,7 @@ int simulate(const SimParams &p, const Trap &trap) {
     omp_set_num_threads(num_threads);
 
     // Storage of pre-computed Coulomb force data
-    mat coulomb_forces = arama(3, p->num_ions);
+    mat coulomb_forces = arma(3, p->num_ions);
     coulomb_forces.zeros();
 
     // Initialize CCD
@@ -63,7 +63,7 @@ int simulate(const SimParams &p, const Trap &trap) {
 
     // Initialize ions
     float M = 0;
-    std::vec<Ion> ions;
+    std::vector<Ion> ions;
     const vec x0 = arma::zeros<vec>(3);
     for (unsigned int i = 0; i < p.num_ions; i++) {
 	// TODO: place on grid
@@ -72,20 +72,20 @@ int simulate(const SimParams &p, const Trap &trap) {
     }
 
     // Data recording initialization
-    auto *output_file = new H5::H5File(p.output_filename, H5::H5F_ACC_TRUNC);
+    // TODO
 
     // Run simulation
     int index = 0;
-    int t_10 = (int)(p.t_max/p.dt) / 10;
+    int t_10 = (int)(p->t_max/p->dt) / 10;
     printf("Simulating...\n");
 
-    for(double t = 0; t < p.t_max; t += p.dt) {
+    for(double t = 0; t < p->t_max; t += p->dt) {
         // Calculate Coulomb forces
-        if (p.coulomb_enabled)
+        if (p->coulomb_enabled)
             coulomb_forces = precompute_coulomb(ions);
 
 	// Progress update
-	if (index % t_10 == 0 && p.verbosity != 0) {
+	if (index % t_10 == 0 && p->verbosity != 0) {
 	    cout << int(10*index/t_10) << "% complete; "
 		 << "t = " << t << "\n";
 	}
@@ -101,11 +101,6 @@ int simulate(const SimParams &p, const Trap &trap) {
 
         index++;
     }
-
-    // TODO: Save data
-
-    // Cleanup
-    delete output_file;
 
     return 0;
 }

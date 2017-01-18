@@ -2,6 +2,7 @@
 #define ION_HPP
 
 #include <vector>
+#include <memory>
 #include <armadillo>
 #include "ionmd.hpp"
 #include "laser.hpp"
@@ -9,51 +10,79 @@
 #include "params.hpp"
 
 using arma::vec;
-using arma::dot;
 using arma::mat;
+
 
 namespace ionmd {
     typedef std::vector<Laser *> lasers_t;
 
     class Ion {
+    private:
+	/// Unique ID
+	unsigned int id;
+
+        /// Common simulation parameters
+        std::shared_ptr<SimParams> p;
+
+        /// Compute the force from Doppler cooling lasers.
+	vec doppler_force();
+
+        /// Compute the secular motion (ponderomotive) force of the trap.
+	vec secular_force();
+
+        /**
+         * Compute micromotion (rf) force due to the trap.
+         * @param t
+         */
+        vec micromotion_force(double t);
+
+        /**
+         * Sum all forces due to other ions.
+         * @param forces
+         */
+	vec coulomb_force(mat forces);
+
+        /// Compute stochastic forces (background gas collisions, etc.).
+	vec stochastic_force();
+
     public:
-	// Position, velocity, acceleration
-	vec x, v, a;
+	vec x;  /// Ion position
+        vec v;  /// Ion velocity
+        vec a;  /// Ion acceleration
 
-	// Mass and charge (in units of e)
-	double m, Z;
+	double m;  /// Ion mass.
+        double Z;  /// Ion charg in units of e.
 
-	// Pointer to trap
-	Trap *trap;
+        /// Trap pointer for computing trap-related forces.
+        std::shared_ptr<Trap> trap;
 
-	// Laser cooling parameters
-	bool doppler_coolable;
-	double doppler_omega0;  // resonance Doppler cooling frequency
-	double doppler_width;  // Doppler cooling linewidth
-	lasers_t doppler_lasers;
+        /**
+         * @param p
+         * @param trap
+         * @param lasers Doppler cooling lasers that affect this ion
+         * @param m Ion mass
+         * @param Z Ion charge in units of e
+         * @param x0 Initial position
+         */
+	Ion(std::shared_ptr<SimParams> params, std::shared_ptr<Trap> trap,
+            std::shared_ptr<lasers_t> lasers,
+            double m, double Z, vec x0);
 
-	SimParams *p;
-
-	Ion(SimParams *p, Trap *trap, lasers_t lasers, double m, double Z, vec x0);
-
+        /**
+         * Apply a single time step of integration.
+         * @param t Current time
+         * @param forces Pre-computed Coulomb forces due to all other ions
+         */
 	void update(double t, mat forces);
 
-	// Pretty printing
-	void print_position();
-
-	// For pre-computing the Coulomb force due to all other ions
+	/**
+         * Pre-compute the Coluomb forces due to all other ions in the trap.
+         * @param ions Vector of all ions in the trap.
+         */
 	vec coulomb(const std::vector<Ion> ions);
 
-    private:
-	// Unique ID
-	int id;
-
-	// Forces
-	vec doppler_force();
-	vec secular_force();
-	vec coulomb_force(mat forces);
-	vec micromotion_force(double t);
-	vec stochastic_force();
+        /// Convenience function to pretty-print the ion position.
+	void print_position();
     };
 }
 

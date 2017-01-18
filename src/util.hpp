@@ -2,7 +2,6 @@
 #define UTIL_HPP
 
 #include <cmath>
-#include <gsl/gsl_histogram2d.h>
 #include <armadillo>
 
 using std::sqrt;
