@@ -1,4 +1,5 @@
 *~
+build/
 *.pyc
 *.o
 *.so
@@ -9,4 +10,3 @@ temperature.txt
 README.html
 params.py
 params.xml
-
