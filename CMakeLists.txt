@@ -19,4 +19,5 @@ include_directories(
 
 add_library(${PROJECT_NAME} SHARED ${SRCS})
 
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
 target_link_libraries(${PROJECT_NAME} ${ARMADILLO_LIBRARIES})
