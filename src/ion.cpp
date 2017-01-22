@@ -16,8 +16,8 @@ std::uniform_real_distribution<double> uniform(0, 1);
 
 
 Ion::Ion(std::shared_ptr<SimParams> params, std::shared_ptr<Trap> trap,
-    std::shared_ptr<lasers_t> lasers,
-    double m, double Z, vec x0)
+         lasers_t lasers,
+         const double m, const double Z, const vec x0)
 {
     this->p = params;
     this->trap = trap;

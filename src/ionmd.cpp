@@ -38,16 +38,10 @@ mat precompute_coulomb(std::vector<Ion> ions) {
 }
 
 
-/**
-   Main entry point to run simulations.
-
-   TODO: exception handling (e.g., see HDF5 C++ examples)
-   TODO: return codes
-   TODO: messaging to interrupt
- */
-int simulate(const SimParams *p, const Trap *trap) {
+/** Main entry point to run simulations. */
+int simulate(SimParams *p, Trap *trap) {
     // Initialize RNG
-    std::mersenne_twister_engine<double> rng;
+    // std::mersenne_twister_engine<double> rng;
 
     // Set number of threads for multiprocessing
     // TOOD: convert to OpenCL and use GPU when available
@@ -55,24 +49,26 @@ int simulate(const SimParams *p, const Trap *trap) {
     omp_set_num_threads(num_threads);
 
     // Storage of pre-computed Coulomb force data
-    mat coulomb_forces = arma(3, p->num_ions);
+    mat coulomb_forces(3, p->num_ions);
     coulomb_forces.zeros();
 
-    // Initialize CCD
-    // TODO: reimplement
+    // TODO: Initialize CCD
+
+    // Initialize lasers
+    std::vector<Laser> lasers;
 
     // Initialize ions
     float M = 0;
     std::vector<Ion> ions;
     const vec x0 = arma::zeros<vec>(3);
-    for (unsigned int i = 0; i < p.num_ions; i++) {
+
+    for (unsigned int i = 0; i < p->num_ions; i++) {
 	// TODO: place on grid
 	// TODO: figure out how to specify mass and charge in params
-        ions.push_back(Ion(&p, &trap, lasers, 40, 1, x0));
+        ions.push_back(Ion(p, trap, lasers, 40, 1, x0));
     }
 
-    // Data recording initialization
-    // TODO
+    // TODO: recording initialization
 
     // Run simulation
     int index = 0;

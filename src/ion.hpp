@@ -65,8 +65,8 @@ namespace ionmd {
          * @param x0 Initial position
          */
 	Ion(std::shared_ptr<SimParams> params, std::shared_ptr<Trap> trap,
-            std::shared_ptr<lasers_t> lasers,
-            double m, double Z, vec x0);
+            const lasers_t lasers,
+            const double m, const double Z, const vec x0);
 
         /**
          * Apply a single time step of integration.
