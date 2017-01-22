@@ -15,18 +15,20 @@ std::default_random_engine rng;
 std::uniform_real_distribution<double> uniform(0, 1);
 
 
-Ion::Ion(std::shared_ptr<SimParams> params, std::shared_ptr<Trap> trap,
-         lasers_t lasers,
-         const double m, const double Z, const vec x0)
+Ion::Ion(params_ptr params, trap_ptr trap, const double m, const double Z)
+    : m(m), Z(Z)
 {
     this->p = params;
     this->trap = trap;
+}
 
+
+Ion::Ion(params_ptr params, trap_ptr trap, lasers_t lasers,
+         const double m, const double Z, const vec x0)
+    : Ion(params, trap, m, Z)
+{
     // FIXME
     // this->doppler_lasers = lasers;
-
-    this->m = m;
-    this->Z = Z;
     this->x = x0;
 }
 
