@@ -6,19 +6,31 @@
 
 namespace ionmd {
 
+/**
+ * Container structure for all parameters of a simulation. Note that all units
+ * are SI unless otherwise specified.
+ */
 struct SimParams {
-    // Total number of ions
+    /// Total number of ions
     unsigned int num_ions;
 
-    // Simulation settings
-    double dt, t_max;  // time step, max time
-    unsigned int verbosity;
+    /// Time step
+    double dt = 50e-9;
 
-    // Enable/disable some types of forces
-    bool micromotion_enabled;
-    bool coulomb_enabled;
-    bool stochastic_enabled;
-    bool doppler_enabled;
+    /// Max time
+    double t_max = 1e-3;
+
+    /// Enable micromotion calculations (requires smaller time steps)
+    bool micromotion_enabled = false;
+
+    /// Enable Coulomb repulsion calculation
+    bool coulomb_enabled = true;
+
+    /// Enable stochastic force calculation
+    bool stochastic_enabled = false;
+
+    /// Enable Doppler cooling simulation
+    bool doppler_enabled = false;
 
     // Output
     std::string output_filename;
