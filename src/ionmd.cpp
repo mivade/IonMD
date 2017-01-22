@@ -39,7 +39,7 @@ mat precompute_coulomb(std::vector<Ion> ions) {
 
 
 /** Main entry point to run simulations. */
-int simulate(SimParams *p, Trap *trap) {
+int simulate(params_ptr p, trap_ptr trap) {
     // Initialize RNG
     // std::mersenne_twister_engine<double> rng;
 
@@ -54,18 +54,16 @@ int simulate(SimParams *p, Trap *trap) {
 
     // TODO: Initialize CCD
 
-    // Initialize lasers
-    std::vector<Laser> lasers;
+    // TODO: Initialize lasers
 
     // Initialize ions
-    float M = 0;
     std::vector<Ion> ions;
     const vec x0 = arma::zeros<vec>(3);
 
     for (unsigned int i = 0; i < p->num_ions; i++) {
 	// TODO: place on grid
 	// TODO: figure out how to specify mass and charge in params
-        ions.push_back(Ion(p, trap, lasers, 40, 1, x0));
+        ions.push_back(Ion(p, trap, 40, 1, x0));
     }
 
     // TODO: recording initialization

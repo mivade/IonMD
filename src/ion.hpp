@@ -70,6 +70,15 @@ public:
     /**
      * @param params
      * @param trap
+     * @param m Ion mass
+     * @param Z Ion charge
+     * @param x0 Initial position vector
+     */
+    Ion(params_ptr params, trap_ptr trap, const double m, const double Z, const vec x0);
+
+    /**
+     * @param params
+     * @param trap
      * @param lasers Doppler cooling lasers that affect this ion
      * @param m Ion mass
      * @param Z Ion charge in units of e

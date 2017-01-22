@@ -23,6 +23,14 @@ Ion::Ion(params_ptr params, trap_ptr trap, const double m, const double Z)
 }
 
 
+Ion::Ion(params_ptr params, trap_ptr trap, const double m, const double Z,
+         const vec x0)
+    : Ion(params, trap, m, Z)
+{
+    this->x = x0;
+}
+
+
 Ion::Ion(params_ptr params, trap_ptr trap, lasers_t lasers,
          const double m, const double Z, const vec x0)
     : Ion(params, trap, m, Z)
