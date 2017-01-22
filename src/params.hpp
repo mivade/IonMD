@@ -20,6 +20,9 @@ struct SimParams {
     /// Max time
     double t_max = 1e-3;
 
+    /// Verbosity of output. Higher numbers increases verbosity.
+    unsigned int verbosity = 0;
+
     /// Enable micromotion calculations (requires smaller time steps)
     bool micromotion_enabled = false;
 
