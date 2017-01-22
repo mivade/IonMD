@@ -11,8 +11,8 @@ using arma::vec;
 
 class Laser {
 public:
-  double detuning;
-  vec wave_vector;
+    double detuning;
+    vec wave_vector;
 };
 
 typedef std::vector<Laser *> lasers_t;
