@@ -9,12 +9,10 @@
 #include "trap.hpp"
 #include "params.hpp"
 
-using arma::vec;
-using arma::mat;
-
 
 namespace ionmd {
-    typedef std::vector<Laser *> lasers_t;
+    using arma::vec;
+    using arma::mat;
 
     class Ion {
     private:
@@ -55,6 +53,10 @@ namespace ionmd {
 
         /// Trap pointer for computing trap-related forces.
         std::shared_ptr<Trap> trap;
+
+        /**
+         */
+        Ion();
 
         /**
          * @param p

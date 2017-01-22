@@ -3,8 +3,6 @@
 
 #include <cmath>
 
-using std::atan;
-
 const double pi = 4*std::atan(1);
 const double amu = 1.660538782e-27;
 const double q_e = 1.602176487e-19;
