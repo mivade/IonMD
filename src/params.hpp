@@ -5,24 +5,26 @@
 
 
 namespace ionmd {
-    struct SimParams {
-	// Total number of ions
-	unsigned int num_ions;
 
-	// Simulation settings
-	double dt, t_max;  // time step, max time
-	unsigned int verbosity;
+struct SimParams {
+  // Total number of ions
+  unsigned int num_ions;
 
-	// Enable/disable some types of forces
-	bool micromotion_enabled;
-	bool coulomb_enabled;
-	bool stochastic_enabled;
-	bool doppler_enabled;
+  // Simulation settings
+  double dt, t_max;  // time step, max time
+  unsigned int verbosity;
 
-	// Output
-	std::string output_filename;
-	bool record_trajectories;
-    };
+  // Enable/disable some types of forces
+  bool micromotion_enabled;
+  bool coulomb_enabled;
+  bool stochastic_enabled;
+  bool doppler_enabled;
+
+  // Output
+  std::string output_filename;
+  bool record_trajectories;
+};
+
 }
 
 #endif

@@ -6,15 +6,17 @@
 
 
 namespace ionmd {
-    using arma::vec;
 
-    class Laser {
-    public:
-	double detuning;
-	vec wave_vector;
-    };
+using arma::vec;
 
-    typedef std::vector<Laser *> lasers_t;
+class Laser {
+public:
+  double detuning;
+  vec wave_vector;
+};
+
+typedef std::vector<Laser *> lasers_t;
+
 }
 
 #endif
