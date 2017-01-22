@@ -1,6 +1,5 @@
 #include <cstdio>
 #include <iostream>
-#include <boost/format.hpp>
 #include <cmath>
 #include <vector>
 #include <thread>
