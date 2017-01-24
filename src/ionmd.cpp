@@ -5,27 +5,36 @@
 
 #include <omp.h>
 
-#include <armadillo>
+#include "ionmd.hpp"
 
-#include "ion.hpp"
-#include "trap.hpp"
+namespace ionmd {
 
 using arma::vec;
 using arma::mat;
 using std::cout;
 using std::cerr;
 using std::endl;
-using namespace ionmd;
 
 
-/**
-   Precomputes all Coulomb interactions (that way they can be applied
-   all at once instead of having one ion updated before the Coulomb
-   interaction is computed for the rest).
+Simulation::Simulation()
+{
+}
 
-   TODO: convert to OpenCL
-*/
-mat precompute_coulomb(std::vector<Ion> ions) {
+
+Simulation::Simulation(SimParams p, Trap trap) {
+    this->p = std::make_shared<SimParams>(p);
+    this->trap = std::make_shared<Trap>(trap);
+}
+
+
+Simulation::Simulation(SimParams p, Trap trap, std::vector<Ion> ions)
+    : Simulation(p, trap)
+{
+    this->ions = ions;
+}
+
+
+mat Simulation::precompute_coulomb() {
     int i = 0;
     mat Flist(3, ions.size());
     #pragma omp parallel for
@@ -37,11 +46,7 @@ mat precompute_coulomb(std::vector<Ion> ions) {
 }
 
 
-/** Main entry point to run simulations. */
-int simulate(SimParams params, Trap trap) {
-    auto params_p = std::make_shared<SimParams>(params);
-    auto trap_p = std::make_shared<Trap>(trap);
-
+void Simulation::run() {
     // Initialize RNG
     // std::mersenne_twister_engine<double> rng;
 
@@ -51,7 +56,7 @@ int simulate(SimParams params, Trap trap) {
     omp_set_num_threads(num_threads);
 
     // Storage of pre-computed Coulomb force data
-    mat coulomb_forces(3, params_p->num_ions);
+    mat coulomb_forces(3, p->num_ions);
     coulomb_forces.zeros();
 
     // TODO: Initialize CCD
@@ -62,26 +67,26 @@ int simulate(SimParams params, Trap trap) {
     std::vector<Ion> ions;
     const vec x0 = arma::zeros<vec>(3);
 
-    for (unsigned int i = 0; i < params_p->num_ions; i++) {
+    for (unsigned int i = 0; i < p->num_ions; i++) {
 	// TODO: place on grid
 	// TODO: figure out how to specify mass and charge in params
-        ions.push_back(Ion(params_p, trap_p, 40, 1, x0));
+        ions.push_back(Ion(p, trap, 40, 1, x0));
     }
 
     // TODO: recording initialization
 
     // Run simulation
     int index = 0;
-    int t_10 = (int)(params_p->t_max/params_p->dt) / 10;
+    int t_10 = (int)(p->t_max/p->dt) / 10;
     cout << "Simulating..." << endl;
 
-    for(double t = 0; t < params_p->t_max; t += params_p->dt) {
+    for(double t = 0; t < p->t_max; t += p->dt) {
         // Calculate Coulomb forces
-        if (params_p->coulomb_enabled)
-            coulomb_forces = precompute_coulomb(ions);
+        if (p->coulomb_enabled)
+            coulomb_forces = precompute_coulomb();
 
 	// Progress update
-	if (index % t_10 == 0 && params_p->verbosity != 0) {
+	if (index % t_10 == 0 && p->verbosity != 0) {
 	    cout << int(10*index/t_10) << "% complete; "
 		 << "t = " << t << "\n";
 	}
@@ -97,6 +102,6 @@ int simulate(SimParams params, Trap trap) {
 
         index++;
     }
-
-    return 0;
 }
+
+}  // namespace ionmd

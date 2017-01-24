@@ -1,6 +1,7 @@
 #ifndef TRAP_HPP
 #define TRAP_HPP
 
+#include <memory>
 #include "constants.hpp"
 
 namespace ionmd {
@@ -36,6 +37,8 @@ struct Trap {
     /// End cap voltage
     double U_ec = 300;
 };
+
+typedef std::shared_ptr<Trap> trap_ptr;
 
 }
 

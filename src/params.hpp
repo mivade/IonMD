@@ -2,6 +2,7 @@
 #define PARAMS_HPP
 
 #include <string>
+#include <memory>
 
 
 namespace ionmd {
@@ -39,6 +40,8 @@ struct SimParams {
     std::string output_filename;
     bool record_trajectories;
 };
+
+typedef std::shared_ptr<SimParams> params_ptr;
 
 }
 

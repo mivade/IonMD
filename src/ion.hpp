@@ -4,7 +4,6 @@
 #include <vector>
 #include <memory>
 #include <armadillo>
-#include "ionmd.hpp"
 #include "laser.hpp"
 #include "trap.hpp"
 #include "params.hpp"
@@ -14,9 +13,6 @@ namespace ionmd {
 
 using arma::vec;
 using arma::mat;
-
-typedef std::shared_ptr<SimParams> params_ptr;
-typedef std::shared_ptr<Trap> trap_ptr;
 
 
 class Ion {
