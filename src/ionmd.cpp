@@ -1,4 +1,3 @@
-#include <cstdio>
 #include <iostream>
 #include <cmath>
 #include <vector>
@@ -15,6 +14,7 @@ using arma::vec;
 using arma::mat;
 using std::cout;
 using std::cerr;
+using std::endl;
 using namespace ionmd;
 
 
@@ -73,7 +73,7 @@ int simulate(SimParams params, Trap trap) {
     // Run simulation
     int index = 0;
     int t_10 = (int)(params_p->t_max/params_p->dt) / 10;
-    printf("Simulating...\n");
+    cout << "Simulating..." << endl;
 
     for(double t = 0; t < params_p->t_max; t += params_p->dt) {
         // Calculate Coulomb forces
