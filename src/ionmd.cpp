@@ -38,7 +38,10 @@ mat precompute_coulomb(std::vector<Ion> ions) {
 
 
 /** Main entry point to run simulations. */
-int simulate(params_ptr p, trap_ptr trap) {
+int simulate(SimParams params, Trap trap) {
+    auto params_p = std::make_shared<SimParams>(params);
+    auto trap_p = std::make_shared<Trap>(trap);
+
     // Initialize RNG
     // std::mersenne_twister_engine<double> rng;
 
@@ -48,7 +51,7 @@ int simulate(params_ptr p, trap_ptr trap) {
     omp_set_num_threads(num_threads);
 
     // Storage of pre-computed Coulomb force data
-    mat coulomb_forces(3, p->num_ions);
+    mat coulomb_forces(3, params_p->num_ions);
     coulomb_forces.zeros();
 
     // TODO: Initialize CCD
@@ -59,26 +62,26 @@ int simulate(params_ptr p, trap_ptr trap) {
     std::vector<Ion> ions;
     const vec x0 = arma::zeros<vec>(3);
 
-    for (unsigned int i = 0; i < p->num_ions; i++) {
+    for (unsigned int i = 0; i < params_p->num_ions; i++) {
 	// TODO: place on grid
 	// TODO: figure out how to specify mass and charge in params
-        ions.push_back(Ion(p, trap, 40, 1, x0));
+        ions.push_back(Ion(params_p, trap_p, 40, 1, x0));
     }
 
     // TODO: recording initialization
 
     // Run simulation
     int index = 0;
-    int t_10 = (int)(p->t_max/p->dt) / 10;
+    int t_10 = (int)(params_p->t_max/params_p->dt) / 10;
     printf("Simulating...\n");
 
-    for(double t = 0; t < p->t_max; t += p->dt) {
+    for(double t = 0; t < params_p->t_max; t += params_p->dt) {
         // Calculate Coulomb forces
-        if (p->coulomb_enabled)
+        if (params_p->coulomb_enabled)
             coulomb_forces = precompute_coulomb(ions);
 
 	// Progress update
-	if (index % t_10 == 0 && p->verbosity != 0) {
+	if (index % t_10 == 0 && params_p->verbosity != 0) {
 	    cout << int(10*index/t_10) << "% complete; "
 		 << "t = " << t << "\n";
 	}
