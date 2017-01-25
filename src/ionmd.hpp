@@ -12,6 +12,14 @@ namespace ionmd {
 using arma::mat;
 
 /**
+ * Simulation status enum
+ *
+ * TODO: use or eliminate SimStatus::ERRORED
+ */
+enum class SimStatus { IDLE, RUNNING, FINISHED, ERRORED };
+
+
+/**
  * Class that controls the overall simulation.
  */
 class Simulation {
@@ -25,8 +33,8 @@ private:
     /// All ions to simulate.
     std::vector<Ion> ions;
 
-    /// Simulation is in progress.
-    bool in_progress = false;
+    /// Simulation status
+    SimStatus status;
 
     /**
      * Precomputes all Coulomb interactions between ions that way they can be
@@ -42,16 +50,27 @@ public:
     Simulation(SimParams p, Trap trap, std::vector<Ion> ions);
 
     /**
-     * Set or update simulation parameters. This method will only set parameters
-     * when the simulation is not in progress.
+     * Set new simulation parameters. This method will only set parameters when
+     * the simulation is not in progress.
+     * @param new_params
      */
-    void set_params(params_ptr p);
+    void set_params(SimParams new_params);
 
     /**
-     * Set or update trap parameters. This method will only set parameters
-     * when the simulation is not in progress.
+     * Set new trap parameters. This method will only set parameters when the
+     * simulation is not in progress.
+     * @param new_trap
      */
-    void set_trap(trap_ptr trap);
+    void set_trap(Trap new_trap);
+
+    /**
+     * Make an ion with given intial position and zero velocity.
+     * @param m Ion mass in amu
+     * @param Z Ion charge in units of e
+     * @param x0 Initial position
+     */
+    Ion make_ion(const double &m, const double &Z,
+                 const std::vector<double> &x0);
 
     /**
      * Set ions. This method will only set parameters when the simulation is not

@@ -16,12 +16,14 @@ using std::cerr;
 using std::endl;
 
 
-Simulation::Simulation()
-{
+Simulation::Simulation() {
+    status = SimStatus::IDLE;
 }
 
 
-Simulation::Simulation(SimParams p, Trap trap) {
+Simulation::Simulation(SimParams p, Trap trap)
+    : Simulation()
+{
     this->p = std::make_shared<SimParams>(p);
     this->trap = std::make_shared<Trap>(trap);
 }
@@ -45,6 +47,48 @@ mat Simulation::precompute_coulomb() {
 	i++;
     }
     return Flist;
+}
+
+
+void Simulation::set_params(SimParams new_params) {
+    if (status != SimStatus::RUNNING) {
+        p = std::make_shared<SimParams>(new_params);
+    }
+    else {
+        std::cerr << "Can't change parameters while simulation is running!\n";
+    }
+}
+
+
+
+void Simulation::set_trap(Trap new_trap) {
+    if (status != SimStatus::RUNNING) {
+        trap = std::make_shared<Trap>(new_trap);
+    }
+    else {
+        std::cerr << "Can't set a new trap while simulation is running!\n";
+    }
+}
+
+
+Ion Simulation::make_ion(const double &m, const double &Z,
+                         const std::vector<double> &x0)
+{
+    return Ion(p, trap, m, Z, x0);
+}
+
+
+void Simulation::set_ions(std::vector<Ion> ions) {
+    if (status != SimStatus::RUNNING) {
+        ions.clear();
+
+        for (auto ion: ions) {
+            ions.push_back(ion);
+        }
+    }
+    else {
+        std::cerr << "Can't set new ions while simulation is running!\n";
+    }
 }
 
 
@@ -81,8 +125,9 @@ void Simulation::run() {
     int index = 0;
     int t_10 = (int)(p->t_max/p->dt) / 10;
     cout << "Simulating..." << endl;
+    status = SimStatus::RUNNING;
 
-    for(double t = 0; t < p->t_max; t += p->dt) {
+    for (double t = 0; t < p->t_max; t += p->dt) {
         // Calculate Coulomb forces
         if (p->coulomb_enabled)
             coulomb_forces = precompute_coulomb();
@@ -104,6 +149,8 @@ void Simulation::run() {
 
         index++;
     }
+
+    status = SimStatus::FINISHED;
 }
 
 }  // namespace ionmd
