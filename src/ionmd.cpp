@@ -30,7 +30,9 @@ Simulation::Simulation(SimParams p, Trap trap) {
 Simulation::Simulation(SimParams p, Trap trap, std::vector<Ion> ions)
     : Simulation(p, trap)
 {
-    this->ions = ions;
+    for (auto ion: ions) {
+        this->ions.push_back(ion);
+    }
 }
 
 
