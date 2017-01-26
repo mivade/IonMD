@@ -1,23 +1,15 @@
 cmake_minimum_required(VERSION 3.6)
 
-project(IonMD)
+set(CMAKE_CXX_STANDARD 11)
 
 find_package(Armadillo REQUIRED)
 find_package(Boost REQUIRED)
-
-set(SRCDIR ${CMAKE_SOURCE_DIR}/src)
-
-set(SRCS
-  src/ion.cpp
-  src/ionmd.cpp
-)
+find_package(OpenMP REQUIRED)
 
 include_directories(
   ${ARMADILLO_INCLUDE_DIRS}
   ${BOOST_INCLUDE_DIRS}
 )
 
-add_library(${PROJECT_NAME} SHARED ${SRCS})
-
-set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
-target_link_libraries(${PROJECT_NAME} ${ARMADILLO_LIBRARIES})
+add_subdirectory(ionmd)
+add_subdirectory(demo)
