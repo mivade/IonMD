@@ -70,7 +70,7 @@ The C++ components are built with CMake::
 
   $ cd build
   $ cmake ..
-  $ cmake --build
+  $ cmake --build .
 
 
 Usage
