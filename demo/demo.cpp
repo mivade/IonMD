@@ -32,9 +32,9 @@ int main(int argc, char *argv[]) {
     auto p = std::make_shared<SimParams>();
     auto trap = std::make_shared<Trap>();
 
-    cout << "Generating ions..." << endl;
-    std::vector<Ion> ions = make_ions(p, trap);
+    p->verbosity = 2;
 
+    auto ions = make_ions(p, trap);
     Simulation sim(*p.get(), *trap.get(), ions);
 
     cout << "Running simulation..." << endl;

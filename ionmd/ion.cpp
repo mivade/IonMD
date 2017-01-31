@@ -66,6 +66,11 @@ void Ion::update(double t, mat forces) {
     accel = F/m;
     v += 0.5*(a + accel)*p->dt;
     a = accel;
+
+    if (p->verbosity > 0) {
+        std::cout << "HI" << std::endl;
+        print_position();
+    }
 }
 
 

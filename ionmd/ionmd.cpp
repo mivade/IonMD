@@ -32,9 +32,11 @@ Simulation::Simulation(SimParams p, Trap trap)
 Simulation::Simulation(SimParams p, Trap trap, std::vector<Ion> ions)
     : Simulation(p, trap)
 {
+    cout << ions.size();
     for (auto ion: ions) {
         this->ions.push_back(ion);
     }
+    cout << this->ions.size();
 }
 
 
@@ -43,7 +45,8 @@ mat Simulation::precompute_coulomb() {
     mat Flist(3, ions.size());
     #pragma omp parallel for
     for (auto ion: ions) {
-	Flist.col(i) = ion.coulomb(ions);
+        // FIXME
+	// Flist.col(i) = ion.coulomb(ions);
 	i++;
     }
     return Flist;
@@ -105,19 +108,9 @@ void Simulation::run() {
     mat coulomb_forces(3, p->num_ions);
     coulomb_forces.zeros();
 
+    // FIXME: Initialization should happen before here
     // TODO: Initialize CCD
-
     // TODO: Initialize lasers
-
-    // Initialize ions
-    std::vector<Ion> ions;
-    const vec x0 = arma::zeros<vec>(3);
-
-    for (unsigned int i = 0; i < p->num_ions; i++) {
-	// TODO: place on grid
-	// TODO: figure out how to specify mass and charge in params
-        ions.push_back(Ion(p, trap, 40, 1, x0));
-    }
 
     // TODO: recording initialization
 
@@ -143,6 +136,7 @@ void Simulation::run() {
             // TODO: Record data
 
 	    ion.update(t, coulomb_forces);
+            cout << ion.x[0] << " " << ion.x[1] << " " << ion.x[2] << "\n";
 
 	    // TODO: Check bounds
         }
