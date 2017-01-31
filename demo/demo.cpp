@@ -19,8 +19,8 @@ typedef std::vector<Ion> ions_t;
 
 ions_t make_ions(params_ptr p, trap_ptr trap) {
     ions_t ions;
-    ions.push_back(Ion(p, trap, 40., 1., vec{{0., 0., -20e-6}}));
-    ions.push_back(Ion(p, trap, 40., 1., vec{{0., 0., 20e-6}}));
+    ions.push_back(Ion(p, trap, 40., 1., vec({0., 0., -20e-6})));
+    ions.push_back(Ion(p, trap, 40., 1., vec({0., 0., 20e-6})));
     return ions;
 }
 
@@ -32,14 +32,13 @@ int main(int argc, char *argv[]) {
     auto p = std::make_shared<SimParams>();
     auto trap = std::make_shared<Trap>();
 
+    p->coulomb_enabled = false;
     p->verbosity = 2;
 
     auto ions = make_ions(p, trap);
-    Simulation sim(*p.get(), *trap.get(), ions);
 
-    cout << "Running simulation..." << endl;
+    Simulation sim(*p.get(), *trap.get(), ions);
     sim.run();
-    cout << "Simulation complete." << endl;
 
     return 0;
 }

@@ -1,7 +1,10 @@
 #include <iostream>
 #include <cmath>
 #include <random>
+
+#include <boost/log/trivial.hpp>
 #include <armadillo>
+
 #include "ion.hpp"
 #include "util.hpp"
 #include "constants.hpp"
@@ -16,10 +19,12 @@ std::uniform_real_distribution<double> uniform(0, 1);
 
 
 Ion::Ion(params_ptr params, trap_ptr trap, const double m, const double Z)
-    : m(m), Z(Z)
+    : v(3), a(3), m(m), Z(Z)
 {
     this->p = params;
     this->trap = trap;
+    this->v.zeros();
+    this->a.zeros();
 }
 
 
@@ -28,6 +33,8 @@ Ion::Ion(params_ptr params, trap_ptr trap, const double m, const double Z,
     : Ion(params, trap, m, Z)
 {
     this->x = x0;
+    BOOST_LOG_TRIVIAL(debug) << "m=" << m << ", Z=" << Z << ", x0="
+                             << x0[0] << "," << x0[1] << "," << x0[2];
 }
 
 
@@ -49,19 +56,20 @@ void Ion::print_position() {
 
 
 void Ion::update(double t, mat forces) {
-    vec F, accel;
+    vec F(3);
+    vec accel(3);
 
     x += v*p->dt + 0.5*a*pow(p->dt, 2);
 
     F = secular_force();
     if (p->micromotion_enabled)
-	F += micromotion_force(t);
+        F += micromotion_force(t);
     if (p->coulomb_enabled)
-	F += coulomb_force(forces);
+        F += coulomb_force(forces);
     if (p->stochastic_enabled)
-	F += stochastic_force();
+        F += stochastic_force();
     if (p->doppler_enabled)
-	F += doppler_force();
+        F += doppler_force();
 
     accel = F/m;
     v += 0.5*(a + accel)*p->dt;
