@@ -112,12 +112,11 @@ vec Ion::coulomb_force(mat forces) {
 
 
 vec Ion::secular_force() {
-    double A, B;
     vec F(3);
 
     //A = p->kappa*p->UEC/pow(p->z0,2);
-    A = Z*pow(trap->V_rf, 2)/(m*pow(trap->omega_rf, 2)*pow(trap->r0, 4));
-    B = trap->kappa*trap->U_ec/(2*pow(trap->z0,2));
+    const double A = Z*pow(trap->V_rf, 2)/(m*pow(trap->omega_rf, 2)*pow(trap->r0, 4));
+    const double B = trap->kappa*trap->U_ec/(2*pow(trap->z0,2));
     F[0] = -2*Z*(A-B)*x[0];
     F[1] = -2*Z*(A-B)*x[1];
     F[2] = -4*Z*B*x[2];
