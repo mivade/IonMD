@@ -2,6 +2,12 @@
 IonMD
 =====
 
+.. note::
+
+   The current master branch is undergoing a large overhaul to modernize the C++
+   code and doesn't actually do much of anything yet. See the ``thesis`` tag for
+   a version that nominally worked before.
+
 
 Overview
 ========
