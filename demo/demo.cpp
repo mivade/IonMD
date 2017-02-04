@@ -3,7 +3,7 @@
 
 #include <armadillo>
 
-#include <ionmd/ionmd.hpp>
+#include <ionmd/simulation.hpp>
 #include <ionmd/params.hpp>
 #include <ionmd/trap.hpp>
 #include <ionmd/ion.hpp>
@@ -19,8 +19,8 @@ typedef std::vector<Ion> ions_t;
 
 ions_t make_ions(params_ptr p, trap_ptr trap) {
     ions_t ions;
-    ions.push_back(Ion(p, trap, 40., 1., vec({0., 0., -20e-6})));
-    ions.push_back(Ion(p, trap, 40., 1., vec({0., 0., 20e-6})));
+    ions.push_back(Ion(p, trap, 40, 1, vec({0, 0, -20})));
+    ions.push_back(Ion(p, trap, 40, 1, vec({0, 0, 20})));
     return ions;
 }
 

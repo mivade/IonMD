@@ -9,7 +9,7 @@
 
 #include <omp.h>
 
-#include "ionmd.hpp"
+#include "simulation.hpp"
 
 namespace ionmd {
 
