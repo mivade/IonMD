@@ -8,18 +8,17 @@
 namespace ionmd {
 
 /**
- * Container structure for all parameters of a simulation. Note that all units
- * are SI unless otherwise specified.
+ * Container structure for all parameters of a simulation.
  */
 struct SimParams {
     /// Total number of ions
     unsigned int num_ions;
 
-    /// Time step
-    double dt = 50e-9;
+    /// Time step [&mu;s]
+    double dt = 0.050;
 
-    /// Max time
-    double t_max = 1e-3;
+    /// Max time [&mu;s]
+    double t_max = 1000;
 
     /// Verbosity of output. Higher numbers increases verbosity.
     unsigned int verbosity = 0;

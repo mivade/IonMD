@@ -135,15 +135,15 @@ void Simulation::run() {
 
 	// Progress update
 	if (index % t_10 == 0 && p->verbosity != 0) {
-            BOOST_LOG_TRIVIAL(info) << int(10*index/t_10) << "% complete; "
-                                    << "t = " << t;
+        BOOST_LOG_TRIVIAL(info) << int(10*index/t_10) << "% complete; "
+                                << "t = " << t;
 	}
 
-        // Update each ion
-	for (auto ion: ions) {
-            // TODO: Record data
+    // Update each ion
+    for (unsigned int i = 0; i < ions.size(); i++) {
+        ions[i].update(t, coulomb_forces);
 
-	    ion.update(t, coulomb_forces);
+        // TODO: Record data
 
 	    // TODO: Check bounds
         }

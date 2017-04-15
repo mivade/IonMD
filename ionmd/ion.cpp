@@ -57,9 +57,9 @@ void Ion::print_position() {
 
 void Ion::update(double t, mat forces) {
     vec F(3);
-    vec accel(3);
 
-    x += v*p->dt + 0.5*a*pow(p->dt, 2);
+    auto dx = v*p->dt + 0.5*a*pow(p->dt, 2);
+    x += dx;
 
     F = secular_force();
     if (p->micromotion_enabled)
@@ -71,7 +71,7 @@ void Ion::update(double t, mat forces) {
     if (p->doppler_enabled)
         F += doppler_force();
 
-    accel = F/m;
+    auto accel = F/m;
     v += 0.5*(a + accel)*p->dt;
     a = accel;
 }
@@ -115,7 +115,8 @@ vec Ion::secular_force() {
     vec F(3);
 
     //A = p->kappa*p->UEC/pow(p->z0,2);
-    const double A = Z*pow(trap->V_rf, 2)/(m*pow(trap->omega_rf, 2)*pow(trap->r0, 4));
+    const auto mass = m*amu;
+    const double A = Z*pow(trap->V_rf, 2)/(mass*pow(trap->omega_rf, 2)*pow(trap->r0, 4));
     const double B = trap->kappa*trap->U_ec/(2*pow(trap->z0,2));
     F[0] = -2*Z*(A-B)*x[0];
     F[1] = -2*Z*(A-B)*x[1];

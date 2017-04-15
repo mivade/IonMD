@@ -48,12 +48,12 @@ private:
     vec stochastic_force();
 
 public:
-    vec x;  /// Ion position
+    vec x;  /// Ion position [&mu;m]
     vec v;  /// Ion velocity
     vec a;  /// Ion acceleration
 
-    const double m;  /// Ion mass.
-    const double Z;  /// Ion charg in units of e.
+    const double m;  /// Ion mass [amu]
+    const double Z;  /// Ion charge in units of [e]
 
     /**
      * @param params
