@@ -46,7 +46,7 @@ mat Simulation::precompute_coulomb() {
     mat Flist(3, ions.size());
 
     #pragma omp parallel for
-    for (auto i = 0; i < ions.size(); i++) {
+    for (unsigned int i = 0; i < ions.size(); i++) {
         // FIXME
         // Flist.col(i) = ion.coulomb(ions);
         i++;
