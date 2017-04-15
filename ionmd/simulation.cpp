@@ -9,6 +9,7 @@
 #include <boost/log/expressions.hpp>
 
 #include "simulation.hpp"
+#include "util.hpp"
 
 namespace ionmd {
 
@@ -123,7 +124,7 @@ void Simulation::run() {
     // Run simulation
     int iteration = 0;
     int t_10 = (int)(p->t_max/p->dt) / 10;
-    BOOST_LOG_TRIVIAL(info) << "Simulating...";
+    BOOST_LOG_TRIVIAL(info) << "Start simulation: " << timestamp_str() << "\n";
     status = SimStatus::RUNNING;
 
     for (double t = 0; t < p->t_max; t += p->dt) {
