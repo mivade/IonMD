@@ -1,13 +1,12 @@
 #include <iostream>
+#include <fstream>
 #include <cmath>
 #include <vector>
-#include <thread>
+// #include <ctime>
 
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
-
-#include <omp.h>
 
 #include "simulation.hpp"
 
@@ -45,11 +44,12 @@ Simulation::Simulation(SimParams p, Trap trap, std::vector<Ion> ions)
 mat Simulation::precompute_coulomb() {
     int i = 0;
     mat Flist(3, ions.size());
+
     #pragma omp parallel for
-    for (auto ion: ions) {
+    for (auto i = 0; i < ions.size(); i++) {
         // FIXME
-	// Flist.col(i) = ion.coulomb(ions);
-	i++;
+        // Flist.col(i) = ion.coulomb(ions);
+        i++;
     }
     return Flist;
 }
@@ -106,11 +106,6 @@ void Simulation::run() {
     // Initialize RNG
     // std::mersenne_twister_engine<double> rng;
 
-    // Set number of threads for multiprocessing
-    // TOOD: convert to OpenCL and use GPU when available
-    const int num_threads = std::thread::hardware_concurrency();
-    omp_set_num_threads(num_threads);
-
     // Storage of pre-computed Coulomb force data
     mat coulomb_forces(3, p->num_ions);
     coulomb_forces.zeros();
@@ -119,10 +114,14 @@ void Simulation::run() {
     // TODO: Initialize CCD
     // TODO: Initialize lasers
 
-    // TODO: recording initialization
+    // Recording initialization
+    // TODO: HDF5, store all data
+    // char buff[256];
+    // const auto filename = std::string(std::strftime(buff, sizeof(buff), "%F-%T.bin"));
+    // auto outfile = std::ostream(filename, std::ios::out | std::ios::binary);
 
     // Run simulation
-    int index = 0;
+    int iteration = 0;
     int t_10 = (int)(p->t_max/p->dt) / 10;
     BOOST_LOG_TRIVIAL(info) << "Simulating...";
     status = SimStatus::RUNNING;
@@ -133,22 +132,24 @@ void Simulation::run() {
             coulomb_forces = precompute_coulomb();
         }
 
-	// Progress update
-	if (index % t_10 == 0 && p->verbosity != 0) {
-        BOOST_LOG_TRIVIAL(info) << int(10*index/t_10) << "% complete; "
-                                << "t = " << t;
-	}
-
-    // Update each ion
-    for (unsigned int i = 0; i < ions.size(); i++) {
-        ions[i].update(t, coulomb_forces);
-
-        // TODO: Record data
-
-	    // TODO: Check bounds
+        // Progress update
+        if (iteration % t_10 == 0 && p->verbosity != 0) {
+            BOOST_LOG_TRIVIAL(info) << int(10*iteration/t_10) << "% complete; "
+                                    << "t = " << t;
         }
 
-        index++;
+        // Update each ion
+        // TODO: update to use Boost.compute
+        #pragma omp parallel for
+        for (unsigned int i = 0; i < ions.size(); i++) {
+            auto ion = &ions[i];
+            ion->update(t, coulomb_forces);
+
+            // TODO: Record data
+            // TODO: Check bounds
+        }
+
+        iteration++;
     }
 
     status = SimStatus::FINISHED;

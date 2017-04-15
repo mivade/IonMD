@@ -6,7 +6,7 @@ set(Boost_USE_STATIC_LIBS ON)
 
 find_package(Armadillo REQUIRED)
 find_package(Boost COMPONENTS log REQUIRED)
-find_package(OpenMP REQUIRED)
+# find_package(OpenMP REQUIRED)
 
 include_directories(
   ${ARMADILLO_INCLUDE_DIRS}
