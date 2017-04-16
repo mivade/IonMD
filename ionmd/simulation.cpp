@@ -2,7 +2,7 @@
 #include <fstream>
 #include <cmath>
 #include <vector>
-// #include <ctime>
+#include <tuple>
 
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
@@ -108,7 +108,7 @@ void Simulation::run() {
     // std::mersenne_twister_engine<double> rng;
 
     // Storage of pre-computed Coulomb force data
-    mat coulomb_forces(3, p->num_ions);
+    mat coulomb_forces(3, ions.size());
     coulomb_forces.zeros();
 
     // FIXME: Initialization should happen before here
@@ -117,9 +117,20 @@ void Simulation::run() {
 
     // Recording initialization
     // TODO: HDF5, store all data
-    // char buff[256];
-    // const auto filename = std::string(std::strftime(buff, sizeof(buff), "%F-%T.bin"));
-    // auto outfile = std::ostream(filename, std::ios::out | std::ios::binary);
+    std::ofstream outfile(p->filename, std::ios::binary);
+    // outfile << (unsigned int)ions.size();
+    // outfile.flush();
+
+    // Stores every ion's position in one iteration
+    auto current_positions = std::vector<vec>();
+    for (unsigned int i = 0; i < p->buffer_size; i++) {
+        current_positions.push_back(vec(3));
+    }
+
+    // Stores all ion positions for a number of iterations dictated by the sim
+    // parameters.
+    auto pos_buffer = std::vector<decltype(current_positions)>();
+    pos_buffer.reserve(ions.size() * p->buffer_size);
 
     // Run simulation
     int iteration = 0;
@@ -143,16 +154,31 @@ void Simulation::run() {
         // TODO: update to use Boost.compute
         #pragma omp parallel for
         for (unsigned int i = 0; i < ions.size(); i++) {
-            auto ion = &ions[i];
-            ion->update(t, coulomb_forces);
+            auto x = ions[i].update(t, coulomb_forces);
 
-            // TODO: Record data
+            // Record trajectory position
+            current_positions[i] = x;
+
             // TODO: Check bounds
+        }
+
+        pos_buffer.push_back(current_positions);
+        // for (auto &x: current_positions) {
+        //     // outfile << x[0] << x[1] << x[2];
+        //     x.save(outfile, arma::raw_binary);
+        // }
+        // if (pos_buffer.size() == p->buffer_size && false) {
+        //     outfile.flush();
+        // }
+        if (pos_buffer.size() == p->buffer_size) {
+            pos_buffer.clear();
         }
 
         iteration++;
     }
 
+    // FIXME: write rest
+    outfile.close();
     status = SimStatus::FINISHED;
 }
 

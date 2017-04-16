@@ -3,6 +3,7 @@
 
 #include <string>
 #include <memory>
+#include "util.hpp"
 
 
 namespace ionmd {
@@ -11,9 +12,6 @@ namespace ionmd {
  * Container structure for all parameters of a simulation.
  */
 struct SimParams {
-    /// Total number of ions
-    unsigned int num_ions;
-
     /// Time step [&mu;s]
     double dt = 0.050;
 
@@ -35,9 +33,11 @@ struct SimParams {
     /// Enable Doppler cooling simulation
     bool doppler_enabled = false;
 
-    // Output
-    std::string output_filename;
-    bool record_trajectories;
+    /// Filename for writing trajectory data to.
+    std::string filename = "out.bin";
+
+    /// How many points in time to store before writing to disk.
+    size_t buffer_size = 10000;
 };
 
 typedef std::shared_ptr<SimParams> params_ptr;

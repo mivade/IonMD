@@ -55,7 +55,7 @@ void Ion::print_position() {
 }
 
 
-void Ion::update(double t, mat forces) {
+const vec Ion::update(double t, mat forces) {
     vec F(3);
 
     auto dx = v*p->dt + 0.5*a*pow(p->dt, 2);
@@ -74,6 +74,8 @@ void Ion::update(double t, mat forces) {
     auto accel = F/m;
     v += 0.5*(a + accel)*p->dt;
     a = accel;
+
+    return x;
 }
 
 

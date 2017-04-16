@@ -1,4 +1,3 @@
-=====
 IonMD
 =====
 
@@ -10,7 +9,7 @@ IonMD
 
 
 Overview
-========
+--------
 
 IonMD is a molecular dynamics (MD) simulation of ions in a linear Paul
 trap. The implmentation uses the leapfrog integration technique and
@@ -20,7 +19,7 @@ described in [1]_ and [2]_.
 
 
 Model Description
------------------
+^^^^^^^^^^^^^^^^^
 
 IonMD simulates ions in a linear Paul trap by solving each ion's
 classical equation of motion :math:`\ddot{\vec{x}}_i = \vec{F}_i/m_i`
@@ -33,19 +32,8 @@ such as background gas collisions. In other words,
    \vec{F}_i = \vec{F}_{T,i} + \vec{F}_{L,i} + \vec{F}_{C,i} + \vec{F}_{S,i}
 
 
-Minimization
-------------
-
-For obtaining good simulation results, it is best to start with good
-initial conditions, otherwise the simulation would need to run for an
-exorbitant amount of time. Essentially, this means minimizing the
-potential energy of the system. This is currently implemented by first
-treating *all* ions as laser cooled for a period of time in order to
-obtain good starting positions.
-
-
 System Requirements
-===================
+-------------------
 
 FIXME: Installation of requirements with conda
 
@@ -53,9 +41,8 @@ FIXME: Python requirements
 
 * C++ requirements
 
-  * Armadillo_ and its dependencies (on Debian wheezy, this requires
-    manually adding ``libboost-math-dev`` since it is not listed as a
-    dependency).
+  * Armadillo_ and its dependencies (on Debian, this requires manually adding
+  ``libboost-math-dev`` since it is not listed as a dependency).
 
   * Boost_
 
@@ -64,23 +51,24 @@ FIXME: Python requirements
 
 
 Building
-========
+--------
 
 The C++ components are built with CMake::
 
+  $ mkdir -p build
   $ cd build
   $ cmake ..
   $ cmake --build .
 
 
 Usage
-=====
+-----
 
-TODO
+See ``demo/demo.cpp``.
 
 
 Data Output
-===========
+-----------
 
 The following is old:
 
@@ -100,27 +88,27 @@ chemical file format).
 
 
 Known Bugs
-==========
+----------
 
 * Temperature calculation is... wrong.
 
 
 Authors
-=======
+-------
 
-IonMD is principally written by Michael V. DePalatis <depalatis@phys.au.dk> with
-some optimization enhancements by Ben Land.
+IonMD is principally written by Michael V. DePalatis with some optimization
+enhancements by Ben Land.
 
 
 License
-=======
+-------
 
 IonMD is freely distributable under the terms of the GNU GPL version 3
 (see COPYING for details).
 
 
 References
-==========
+----------
 
 .. [1] C.B. Zhang *et al.*, Phys. Rev. A **76**, 012719 (2007).
 .. [2] C.B. Zhang, *Production and Sympathetic Cooling of Complex

@@ -87,8 +87,9 @@ public:
      * Apply a single time step of integration.
      * @param t Current time
      * @param forces Pre-computed Coulomb forces due to all other ions
+     * @returns The new ion position
      */
-    void update(double t, mat forces);
+    const vec update(double t, mat forces);
 
     /**
      * Pre-compute the Coluomb forces due to all other ions in the trap.
