@@ -120,14 +120,12 @@ void Simulation::run() {
     }
 
     // Stores all ion positions
-    auto trajectories = mat(p->t_max / p->dt, ions.size() * 3);
+    auto trajectories = mat(p->num_steps, ions.size() * 3);
 
     // Run simulation
-    // int t_10 = int(p->t_max/p->dt) / 10;
     BOOST_LOG_TRIVIAL(info) << "Start simulation: " << timestamp_str() << "\n";
     status = SimStatus::RUNNING;
 
-    //for (double t = 0; t < p->t_max; t += p->dt) {
     auto t = double(0);
     for (unsigned int step = 0; step < p->num_steps; step++) {
         // Calculate Coulomb forces

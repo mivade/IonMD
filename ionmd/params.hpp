@@ -13,10 +13,10 @@ namespace ionmd {
  */
 struct SimParams {
     /// Time step [&mu;s]
-    double dt = 0.050;
+    double dt = 0.01;
 
-    /// Max time [&mu;s]
-    double t_max = 1000;
+    /// Total number of time steps.
+    unsigned int num_steps = 20000;
 
     /// Verbosity of output. Higher numbers increases verbosity.
     unsigned int verbosity = 0;
