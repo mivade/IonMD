@@ -1,8 +1,7 @@
 #include <iostream>
-#include <fstream>
 #include <cmath>
 #include <vector>
-#include <tuple>
+#include <array>
 
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
@@ -43,7 +42,6 @@ Simulation::Simulation(SimParams p, Trap trap, std::vector<Ion> ions)
 
 
 mat Simulation::precompute_coulomb() {
-    int i = 0;
     mat Flist(3, ions.size());
 
     #pragma omp parallel for
@@ -115,70 +113,53 @@ void Simulation::run() {
     // TODO: Initialize CCD
     // TODO: Initialize lasers
 
-    // Recording initialization
-    // TODO: HDF5, store all data
-    std::ofstream outfile(p->filename, std::ios::binary);
-    // outfile << (unsigned int)ions.size();
-    // outfile.flush();
-
     // Stores every ion's position in one iteration
     auto current_positions = std::vector<vec>();
     for (unsigned int i = 0; i < p->buffer_size; i++) {
         current_positions.push_back(vec(3));
     }
 
-    // Stores all ion positions for a number of iterations dictated by the sim
-    // parameters.
-    auto pos_buffer = std::vector<decltype(current_positions)>();
-    pos_buffer.reserve(ions.size() * p->buffer_size);
+    // Stores all ion positions
+    auto trajectories = mat(p->t_max / p->dt, ions.size() * 3);
 
     // Run simulation
-    int iteration = 0;
-    int t_10 = (int)(p->t_max/p->dt) / 10;
+    // int t_10 = int(p->t_max/p->dt) / 10;
     BOOST_LOG_TRIVIAL(info) << "Start simulation: " << timestamp_str() << "\n";
     status = SimStatus::RUNNING;
 
-    for (double t = 0; t < p->t_max; t += p->dt) {
+    //for (double t = 0; t < p->t_max; t += p->dt) {
+    auto t = double(0);
+    for (unsigned int step = 0; step < p->num_steps; step++) {
         // Calculate Coulomb forces
         if (p->coulomb_enabled) {
             coulomb_forces = precompute_coulomb();
         }
 
         // Progress update
-        if (iteration % t_10 == 0 && p->verbosity != 0) {
-            BOOST_LOG_TRIVIAL(info) << int(10*iteration/t_10) << "% complete; "
-                                    << "t = " << t;
-        }
+        // FIXME
 
         // Update each ion
         // TODO: update to use Boost.compute
         #pragma omp parallel for
         for (unsigned int i = 0; i < ions.size(); i++) {
-            auto x = ions[i].update(t, coulomb_forces);
+            const auto x = ions[i].update(t, coulomb_forces);
 
             // Record trajectory position
+            for (unsigned int j = 0; j < 3; j++) {
+                trajectories(step, 3*i + j) = x[j];
+            }
             current_positions[i] = x;
 
             // TODO: Check bounds
         }
 
-        pos_buffer.push_back(current_positions);
-        // for (auto &x: current_positions) {
-        //     // outfile << x[0] << x[1] << x[2];
-        //     x.save(outfile, arma::raw_binary);
-        // }
-        // if (pos_buffer.size() == p->buffer_size && false) {
-        //     outfile.flush();
-        // }
-        if (pos_buffer.size() == p->buffer_size) {
-            pos_buffer.clear();
-        }
-
-        iteration++;
+        t += p->dt;
     }
 
-    // FIXME: write rest
-    outfile.close();
+    std::cout << current_positions[0] << " " << current_positions[1];
+    // std::cout << trajectories << std::endl;
+    // trajectories.save(p->filename, arma::raw_binary);
+    trajectories.save(p->filename, arma::csv_ascii);
     status = SimStatus::FINISHED;
 }
 
