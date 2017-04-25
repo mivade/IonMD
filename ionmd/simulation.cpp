@@ -154,10 +154,7 @@ void Simulation::run() {
         t += p->dt;
     }
 
-    std::cout << current_positions[0] << " " << current_positions[1];
-    // std::cout << trajectories << std::endl;
-    // trajectories.save(p->filename, arma::raw_binary);
-    trajectories.save(p->filename, arma::csv_ascii);
+    trajectories.save(p->filename, arma::raw_binary);
     status = SimStatus::FINISHED;
 }
 
