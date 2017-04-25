@@ -82,6 +82,18 @@ Ion Simulation::make_ion(const double &m, const double &Z,
 }
 
 
+void Simulation::add_ion(const double &m, const double &z,
+                         const std::vector<double> &x0)
+{
+    if (status != SimStatus::RUNNING) {
+        ions.push_back(make_ion(m, z, x0));
+    }
+    else {
+        BOOST_LOG_TRIVIAL(error) << "Can't add an ion while simulation in progress!";
+    }
+}
+
+
 void Simulation::set_ions(std::vector<Ion> ions) {
     if (status != SimStatus::RUNNING) {
         ions.clear();

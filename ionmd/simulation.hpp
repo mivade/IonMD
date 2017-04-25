@@ -73,6 +73,15 @@ public:
                  const std::vector<double> &x0);
 
     /**
+     * Create an ion with the given initial position and zero velocity and add
+     * to the inventory of ions in the simulation.
+     * @param m Ion mass in amu
+     * @param Z Ion charge in units of e
+     * @param x0 Initial position
+     */
+    void add_ion(const double &m, const double &z, const std::vector<double> &x0);
+
+    /**
      * Set ions. This method will only set parameters when the simulation is not
      * in progress.
      */
