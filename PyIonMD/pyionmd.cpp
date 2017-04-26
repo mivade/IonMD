@@ -1,4 +1,5 @@
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 #include <ionmd/params.hpp>
 #include <ionmd/simulation.hpp>
@@ -35,11 +36,15 @@ PYBIND11_PLUGIN(pyionmd)
         .def_readwrite("filename", &SimParams::filename)
         .def_readwrite("buffer_size", &SimParams::buffer_size);
 
-    // py::class_<Ion>(m, "Ion")
-    //     .def(py::init<SimParams &p, Trap &t, const double m, const double Z>);
-
-    // py::class_<Trap>(m, "Trap")
-    //     .def(py::init());
+    py::class_<Trap>(m, "Trap")
+        .def(py::init())
+        .def_readwrite("r0", &Trap::r0)
+        .def_readwrite("z0", &Trap::z0)
+        .def_readwrite("kappa", &Trap::kappa)
+        .def_readwrite("omega_rf", &Trap::omega_rf)
+        .def_readwrite("V_rf", &Trap::V_rf)
+        .def_readwrite("U_dc", &Trap::U_dc)
+        .def_readwrite("U_ec", &Trap::U_ec);
 
     py::class_<Simulation>(m, "Simulation")
         .def(py::init())
