@@ -14,7 +14,6 @@ using arma::mat;
 /**
  * Simulation status enum
  *
- * TODO: use or eliminate SimStatus::ERRORED
  */
 enum class SimStatus { IDLE, RUNNING, FINISHED, ERRORED };
 
@@ -33,9 +32,6 @@ private:
     /// All ions to simulate.
     std::vector<Ion> ions;
 
-    /// Simulation status
-    SimStatus status;
-
     /**
      * Precomputes all Coulomb interactions between ions that way they can be
      * applied all at once when advancing a time step.
@@ -45,6 +41,9 @@ private:
     mat precompute_coulomb();
 
 public:
+    /// Simulation status
+    SimStatus status;
+
     Simulation();
     Simulation(SimParams p, Trap trap);
     Simulation(SimParams p, Trap trap, std::vector<Ion> ions);

@@ -19,3 +19,4 @@ for n in range(n_ions):
 
 print("Running simulation...")
 sim.run()
+print(sim.status)

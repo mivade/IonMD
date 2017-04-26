@@ -52,7 +52,8 @@ PYBIND11_PLUGIN(pyionmd)
         .def("set_trap", &Simulation::set_trap)
         .def("add_ion", &Simulation::add_ion)
         .def("set_ions", &Simulation::set_ions)
-        .def("run", &Simulation::run);
+        .def("run", &Simulation::run)
+        .def_readonly("status", &Simulation::status);
 
     return m.ptr();
 }

@@ -103,6 +103,22 @@ void Simulation::set_ions(std::vector<Ion> ions) {
 
 
 void Simulation::run() {
+    if (p == nullptr) {
+        std::cerr << "No parameters set!" << std::endl;
+        status = SimStatus::ERRORED;
+        return;
+    }
+    else if (trap == nullptr) {
+        std::cerr << "No trap set!" << std::endl;
+        status = SimStatus::ERRORED;
+        return;
+    }
+    else if (ions.size() == 0) {
+        std::cerr << "No ions set!" << std::endl;
+        status = SimStatus::ERRORED;
+        return;
+    }
+
     // Initialize RNG
     // std::mersenne_twister_engine<double> rng;
 
