@@ -9,6 +9,7 @@ namespace py = pybind11;
 
 using ionmd::SimParams;
 using ionmd::Simulation;
+using ionmd::SimStatus;
 using ionmd::Ion;
 using ionmd::Trap;
 
@@ -16,6 +17,12 @@ using ionmd::Trap;
 PYBIND11_PLUGIN(pyionmd)
 {
     py::module m("pyionmd", "IonMD Python bindings");
+
+    py::enum_<SimStatus>(m, "Status")
+        .value("IDLE", SimStatus::IDLE)
+        .value("RUNNING", SimStatus::RUNNING)
+        .value("FINISHED", SimStatus::FINISHED)
+        .value("ERRORED", SimStatus::ERRORED);
 
     py::class_<SimParams>(m, "SimParams")
         .def(py::init())
@@ -28,8 +35,8 @@ PYBIND11_PLUGIN(pyionmd)
         .def_readwrite("filename", &SimParams::filename)
         .def_readwrite("buffer_size", &SimParams::buffer_size);
 
-    py::class_<Ion>(m, "Ion")
-        .def(py::init<SimParams &p, Trap &t, const double m, const double Z>);
+    // py::class_<Ion>(m, "Ion")
+    //     .def(py::init<SimParams &p, Trap &t, const double m, const double Z>);
 
     // py::class_<Trap>(m, "Trap")
     //     .def(py::init());
@@ -38,7 +45,7 @@ PYBIND11_PLUGIN(pyionmd)
         .def(py::init())
         .def("set_params", &Simulation::set_params)
         .def("set_trap", &Simulation::set_trap)
-//        .def("make_ion" &Simulation::make_ion)
+        .def("add_ion", &Simulation::add_ion)
         .def("set_ions", &Simulation::set_ions)
         .def("run", &Simulation::run);
 

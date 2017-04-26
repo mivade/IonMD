@@ -3,10 +3,6 @@
 #include <vector>
 #include <array>
 
-#include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/expressions.hpp>
-
 #include "simulation.hpp"
 #include "util.hpp"
 
@@ -14,8 +10,6 @@ namespace ionmd {
 
 using arma::vec;
 using arma::mat;
-
-namespace logging = boost::log;
 
 
 Simulation::Simulation() {
@@ -37,7 +31,7 @@ Simulation::Simulation(SimParams p, Trap trap, std::vector<Ion> ions)
     for (auto ion: ions) {
         this->ions.push_back(ion);
     }
-    BOOST_LOG_TRIVIAL(debug) << "Number of ions: " << this->ions.size();
+    // BOOST_LOG_TRIVIAL(debug) << "Number of ions: " << this->ions.size();
 }
 
 
@@ -59,7 +53,7 @@ void Simulation::set_params(SimParams new_params) {
         p = std::make_shared<SimParams>(new_params);
     }
     else {
-        BOOST_LOG_TRIVIAL(error) << "Can't change parameters while simulation is running!";
+        // BOOST_LOG_TRIVIAL(error) << "Can't change parameters while simulation is running!";
     }
 }
 
@@ -70,7 +64,7 @@ void Simulation::set_trap(Trap new_trap) {
         trap = std::make_shared<Trap>(new_trap);
     }
     else {
-        BOOST_LOG_TRIVIAL(error) << "Can't set a new trap while simulation is running!";
+        // BOOST_LOG_TRIVIAL(error) << "Can't set a new trap while simulation is running!";
     }
 }
 
@@ -89,7 +83,7 @@ void Simulation::add_ion(const double &m, const double &z,
         ions.push_back(make_ion(m, z, x0));
     }
     else {
-        BOOST_LOG_TRIVIAL(error) << "Can't add an ion while simulation in progress!";
+        // BOOST_LOG_TRIVIAL(error) << "Can't add an ion while simulation in progress!";
     }
 }
 
@@ -103,17 +97,12 @@ void Simulation::set_ions(std::vector<Ion> ions) {
         }
     }
     else {
-        BOOST_LOG_TRIVIAL(error) << "Can't set new ions while simulation is running!";
+        // BOOST_LOG_TRIVIAL(error) << "Can't set new ions while simulation is running!";
     }
 }
 
 
 void Simulation::run() {
-    // Setup logging.
-    // TODO: maybe just leave this up to implementation?
-    auto severity = p->verbosity > 0 ? logging::trivial::debug : logging::trivial::info;
-    logging::core::get()->set_filter(logging::trivial::severity >= severity);
-
     // Initialize RNG
     // std::mersenne_twister_engine<double> rng;
 
@@ -135,7 +124,7 @@ void Simulation::run() {
     auto trajectories = mat(p->num_steps, ions.size() * 3);
 
     // Run simulation
-    BOOST_LOG_TRIVIAL(info) << "Start simulation: " << timestamp_str() << "\n";
+    // BOOST_LOG_TRIVIAL(info) << "Start simulation: " << timestamp_str() << "\n";
     status = SimStatus::RUNNING;
 
     auto t = double(0);

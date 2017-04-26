@@ -2,7 +2,6 @@
 #include <cmath>
 #include <random>
 
-#include <boost/log/trivial.hpp>
 #include <armadillo>
 
 #include "ion.hpp"
@@ -33,8 +32,8 @@ Ion::Ion(params_ptr params, trap_ptr trap, const double m, const double Z,
     : Ion(params, trap, m, Z)
 {
     this->x = x0;
-    BOOST_LOG_TRIVIAL(debug) << "m=" << m << ", Z=" << Z << ", x0="
-                             << x0[0] << "," << x0[1] << "," << x0[2];
+    // BOOST_LOG_TRIVIAL(debug) << "m=" << m << ", Z=" << Z << ", x0="
+    //                          << x0[0] << "," << x0[1] << "," << x0[2];
 }
 
 
