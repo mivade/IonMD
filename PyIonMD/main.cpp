@@ -3,7 +3,6 @@
 
 #include <ionmd/params.hpp>
 #include <ionmd/simulation.hpp>
-#include <ionmd/ion.hpp>
 #include <ionmd/trap.hpp>
 
 namespace py = pybind11;
@@ -15,9 +14,9 @@ using ionmd::Ion;
 using ionmd::Trap;
 
 
-PYBIND11_PLUGIN(pyionmd)
+PYBIND11_PLUGIN(ionmd)
 {
-    py::module m("pyionmd", "IonMD Python bindings");
+    py::module m("ionmd", "IonMD Python bindings");
 
     py::enum_<SimStatus>(m, "Status")
         .value("IDLE", SimStatus::IDLE)
@@ -25,7 +24,7 @@ PYBIND11_PLUGIN(pyionmd)
         .value("FINISHED", SimStatus::FINISHED)
         .value("ERRORED", SimStatus::ERRORED);
 
-    py::class_<SimParams>(m, "SimParams")
+    py::class_<SimParams>(m, "Params")
         .def(py::init())
         .def_readwrite("dt", &SimParams::dt)
         .def_readwrite("num_steps", &SimParams::num_steps)

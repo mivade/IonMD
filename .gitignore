@@ -12,3 +12,6 @@ temperature.txt
 README.html
 params.py
 params.xml
+*.bin
+*.egg-info/
+Untitled.ipynb
