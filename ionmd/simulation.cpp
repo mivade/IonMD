@@ -2,6 +2,7 @@
 #include <cmath>
 #include <vector>
 #include <array>
+#include <thread>
 
 #include "simulation.hpp"
 #include "util.hpp"
@@ -173,6 +174,12 @@ void Simulation::run() {
 
     trajectories.save(p->filename, arma::raw_binary);
     status = SimStatus::FINISHED;
+}
+
+
+void Simulation::start()
+{
+    std::thread([this]() { this->run(); }).detach();
 }
 
 }  // namespace ionmd

@@ -88,6 +88,9 @@ public:
 
     /** Run the simulation. This is a blocking function. */
     void run();
+
+    /** Starts the simulation in the background. */
+    void start();
 };
 
 }

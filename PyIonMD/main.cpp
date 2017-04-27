@@ -10,7 +10,6 @@ namespace py = pybind11;
 using ionmd::SimParams;
 using ionmd::Simulation;
 using ionmd::SimStatus;
-using ionmd::Ion;
 using ionmd::Trap;
 
 
@@ -51,10 +50,7 @@ PYBIND11_PLUGIN(ionmd)
         .def("set_trap", &Simulation::set_trap)
         .def("add_ion", &Simulation::add_ion)
         .def("set_ions", &Simulation::set_ions)
-        .def("start", [](Simulation *sim) {
-                py::gil_scoped_release release;
-                sim->run();
-            })
+        .def("start", &Simulation::start)
         .def_readonly("status", &Simulation::status);
 
     return m.ptr();

@@ -79,7 +79,7 @@ class BuildExt(build_ext):
     }
 
     if sys.platform == 'darwin':
-        c_opts['unix'] += ['-stdlib=libc++', '-mmacosx-version-min=10.7']
+        c_opts['unix'] += ['-stdlib=libc++', '-mmacosx-version-min=10.9']
 
     def build_extensions(self):
         ct = self.compiler.compiler_type
@@ -95,6 +95,7 @@ class BuildExt(build_ext):
         for ext in self.extensions:
             ext.extra_compile_args = opts
         build_ext.build_extensions(self)
+
 
 setup(
     name="ionmd",
