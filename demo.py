@@ -2,7 +2,7 @@ import os
 import time
 import numpy as np
 import matplotlib.pyplot as plt
-from ionmd import Params, Trap, Simulation
+from ionmd import Params, Trap, Simulation, Status
 
 params = Params()
 trap = Trap()
@@ -29,16 +29,19 @@ for n in range(n_ions):
 
 print("Running simulation...")
 sim.start()
-print("waiting...")
-time.sleep(0.5)
+if sim.status != Status.FINISHED:
+    print("waiting...")
+    time.sleep(0.5)
 print(sim.status)
 
 shape = (n_ions*3, params.num_steps)
+# shape = (params.num_steps, n_ions*3)
 data = np.fromfile(params.filename, dtype=np.double).reshape(shape).T
 
-plt.figure()
+fig, ax = plt.subplots(3, n_ions)
+t = np.linspace(0, params.num_steps * params.dt, params.num_steps)
+lim = 200
 for n in range(n_ions):
-    # plt.plot(data[n+2,:100], label=str(n + 1))
-    plt.plot(data[:100,n+2], label=str(n + 1))
-plt.legend()
+    for k in range(3):
+        ax[k, n].plot(t[:lim], data[:lim, k])
 plt.show()
