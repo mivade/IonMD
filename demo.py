@@ -1,3 +1,5 @@
+import os
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 from ionmd import Params, Trap, Simulation
@@ -6,7 +8,12 @@ params = Params()
 trap = Trap()
 sim = Simulation()
 
-# params.filename = "trajectories.bin"
+filename = "trajectories.bin"
+try:
+    os.remove(filename)
+except OSError:
+    pass
+params.filename = filename
 
 sim.set_params(params)
 sim.set_trap(trap)
@@ -21,7 +28,9 @@ for n in range(n_ions):
     sim.add_ion(40, 1, [0, 0, z[n]])
 
 print("Running simulation...")
-sim.run()
+sim.start()
+print("waiting...")
+time.sleep(0.5)
 print(sim.status)
 
 shape = (n_ions*3, params.num_steps)

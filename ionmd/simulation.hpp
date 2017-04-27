@@ -86,7 +86,7 @@ public:
      */
     void set_ions(std::vector<Ion> ions);
 
-    /** Run the simulation. */
+    /** Run the simulation. This is a blocking function. */
     void run();
 };
 
