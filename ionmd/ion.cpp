@@ -138,8 +138,8 @@ vec Ion::stochastic_force() {
     double v;
     vec F(3);
     F.zeros();
-    vec hat = {uniform(rng), uniform(rng), uniform(rng)};
-    normalize(hat);
+    vec direction = {uniform(rng), uniform(rng), uniform(rng)};
+    vec hat = normalize(direction);
     // FIXME
     v = 0; // sqrt(2*kB*p->gamma_col*p->dt/this->m);
     F = this->m*v*hat/p->dt;
