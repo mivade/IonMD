@@ -17,5 +17,5 @@ include_directories(
 
 add_subdirectory(ionmd)
 add_subdirectory(demo)
-add_subdirectory(pybind11)
-add_subdirectory(PyIonMD)
+#add_subdirectory(pybind11)
+#add_subdirectory(PyIonMD)
