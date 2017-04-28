@@ -11,6 +11,8 @@
 using std::cout;
 using arma::vec;
 using arma::mat;
+using arma::normalise;
+
 using namespace ionmd;
 
 std::default_random_engine rng;
@@ -60,15 +62,11 @@ const vec Ion::update(double t, mat forces) {
     auto dx = v*p->dt + 0.5*a*pow(p->dt, 2);
     x += dx;
 
-    F = secular_force();
-    if (p->micromotion_enabled)
-        F += micromotion_force(t);
-    if (p->coulomb_enabled)
-        F += coulomb_force(forces);
-    if (p->stochastic_enabled)
-        F += stochastic_force();
-    if (p->doppler_enabled)
-        F += doppler_force();
+    F = secular_force()
+        + (p->micromotion_enabled ? micromotion_force(t) : 0)
+        + (p->coulomb_enabled ? coulomb_force(forces) : 0)
+        + (p->stochastic_enabled ? stochastic_force() : 0)
+        + (p->doppler_enabled ? doppler_force() : 0);
 
     auto accel = F/m;
     v += 0.5*(a + accel)*p->dt;
@@ -139,7 +137,7 @@ vec Ion::stochastic_force() {
     vec F(3);
     F.zeros();
     vec direction = {uniform(rng), uniform(rng), uniform(rng)};
-    vec hat = normalize(direction);
+    vec hat = normalise(direction);
     // FIXME
     v = 0; // sqrt(2*kB*p->gamma_col*p->dt/this->m);
     F = this->m*v*hat/p->dt;
