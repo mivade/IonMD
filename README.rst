@@ -32,65 +32,37 @@ such as background gas collisions. In other words,
    \vec{F}_i = \vec{F}_{T,i} + \vec{F}_{L,i} + \vec{F}_{C,i} + \vec{F}_{S,i}
 
 
-System Requirements
--------------------
-
-FIXME: Installation of requirements with conda
-
-FIXME: Python requirements
-
-* C++ requirements
-
-  * Armadillo_ and its dependencies (on Debian, this requires manually adding
-  ``libboost-math-dev`` since it is not listed as a dependency).
-
-  * Boost_
-
-.. _Armadillo: http://arma.sourceforge.net/
-.. _Boost: http://www.boost.org/
-
-
 Building
 --------
 
-The C++ components are built with CMake::
+.. warning:: This section is a work in progress.
 
-  $ mkdir -p build
-  $ cd build
-  $ cmake ..
-  $ cmake --build .
+To build, Armadillo_ and CMake_ are required. If using Anaconda or Miniconda,
+these can be installed with::
+
+    $ conda install cmake
+    $ conda install -c conda-forge armadillo
+
+.. note:: The Armadillo package on conda-forge does not include Windows
+          binaries. Instead, download and install binaries from Armadillo
+          website.
+
+Building the Python bindings requires pybind11_ which is included here as a git
+submodule::
+
+    $ git submodule init && git submodule update
+
+.. _Armadillo: http://arma.sourceforge.net/
+.. _CMake: https://cmake.org/
+.. _pybind11: https://pybind11.readthedocs.io/en/master/
+
+TODO: use scikit-build for setup.py
 
 
 Usage
 -----
 
 See ``demo/demo.cpp``.
-
-
-Data Output
------------
-
-The following is old:
-
-Large data files containing, e.g., trajectories are written in low
-level binary format. This means that they may not be portable to
-another computer, but within a machine, there should be no
-issues. Data can be easily read with numpy.fromfile. See the simCCD
-function in runsim.py for an example.
-
-Simulated CCD data gives mass in amu and position data in
-microns. Trajectory data gives time in microseconds and position in
-mm. In both cases, floats are used rather than the internal doubles in
-order to reduce file size (precision should not be an issue in this
-case). A "final positions" file gives x y z positions of all ions at
-the end of the simulation in the plaintext xyz format (a common
-chemical file format).
-
-
-Known Bugs
-----------
-
-* Temperature calculation is... wrong.
 
 
 Authors
