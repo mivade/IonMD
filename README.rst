@@ -47,16 +47,23 @@ these can be installed with::
           binaries. Instead, download and install binaries from Armadillo
           website.
 
-Building the Python bindings requires pybind11_ which is included here as a git
-submodule::
+Building the Python bindings requires pybind11_ and scikit-build_. The former
+is included here as a git submodule::
 
     $ git submodule init && git submodule update
+
+The latter is installed with pip::
+
+    $ pip install scikit-built
+
+To build without Python bindings::
+
+    $ mkdir -p build && cd build && cmake .. && cmake --build .
 
 .. _Armadillo: http://arma.sourceforge.net/
 .. _CMake: https://cmake.org/
 .. _pybind11: https://pybind11.readthedocs.io/en/master/
-
-TODO: use scikit-build for setup.py
+.. _scikit-build: https://github.com/scikit-build/scikit-build
 
 
 Usage

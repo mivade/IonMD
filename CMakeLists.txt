@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.6)
 
+option(BUILD_PY "Build Python bindings" OFF)
+
 # set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/dist CACHE PATH "Install prefix")
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")  # TODO: fix for MSVC
@@ -15,6 +17,10 @@ include_directories(
 )
 
 add_subdirectory(libionmd)
-add_subdirectory(demo)
-add_subdirectory(pybind11)
-add_subdirectory(PyIonMD)
+
+if(BUILD_PY)
+  add_subdirectory(pybind11)
+  add_subdirectory(PyIonMD)
+else()
+  add_subdirectory(demo)
+endif(BUILD_PY)
