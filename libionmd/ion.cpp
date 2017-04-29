@@ -4,9 +4,9 @@
 
 #include <armadillo>
 
-#include "ion.hpp"
-#include "util.hpp"
-#include "constants.hpp"
+#include <ionmd/ion.hpp>
+#include <ionmd/util.hpp>
+#include <ionmd/constants.hpp>
 
 using std::cout;
 using arma::vec;
@@ -54,11 +54,11 @@ const vec Ion::update(double t, mat forces)
     auto dx = v*p->dt + 0.5*a*pow(p->dt, 2);
     x += dx;
 
-    vec F = secular_force()
-        + micromotion_force(t)
-        + coulomb_force(forces)
-        + stochastic_force()
-        + doppler_force();
+    vec F = secular_force();
+        // + micromotion_force(t)
+        // + coulomb_force(forces)
+        // + stochastic_force()
+        // + doppler_force();
 
     auto accel = F/m;
     v += 0.5*(a + accel)*p->dt;

@@ -4,8 +4,8 @@
 #include <array>
 #include <thread>
 
-#include "simulation.hpp"
-#include "util.hpp"
+#include <ionmd/simulation.hpp>
+#include <ionmd/util.hpp>
 
 namespace ionmd {
 
