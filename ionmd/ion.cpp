@@ -49,24 +49,16 @@ Ion::Ion(params_ptr params, trap_ptr trap, lasers_t lasers,
 }
 
 
-void Ion::print_position() {
-    cout << "(" << std::scientific << x[0] << ", "
-         << std::scientific << x[1] << ", "
-         << std::scientific << x[2] << ")\n";
-}
-
-
-const vec Ion::update(double t, mat forces) {
-    vec F(3);
-
+const vec Ion::update(double t, mat forces)
+{
     auto dx = v*p->dt + 0.5*a*pow(p->dt, 2);
     x += dx;
 
-    F = secular_force()
-        + (p->micromotion_enabled ? micromotion_force(t) : 0)
-        + (p->coulomb_enabled ? coulomb_force(forces) : 0)
-        + (p->stochastic_enabled ? stochastic_force() : 0)
-        + (p->doppler_enabled ? doppler_force() : 0);
+    vec F = secular_force()
+        + micromotion_force(t)
+        + coulomb_force(forces)
+        + stochastic_force()
+        + doppler_force();
 
     auto accel = F/m;
     v += 0.5*(a + accel)*p->dt;
@@ -77,40 +69,52 @@ const vec Ion::update(double t, mat forces) {
 
 
 vec Ion::doppler_force() {
-    vec F(3);
-    F.zeros();
+    vec F = arma::zeros<vec>(3);
 
-    // FIXME
-    // double beta, F0;
-    // beta = this->p->beta;
-    // F0 = this->p->F0;
+    if (p->doppler_enabled) {
+        // FIXME
+        // double beta, F0;
+        // beta = this->p->beta;
+        // F0 = this->p->F0;
 
-    // if(this->p->minimizing) {
-    // 	beta = 1e-20; // unrealistically large damping for minimizing
-    // 	if(this->doppler_coolable == 0) // don't use constant pressure term on non-lc'ed ions
-    // 	    F0 = 0;
-    // }
+        // if(this->p->minimizing) {
+        // 	beta = 1e-20; // unrealistically large damping for minimizing
+        // 	if(this->doppler_coolable == 0) // don't use constant pressure term on non-lc'ed ions
+        // 	    F0 = 0;
+        // }
 
-    // for (auto laser: this->doppler_lasers) {
-	// use all lasers here
-    //}
+        // for (auto laser: this->doppler_lasers) {
+        // use all lasers here
+        //}
 
-    // for (int i = 0; i < 3; i++) {
-    //     F[i] = F0*p->khat[i] - beta*this->v[i];
-    // }
-    return F;
+        // for (int i = 0; i < 3; i++) {
+        //     F[i] = F0*p->khat[i] - beta*this->v[i];
+        // }
+
+        return F;
+    }
+    else {
+        return F;
+    }
 }
 
 
-vec Ion::coulomb_force(mat forces) {
-    // FIXME
-    vec F(3);
-    F.zeros();
-    return F;
+vec Ion::coulomb_force(mat forces)
+{
+    vec F = arma::zeros<vec>(3);
+
+    if (p->coulomb_enabled) {
+        // FIXME
+        return F;
+    }
+    else {
+        return F;
+    }
 }
 
 
-vec Ion::secular_force() {
+vec Ion::secular_force()
+{
     vec F(3);
 
     //A = p->kappa*p->UEC/pow(p->z0,2);
@@ -124,22 +128,37 @@ vec Ion::secular_force() {
 }
 
 
-vec Ion::micromotion_force(double t) {
-    // TODO
-    vec F(3);
-    F.zeros();
-    return F;
+vec Ion::micromotion_force(double t)
+{
+    vec F = arma::zeros<vec>(3);
+
+    if (p->micromotion_enabled) {
+        // FIXME
+        return F;
+    }
+    else {
+        return F;
+    }
 }
 
 
-vec Ion::stochastic_force() {
-    double v;
-    vec F(3);
-    F.zeros();
-    vec direction = {uniform(rng), uniform(rng), uniform(rng)};
-    vec hat = normalise(direction);
+vec Ion::stochastic_force()
+{
+    vec F = arma::zeros<vec>(3);
+
+    if (p->stochastic_enabled) {
+        // FIXME
+        return F;
+    }
+    else {
+        return F;
+    }
+
     // FIXME
-    v = 0; // sqrt(2*kB*p->gamma_col*p->dt/this->m);
-    F = this->m*v*hat/p->dt;
-    return F;
+    // double v;
+    // vec direction = {uniform(rng), uniform(rng), uniform(rng)};
+    // vec hat = normalise(direction);
+    // v = 0; // sqrt(2*kB*p->gamma_col*p->dt/this->m);
+    // F = this->m*v*hat/p->dt;
+    // return F;
 }

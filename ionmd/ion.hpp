@@ -96,9 +96,6 @@ public:
      * @param ions Vector of all ions in the trap.
      */
     vec coulomb(const std::vector<Ion> ions);
-
-    /// Convenience function to pretty-print the ion position.
-    void print_position();
 };
 
 }  // namespace ionmd

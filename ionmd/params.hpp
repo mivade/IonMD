@@ -25,7 +25,7 @@ struct SimParams {
     bool micromotion_enabled = false;
 
     /// Enable Coulomb repulsion calculation
-    bool coulomb_enabled = true;
+    bool coulomb_enabled = false;
 
     /// Enable stochastic force calculation
     bool stochastic_enabled = false;
