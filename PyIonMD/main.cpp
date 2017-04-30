@@ -46,10 +46,9 @@ PYBIND11_PLUGIN(ionmd)
 
     py::class_<Simulation>(m, "Simulation")
         .def(py::init())
-        .def("set_params", &Simulation::set_params)
-        .def("set_trap", &Simulation::set_trap)
+        .def("set_params", &Simulation::set_params)  // FIXME: make property
+        .def("set_trap", &Simulation::set_trap)  // FIXME: make property
         .def("add_ion", &Simulation::add_ion)
-        .def("set_ions", &Simulation::set_ions)
         .def("start", &Simulation::start)
         .def_readonly("status", &Simulation::status);
 

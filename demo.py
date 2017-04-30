@@ -20,7 +20,7 @@ sim.set_trap(trap)
 
 print("Adding ions...")
 
-n_ions = 10
+n_ions = 2
 
 z = np.linspace(-20, 20, n_ions)
 

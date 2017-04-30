@@ -2,13 +2,12 @@ cmake_minimum_required(VERSION 3.6)
 
 option(BUILD_PY "Build Python bindings" OFF)
 
-# set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/dist CACHE PATH "Install prefix")
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")  # TODO: fix for MSVC
 
+# find_package(Threads)  # necessary when not using OpenMP
 find_package(Armadillo REQUIRED)
 find_package(OpenMP REQUIRED)
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 
 include_directories(
