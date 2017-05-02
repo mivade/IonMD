@@ -49,11 +49,22 @@ public:
     Simulation(SimParams p, Trap trap, std::vector<Ion> ions);
 
     /**
+     * Return a copy of the parameters. This is useful for creating a modified
+     * set of parameters for a next run of the simulation.
+     */
+    auto get_params() -> SimParams;
+
+    /**
      * Set new simulation parameters. This method will only set parameters when
      * the simulation is not in progress.
      * @param new_params
      */
     void set_params(SimParams new_params);
+
+    /**
+     * Return a copy of the trap.
+     */
+    auto get_trap() -> Trap;
 
     /**
      * Set new trap parameters. This method will only set parameters when the

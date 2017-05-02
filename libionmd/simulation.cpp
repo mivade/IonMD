@@ -13,7 +13,12 @@ using arma::vec;
 using arma::mat;
 
 
-Simulation::Simulation() {
+Simulation::Simulation()
+{
+    auto default_params = SimParams();
+    auto default_trap = Trap();
+    this->set_params(default_params);
+    this->set_trap(default_trap);
     status = SimStatus::IDLE;
 }
 
@@ -49,7 +54,14 @@ mat Simulation::precompute_coulomb() {
 }
 
 
-void Simulation::set_params(SimParams new_params) {
+auto Simulation::get_params() -> SimParams
+{
+    return *p.get();
+}
+
+
+void Simulation::set_params(SimParams new_params)
+{
     if (status != SimStatus::RUNNING) {
         p = std::make_shared<SimParams>(new_params);
     }
@@ -58,6 +70,11 @@ void Simulation::set_params(SimParams new_params) {
     }
 }
 
+
+auto Simulation::get_trap() -> Trap
+{
+    return *trap.get();
+}
 
 
 void Simulation::set_trap(Trap new_trap) {

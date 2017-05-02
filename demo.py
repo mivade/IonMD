@@ -2,21 +2,18 @@ import os
 import time
 import numpy as np
 import matplotlib.pyplot as plt
-from ionmd import Params, Trap, Simulation, Status
+from ionmd import Simulation, Status
 
-params = Params()
-trap = Trap()
 sim = Simulation()
 
 filename = "trajectories.bin"
+params = sim.params
 try:
     os.remove(filename)
 except OSError:
     pass
 params.filename = filename
-
-sim.set_params(params)
-sim.set_trap(trap)
+sim.params = params
 
 print("Adding ions...")
 
