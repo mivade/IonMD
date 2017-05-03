@@ -48,11 +48,11 @@ PYBIND11_PLUGIN(ionmd)
         .def(py::init())
         .def_property("params", &Simulation::get_params, &Simulation::set_params)
         .def_property("trap", &Simulation::get_trap, &Simulation::set_trap)
-        .def_readonly("status", &Simulation::status);
+        .def_readonly("status", &Simulation::status)
         .def("set_params", &Simulation::set_params)
         .def("set_trap", &Simulation::set_trap)
         .def("add_ion", &Simulation::add_ion)
-        .def("start", &Simulation::start)
+        .def("start", &Simulation::start);
 
     return m.ptr();
 }
