@@ -36,9 +36,9 @@ private:
      * Precomputes all Coulomb interactions between ions that way they can be
      * applied all at once when advancing a time step.
      *
-     * TODO: convert to OpenCL or similar.
+     * TODO: use Boost.compute
      */
-    mat precompute_coulomb();
+    const mat precompute_coulomb();
 
 public:
     /// Simulation status

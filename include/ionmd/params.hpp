@@ -2,6 +2,7 @@
 #define PARAMS_HPP
 
 #include <string>
+#include <sstream>
 #include <memory>
 #include "util.hpp"
 
@@ -25,7 +26,7 @@ struct SimParams {
     bool micromotion_enabled = false;
 
     /// Enable Coulomb repulsion calculation
-    bool coulomb_enabled = false;
+    bool coulomb_enabled = true;
 
     /// Enable stochastic force calculation
     bool stochastic_enabled = false;
@@ -38,6 +39,21 @@ struct SimParams {
 
     /// How many points in time to store before writing to disk.
     size_t buffer_size = 10000;
+
+    auto to_string() -> std::string
+    {
+        std::stringstream stream;
+        stream << "Simulation parameters:\n"
+               << "  dt = " << dt << "\n"
+               << "  num_steps = " << num_steps << "\n"
+               << "  micromotion: " << micromotion_enabled << "\n"
+               << "  coulomb: " << coulomb_enabled << "\n"
+               << "  stochastic: " << stochastic_enabled << "\n"
+               << "  doppler: " << doppler_enabled << "\n"
+               << "  filename: " << filename << "\n"
+               << "  buffer_size: " << buffer_size << "\n";
+        return stream.str();
+    }
 };
 
 typedef std::shared_ptr<SimParams> params_ptr;

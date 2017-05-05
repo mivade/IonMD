@@ -1,6 +1,5 @@
 #include <iostream>
 #include <cmath>
-#include <random>
 
 #include <armadillo>
 
@@ -15,11 +14,8 @@ using arma::normalise;
 
 using namespace ionmd;
 
-std::default_random_engine rng;
-std::uniform_real_distribution<double> uniform(0, 1);
 
-
-Ion::Ion(params_ptr params, trap_ptr trap, const double m, const double Z)
+Ion::Ion(params_ptr params, trap_ptr trap, double m, double Z)
     : v(3), a(3), m(m), Z(Z)
 {
     this->p = params;
@@ -29,8 +25,7 @@ Ion::Ion(params_ptr params, trap_ptr trap, const double m, const double Z)
 }
 
 
-Ion::Ion(params_ptr params, trap_ptr trap, const double m, const double Z,
-         const vec x0)
+Ion::Ion(params_ptr params, trap_ptr trap, const double m, const double Z, vec x0)
     : Ion(params, trap, m, Z)
 {
     this->x = x0;
@@ -40,7 +35,7 @@ Ion::Ion(params_ptr params, trap_ptr trap, const double m, const double Z,
 
 
 Ion::Ion(params_ptr params, trap_ptr trap, lasers_t lasers,
-         const double m, const double Z, const vec x0)
+         double m, double Z, vec x0)
     : Ion(params, trap, m, Z)
 {
     // FIXME
@@ -49,14 +44,15 @@ Ion::Ion(params_ptr params, trap_ptr trap, lasers_t lasers,
 }
 
 
-const vec Ion::update(double t, mat forces)
+const vec Ion::update(const double &t, const mat &forces,
+                      const unsigned int &index)
 {
     vec dx = v*p->dt + 0.5*a*pow(p->dt, 2);
     x += dx;
 
     vec F = secular_force()
         + micromotion_force(t)
-        + coulomb_force(forces)
+        + coulomb_force(forces, index)
         + stochastic_force()
         + doppler_force();
 
@@ -99,26 +95,39 @@ vec Ion::doppler_force() {
 }
 
 
-vec Ion::coulomb_force(mat forces)
+const vec Ion::coulomb(const std::vector<Ion> &ions)
 {
     vec F = arma::zeros<vec>(3);
 
+    for (const auto &other: ions) {
+        if (this == &other) {
+            continue;
+        }
+        const double coef = this->Z * other.Z;
+        vec r = other.x - this->x;
+        F += (coef * r / pow(arma::norm(r), 3));
+    }
+
+    return constants::OOFPEN * pow(constants::q_e, 2) * F;
+}
+
+
+vec Ion::coulomb_force(const mat &forces, const unsigned int &index)
+{
     if (p->coulomb_enabled) {
-        // FIXME
-        return F;
+        return forces.col(index);
     }
     else {
-        return F;
+        return arma::zeros<vec>(3);
     }
 }
 
 
 vec Ion::secular_force()
 {
-    vec F(3);
+    vec F = arma::zeros<vec>(3);
 
-    //A = p->kappa*p->UEC/pow(p->z0,2);
-    const auto mass = m*amu;
+    const auto mass = m*constants::amu;
     const double A = Z*pow(trap->V_rf, 2)/(mass*pow(trap->omega_rf, 2)*pow(trap->r0, 4));
     const double B = trap->kappa*trap->U_ec/(2*pow(trap->z0,2));
     F[0] = -2*Z*(A-B)*x[0];

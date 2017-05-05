@@ -32,7 +32,8 @@ PYBIND11_PLUGIN(ionmd)
         .def_readwrite("stochastic_enabled", &SimParams::stochastic_enabled)
         .def_readwrite("doppler_enabled", &SimParams::doppler_enabled)
         .def_readwrite("filename", &SimParams::filename)
-        .def_readwrite("buffer_size", &SimParams::buffer_size);
+        .def_readwrite("buffer_size", &SimParams::buffer_size)
+        .def("__str__", &SimParams::to_string);
 
     py::class_<Trap>(m, "Trap")
         .def(py::init())

@@ -41,14 +41,14 @@ Simulation::Simulation(SimParams p, Trap trap, std::vector<Ion> ions)
 }
 
 
-mat Simulation::precompute_coulomb() {
+const mat Simulation::precompute_coulomb()
+{
     mat Flist(3, ions.size());
 
     #pragma omp parallel for
     for (unsigned int i = 0; i < ions.size(); i++) {
-        // FIXME
-        // Flist.col(i) = ion.coulomb(ions);
-        i++;
+        auto F = ions[i].coulomb(ions);
+        Flist.col(i) = F;
     }
     return Flist;
 }
@@ -77,12 +77,10 @@ auto Simulation::get_trap() -> Trap
 }
 
 
-void Simulation::set_trap(Trap new_trap) {
+void Simulation::set_trap(Trap new_trap)
+{
     if (status != SimStatus::RUNNING) {
         trap = std::make_shared<Trap>(new_trap);
-    }
-    else {
-        // BOOST_LOG_TRIVIAL(error) << "Can't set a new trap while simulation is running!";
     }
 }
 
@@ -100,13 +98,11 @@ void Simulation::add_ion(const double &m, const double &z,
     if (status != SimStatus::RUNNING) {
         ions.push_back(make_ion(m, z, x0));
     }
-    else {
-        // BOOST_LOG_TRIVIAL(error) << "Can't add an ion while simulation in progress!";
-    }
 }
 
 
-void Simulation::set_ions(std::vector<Ion> ions) {
+void Simulation::set_ions(std::vector<Ion> ions)
+{
     if (status != SimStatus::RUNNING) {
         ions.clear();
 
@@ -114,13 +110,11 @@ void Simulation::set_ions(std::vector<Ion> ions) {
             ions.push_back(ion);
         }
     }
-    else {
-        // BOOST_LOG_TRIVIAL(error) << "Can't set new ions while simulation is running!";
-    }
 }
 
 
-void Simulation::run() {
+void Simulation::run()
+{
     if (p == nullptr) {
         std::cerr << "No parameters set!" << std::endl;
         status = SimStatus::ERRORED;
@@ -141,8 +135,7 @@ void Simulation::run() {
     // std::mersenne_twister_engine<double> rng;
 
     // Storage of pre-computed Coulomb force data
-    mat coulomb_forces(3, ions.size());
-    coulomb_forces.zeros();
+    mat coulomb_forces = arma::zeros<mat>(3, ions.size());
 
     // FIXME: Initialization should happen before here
     // TODO: Initialize CCD
@@ -175,7 +168,7 @@ void Simulation::run() {
         // TODO: update to use Boost.compute
         #pragma omp parallel for
         for (unsigned int i = 0; i < ions.size(); i++) {
-            const auto x = ions[i].update(t, coulomb_forces);
+            const auto x = ions[i].update(t, coulomb_forces, i);
 
             // Record trajectory position
             for (unsigned int j = 0; j < 3; j++) {

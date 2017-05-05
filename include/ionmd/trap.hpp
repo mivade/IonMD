@@ -2,7 +2,7 @@
 #define TRAP_HPP
 
 #include <memory>
-#include "constants.hpp"
+#include <ionmd/constants.hpp>
 
 namespace ionmd {
 
@@ -26,7 +26,7 @@ struct Trap {
     double kappa = 0.006;
 
     /// rf (angular) frequency
-    double omega_rf = 2*pi*2.7e6;
+    double omega_rf = 2*constants::pi*2.7e6;
 
     /// rf amplitude
     double V_rf = 125;

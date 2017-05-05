@@ -17,7 +17,7 @@ inline auto timestamp_str() -> std::string {
     char buff[256];
     std::strftime(buff, sizeof(buff), "%FT%T%z", std::localtime(&now));
     return std::string(buff);
-}
+};
 
 }  // namespace ionmd
 

@@ -41,8 +41,9 @@ private:
     /**
      * Sum all forces due to other ions.
      * @param forces
+     * @param index
      */
-    vec coulomb_force(mat forces);
+    vec coulomb_force(const mat &forces, const unsigned int &index);
 
     /// Compute stochastic forces (background gas collisions, etc.).
     vec stochastic_force();
@@ -61,7 +62,7 @@ public:
      * @param m Ion mass
      * @param Z Ion charge
      */
-    Ion(params_ptr params, trap_ptr trap, const double m, const double Z);
+    Ion(params_ptr params, trap_ptr trap, double m, double Z);
 
     /**
      * @param params
@@ -70,7 +71,7 @@ public:
      * @param Z Ion charge
      * @param x0 Initial position vector
      */
-    Ion(params_ptr params, trap_ptr trap, const double m, const double Z, const vec x0);
+    Ion(params_ptr params, trap_ptr trap, double m, double Z, vec x0);
 
     /**
      * @param params
@@ -80,22 +81,24 @@ public:
      * @param Z Ion charge in units of e
      * @param x0 Initial position
      */
-    Ion(params_ptr params, trap_ptr trap, const lasers_t lasers,
-        const double m, const double Z, const vec x0);
+    Ion(params_ptr params, trap_ptr trap, lasers_t lasers,
+        double m, double Z, vec x0);
 
     /**
      * Apply a single time step of integration.
      * @param t Current time
      * @param forces Pre-computed Coulomb forces due to all other ions
+     * @param index
      * @returns The new ion position
      */
-    const vec update(double t, mat forces);
+    const vec update(const double &t, const mat &forces,
+                     const unsigned int &index);
 
     /**
      * Pre-compute the Coluomb forces due to all other ions in the trap.
      * @param ions Vector of all ions in the trap.
      */
-    vec coulomb(const std::vector<Ion> ions);
+    const vec coulomb(const std::vector<Ion> &ions);
 };
 
 }  // namespace ionmd
