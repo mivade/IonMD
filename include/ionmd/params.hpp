@@ -13,14 +13,17 @@ namespace ionmd {
  * Container structure for all parameters of a simulation.
  */
 struct SimParams {
-    /// Time step [&mu;s]
-    double dt = 0.01;
+    /// Time step
+    double dt = 0.01e-6;
 
     /// Total number of time steps.
     unsigned int num_steps = 20000;
 
     /// Verbosity of output. Higher numbers increases verbosity.
     unsigned int verbosity = 0;
+
+    /// Enable secular force (only disable for debugging!)
+    bool secular_enabled = true;
 
     /// Enable micromotion calculations (requires smaller time steps)
     bool micromotion_enabled = false;
@@ -46,6 +49,7 @@ struct SimParams {
         stream << "Simulation parameters:\n"
                << "  dt = " << dt << "\n"
                << "  num_steps = " << num_steps << "\n"
+               << "  secular: " << secular_enabled << "\n"
                << "  micromotion: " << micromotion_enabled << "\n"
                << "  coulomb: " << coulomb_enabled << "\n"
                << "  stochastic: " << stochastic_enabled << "\n"

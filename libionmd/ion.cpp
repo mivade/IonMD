@@ -103,12 +103,11 @@ const vec Ion::coulomb(const std::vector<Ion> &ions)
         if (this == &other) {
             continue;
         }
-        const double coef = this->Z * other.Z;
         vec r = other.x - this->x;
-        F += (coef * r / pow(arma::norm(r), 3));
+        F += (other.Z * r / pow(arma::norm(r), 3));
     }
 
-    return constants::OOFPEN * pow(constants::q_e, 2) * F;
+    return constants::OOFPEN * this->Z * pow(constants::q_e, 2) * F;
 }
 
 
@@ -127,12 +126,14 @@ vec Ion::secular_force()
 {
     vec F = arma::zeros<vec>(3);
 
-    const auto mass = m*constants::amu;
-    const double A = Z*pow(trap->V_rf, 2)/(mass*pow(trap->omega_rf, 2)*pow(trap->r0, 4));
-    const double B = trap->kappa*trap->U_ec/(2*pow(trap->z0,2));
-    F[0] = -2*Z*(A-B)*x[0];
-    F[1] = -2*Z*(A-B)*x[1];
-    F[2] = -4*Z*B*x[2];
+    if (p->secular_enabled) {
+        const auto mass = m*constants::amu;
+        const double A = Z*pow(trap->V_rf, 2)/(mass*pow(trap->omega_rf, 2)*pow(trap->r0, 4));
+        const double B = trap->kappa*trap->U_ec/(2*pow(trap->z0,2));
+        F[0] = -2*Z*(A-B)*x[0];
+        F[1] = -2*Z*(A-B)*x[1];
+        F[2] = -4*Z*B*x[2];
+    }
     return F;
 }
 

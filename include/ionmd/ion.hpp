@@ -49,7 +49,7 @@ private:
     vec stochastic_force();
 
 public:
-    vec x;  /// Ion position [&mu;m]
+    vec x;  /// Ion position
     vec v;  /// Ion velocity
     vec a;  /// Ion acceleration
 

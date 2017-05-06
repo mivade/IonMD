@@ -182,7 +182,8 @@ void Simulation::run()
         t += p->dt;
     }
 
-    trajectories.save(p->filename, arma::raw_binary);
+    // trajectories.save(p->filename, arma::raw_binary);
+    trajectories.save(p->filename, arma::csv_ascii);
     status = SimStatus::FINISHED;
 }
 

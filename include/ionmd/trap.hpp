@@ -1,6 +1,8 @@
 #ifndef TRAP_HPP
 #define TRAP_HPP
 
+#include <sstream>
+#include <string>
 #include <memory>
 #include <ionmd/constants.hpp>
 
@@ -35,7 +37,20 @@ struct Trap {
     double U_dc = 0;
 
     /// End cap voltage
-    double U_ec = 300;
+    double U_ec = 20;
+
+    auto to_string() -> std::string
+    {
+        std::stringstream stream;
+        stream << "Trap parameters:\n"
+               << "  r0 = " << r0 << "\n"
+               << "  z0 = " << z0 << "\n"
+               << "  kappa = " << kappa << "\n"
+               << "  V_rf = " << V_rf << "\n"
+               << "  U_dc = " << U_dc << "\n"
+               << "  U_ec = " << U_ec << "\n";
+        return stream.str();
+    }
 };
 
 typedef std::shared_ptr<Trap> trap_ptr;
