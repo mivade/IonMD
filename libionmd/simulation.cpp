@@ -34,7 +34,7 @@ Simulation::Simulation(SimParams p, Trap trap)
 Simulation::Simulation(SimParams p, Trap trap, std::vector<Ion> ions)
     : Simulation(p, trap)
 {
-    for (auto ion: ions) {
+    for (auto &ion: ions) {
         this->ions.push_back(ion);
     }
     // BOOST_LOG_TRIVIAL(debug) << "Number of ions: " << this->ions.size();
@@ -105,10 +105,10 @@ void Simulation::add_ion(const double &m, const double &z,
 void Simulation::set_ions(std::vector<Ion> ions)
 {
     if (status != SimStatus::RUNNING) {
-        ions.clear();
+        this->ions.clear();
 
-        for (auto ion: ions) {
-            ions.push_back(ion);
+        for (auto &ion: ions) {
+            this->ions.push_back(ion);
         }
     }
 }
@@ -116,17 +116,20 @@ void Simulation::set_ions(std::vector<Ion> ions)
 
 void Simulation::run()
 {
-    if (p == nullptr) {
+    if (p == nullptr)
+    {
         std::cerr << "No parameters set!" << std::endl;
         status = SimStatus::ERRORED;
         return;
     }
-    else if (trap == nullptr) {
+    else if (trap == nullptr)
+    {
         std::cerr << "No trap set!" << std::endl;
         status = SimStatus::ERRORED;
         return;
     }
-    else if (ions.size() == 0) {
+    else if (ions.size() == 0)
+    {
         std::cerr << "No ions set!" << std::endl;
         status = SimStatus::ERRORED;
         return;

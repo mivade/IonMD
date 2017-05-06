@@ -4,10 +4,9 @@
 #include <vector>
 #include <memory>
 #include <armadillo>
-#include "laser.hpp"
-#include "trap.hpp"
-#include "params.hpp"
-
+#include <ionmd/laser.hpp>
+#include <ionmd/trap.hpp>
+#include <ionmd/params.hpp>
 
 namespace ionmd {
 
@@ -22,6 +21,9 @@ private:
 
     /// Trap pointer for computing trap-related forces.
     trap_ptr trap;
+
+    /// Doppler cooling lasers affecting this ion.
+    lasers_ptr lasers;
 
     /// Charge in Coulombs
     const double charge;
@@ -49,6 +51,8 @@ private:
     vec stochastic_force();
 
 public:
+    // FIXME: consider making v, a, m private
+
     vec x;  /// Ion position
     vec v;  /// Ion velocity
     vec a;  /// Ion acceleration
@@ -76,12 +80,12 @@ public:
     /**
      * @param params
      * @param trap
-     * @param lasers Doppler cooling lasers that affect this ion
+     * @param lasers Shared pointer to Doppler cooling lasers that affect this ion
      * @param m Ion mass
      * @param Z Ion charge in units of e
      * @param x0 Initial position
      */
-    Ion(params_ptr params, trap_ptr trap, lasers_t lasers,
+    Ion(params_ptr params, trap_ptr trap, lasers_ptr lasers,
         double m, double Z, vec x0);
 
     /**

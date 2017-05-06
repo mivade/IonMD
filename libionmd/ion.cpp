@@ -33,12 +33,11 @@ Ion::Ion(params_ptr params, trap_ptr trap, const double m, const double Z, vec x
 }
 
 
-Ion::Ion(params_ptr params, trap_ptr trap, lasers_t lasers,
+Ion::Ion(params_ptr params, trap_ptr trap, lasers_ptr lasers,
          double m, double Z, vec x0)
     : Ion(params, trap, m, Z)
 {
-    // FIXME
-    // this->doppler_lasers = lasers;
+    this->lasers = lasers;
     this->x = x0;
 }
 
@@ -66,31 +65,14 @@ const vec Ion::update(const double &t, const mat &forces,
 vec Ion::doppler_force() {
     vec F = arma::zeros<vec>(3);
 
-    if (p->doppler_enabled) {
-        // FIXME
-        // double beta, F0;
-        // beta = this->p->beta;
-        // F0 = this->p->F0;
-
-        // if(this->p->minimizing) {
-        // 	beta = 1e-20; // unrealistically large damping for minimizing
-        // 	if(this->doppler_coolable == 0) // don't use constant pressure term on non-lc'ed ions
-        // 	    F0 = 0;
-        // }
-
-        // for (auto laser: this->doppler_lasers) {
-        // use all lasers here
-        //}
-
-        // for (int i = 0; i < 3; i++) {
-        //     F[i] = F0*p->khat[i] - beta*this->v[i];
-        // }
-
-        return F;
+    if (p->doppler_enabled)
+    {
+        for (const auto &laser: lasers) {
+            F = laser->F0 * laser->wave_vector - laser->beta * v;
+        }
     }
-    else {
-        return F;
-    }
+
+    return F;
 }
 
 
