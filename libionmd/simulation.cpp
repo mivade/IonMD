@@ -46,7 +46,8 @@ const mat Simulation::precompute_coulomb()
     mat Flist(3, ions.size());
 
     #pragma omp parallel for
-    for (unsigned int i = 0; i < ions.size(); i++) {
+    for (unsigned int i = 0; i < ions.size(); i++)
+    {
         auto F = ions[i].coulomb(ions);
         Flist.col(i) = F;
     }
@@ -137,10 +138,6 @@ void Simulation::run()
     // Storage of pre-computed Coulomb force data
     mat coulomb_forces = arma::zeros<mat>(3, ions.size());
 
-    // FIXME: Initialization should happen before here
-    // TODO: Initialize CCD
-    // TODO: Initialize lasers
-
     // Stores every ion's position in one iteration
     auto current_positions = std::vector<vec>();
     for (unsigned int i = 0; i < p->buffer_size; i++) {
@@ -155,19 +152,18 @@ void Simulation::run()
     status = SimStatus::RUNNING;
 
     auto t = double(0);
-    for (unsigned int step = 0; step < p->num_steps; step++) {
+    for (unsigned int step = 0; step < p->num_steps; step++)
+    {
         // Calculate Coulomb forces
         if (p->coulomb_enabled) {
             coulomb_forces = precompute_coulomb();
         }
 
-        // Progress update
-        // FIXME
-
         // Update each ion
         // TODO: update to use Boost.compute
         #pragma omp parallel for
-        for (unsigned int i = 0; i < ions.size(); i++) {
+        for (unsigned int i = 0; i < ions.size(); i++)
+        {
             const auto x = ions[i].update(t, coulomb_forces, i);
 
             // Record trajectory position

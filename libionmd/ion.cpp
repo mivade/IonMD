@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cmath>
+#include <atomic>
 
 #include <armadillo>
 
@@ -16,7 +17,7 @@ using namespace ionmd;
 
 
 Ion::Ion(params_ptr params, trap_ptr trap, double m, double Z)
-    : v(3), a(3), m(m), Z(Z)
+    : charge(Z * constants::q_e), v(3), a(3), m(m), Z(Z)
 {
     this->p = params;
     this->trap = trap;
@@ -29,8 +30,6 @@ Ion::Ion(params_ptr params, trap_ptr trap, const double m, const double Z, vec x
     : Ion(params, trap, m, Z)
 {
     this->x = x0;
-    // BOOST_LOG_TRIVIAL(debug) << "m=" << m << ", Z=" << Z << ", x0="
-    //                          << x0[0] << "," << x0[1] << "," << x0[2];
 }
 
 
@@ -56,7 +55,7 @@ const vec Ion::update(const double &t, const mat &forces,
         + stochastic_force()
         + doppler_force();
 
-    auto accel = F/m;
+    auto accel = F / m;
     v += 0.5*(a + accel)*p->dt;
     a = accel;
 
@@ -99,15 +98,16 @@ const vec Ion::coulomb(const std::vector<Ion> &ions)
 {
     vec F = arma::zeros<vec>(3);
 
-    for (const auto &other: ions) {
+    for (const auto &other: ions)
+    {
         if (this == &other) {
             continue;
         }
         vec r = other.x - this->x;
-        F += (other.Z * r / pow(arma::norm(r), 3));
+        F += (other.charge * r / pow(arma::norm(r), 3));
     }
 
-    return constants::OOFPEN * this->Z * pow(constants::q_e, 2) * F;
+    return constants::OOFPEN * this->charge * F;
 }
 
 
@@ -126,13 +126,13 @@ vec Ion::secular_force()
 {
     vec F = arma::zeros<vec>(3);
 
-    if (p->secular_enabled) {
-        const auto mass = m*constants::amu;
-        const double A = Z*pow(trap->V_rf, 2)/(mass*pow(trap->omega_rf, 2)*pow(trap->r0, 4));
-        const double B = trap->kappa*trap->U_ec/(2*pow(trap->z0,2));
-        F[0] = -2*Z*(A-B)*x[0];
-        F[1] = -2*Z*(A-B)*x[1];
-        F[2] = -4*Z*B*x[2];
+    if (p->secular_enabled)
+    {
+        const double A = charge*pow(trap->V_rf, 2)/(m*pow(trap->omega_rf, 2)*pow(trap->r0, 4));
+        const double B = trap->kappa*trap->U_ec/(2*pow(trap->z0, 2));
+        F[0] = -2 * charge * (A - B) * x[0];
+        F[1] = -2 * charge * (A - B) * x[1];
+        F[2] = -4 * charge * B * x[2];
     }
     return F;
 }

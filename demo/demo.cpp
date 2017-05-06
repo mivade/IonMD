@@ -4,6 +4,7 @@
 #include <ionmd/simulation.hpp>
 #include <ionmd/params.hpp>
 #include <ionmd/trap.hpp>
+#include <ionmd/constants.hpp>
 
 using std::cout;
 using std::endl;
@@ -19,19 +20,18 @@ int main(int argc, char *argv[])
     auto trap = Trap();
 
     params.coulomb_enabled = true;
-    params.secular_enabled = false;
-    params.dt = 1e-3;
-    params.num_steps = 5000;
+    params.secular_enabled = true;
 
-    trap.U_ec = 20;
+    trap.U_ec = 5;
 
     cout << params.to_string() << endl
          << trap.to_string() << endl;
 
     Simulation sim(params, trap);
 
-    sim.add_ion(40, 1, {0, 0, -20e-6});
-    sim.add_ion(40, 1, {0, 0, 20e-6});
+    auto m = double(constants::amu * 40);
+    sim.add_ion(m, 1, {0, 0, -20e-6});
+    sim.add_ion(m, 1, {0, 0, 20e-6});
 
     sim.run();
 

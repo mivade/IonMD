@@ -17,14 +17,14 @@ using arma::mat;
 
 class Ion {
 private:
-    /// Unique ID
-    unsigned int id;
-
     /// Common simulation parameters
     params_ptr p;
 
     /// Trap pointer for computing trap-related forces.
     trap_ptr trap;
+
+    /// Charge in Coulombs
+    const double charge;
 
     /// Compute the force from Doppler cooling lasers.
     vec doppler_force();
@@ -53,7 +53,7 @@ public:
     vec v;  /// Ion velocity
     vec a;  /// Ion acceleration
 
-    const double m;  /// Ion mass [amu]
+    const double m;  /// Ion mass
     const double Z;  /// Ion charge in units of [e]
 
     /**

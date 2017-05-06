@@ -17,7 +17,8 @@ namespace ionmd {
  *
  * Units are SI.
  */
-struct Trap {
+struct Trap
+{
     /// Trap radius
     double r0 = 3.18e-3;
 
@@ -37,7 +38,7 @@ struct Trap {
     double U_dc = 0;
 
     /// End cap voltage
-    double U_ec = 20;
+    double U_ec = 5;
 
     auto to_string() -> std::string
     {

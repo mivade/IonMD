@@ -14,7 +14,7 @@ namespace ionmd {
  */
 struct SimParams {
     /// Time step
-    double dt = 0.01e-6;
+    double dt = 10e-6;
 
     /// Total number of time steps.
     unsigned int num_steps = 20000;
