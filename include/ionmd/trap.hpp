@@ -4,6 +4,7 @@
 #include <sstream>
 #include <string>
 #include <memory>
+#include <json.hpp>
 #include <ionmd/constants.hpp>
 
 namespace ionmd {
@@ -51,6 +52,21 @@ struct Trap
                << "  U_dc = " << U_dc << "\n"
                << "  U_ec = " << U_ec << "\n";
         return stream.str();
+    }
+
+    auto to_json() -> std::string
+    {
+        using nlohmann::json;
+        json j = {
+            {"r0", r0},
+            {"z0", z0},
+            {"kappa", kappa},
+            {"V_rf", V_rf},
+            {"U_dc", U_dc},
+            {"U_ec", U_ec}
+        };
+
+        return j.dump(2);
     }
 };
 

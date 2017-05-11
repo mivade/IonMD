@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 #include <memory>
+#include <json.hpp>
 #include "util.hpp"
 
 
@@ -57,6 +58,24 @@ struct SimParams {
                << "  filename: " << filename << "\n"
                << "  buffer_size: " << buffer_size << "\n";
         return stream.str();
+    }
+
+    auto to_json() -> std::string
+    {
+        using nlohmann::json;
+        json j = {
+            {"dt", dt},
+            {"num_steps", num_steps},
+            {"verbosity", verbosity},
+            {"secular_enabled", secular_enabled},
+            {"micromotion_enabled", micromotion_enabled},
+            {"coulomb_enabled", coulomb_enabled},
+            {"stochastic_enabled", stochastic_enabled},
+            {"doppler_enabled", doppler_enabled},
+            {"buffer_size", buffer_size}
+        };
+
+        return j.dump(2);
     }
 };
 
