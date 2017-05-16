@@ -38,13 +38,13 @@ struct SimParams {
     /// Enable Doppler cooling simulation
     bool doppler_enabled = false;
 
-    /// Filename for writing trajectory data to.
-    std::string filename = "out.bin";
+    /// Directory to write data to
+    std::string path = "output";
 
     /// How many points in time to store before writing to disk.
     size_t buffer_size = 10000;
 
-    auto to_string() -> std::string
+    auto to_string() const -> std::string
     {
         std::stringstream stream;
         stream << "Simulation parameters:\n"
@@ -55,12 +55,12 @@ struct SimParams {
                << "  coulomb: " << coulomb_enabled << "\n"
                << "  stochastic: " << stochastic_enabled << "\n"
                << "  doppler: " << doppler_enabled << "\n"
-               << "  filename: " << filename << "\n"
+               << "  path: " << path << "\n"
                << "  buffer_size: " << buffer_size << "\n";
         return stream.str();
     }
 
-    auto to_json() -> std::string
+    auto to_json() const -> std::string
     {
         using nlohmann::json;
         json j = {

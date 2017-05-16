@@ -5,6 +5,7 @@
 #include <thread>
 
 #include <ionmd/simulation.hpp>
+#include <ionmd/data.hpp>
 #include <ionmd/util.hpp>
 
 namespace ionmd {
@@ -148,7 +149,11 @@ void Simulation::run()
     }
 
     // Stores all ion positions
-    auto trajectories = mat(p->num_steps, ions.size() * 3);
+    // TODO: also store velocities and accelerations
+    mat trajectories(p->num_steps, ions.size() * 3);
+
+    // Create output directory and files
+    DataWriter writer(*p.get(), *trap.get(), ions);
 
     // Run simulation
     // BOOST_LOG_TRIVIAL(info) << "Start simulation: " << timestamp_str() << "\n";
@@ -182,7 +187,7 @@ void Simulation::run()
     }
 
     // trajectories.save(p->filename, arma::raw_binary);
-    trajectories.save(p->filename, arma::csv_ascii);
+    // trajectories.save(p->filename, arma::csv_ascii);
     status = SimStatus::FINISHED;
 }
 

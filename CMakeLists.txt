@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.6)
 option(BUILD_PY "Build Python bindings" OFF)
 option(BUILD_TESTS "Build C++ tests" ON)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 if(${CMAKE_COMPILER_IS_GNUCXX})
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 endif(${CMAKE_COMPILER_IS_GNUCXX})
@@ -17,17 +17,9 @@ else()
   find_package(Threads)  # necessary when not using OpenMP
 endif(${OPENMP_FOUND})
 
-find_package(HDF5 REQUIRED)
+find_package(Boost COMPONENTS filesystem REQUIRED)
 
-# Required for tests, but nothing else
-find_package(Boost COMPONENTS filesystem)
-
-set(INCLUDES include ${ARMADILLO_INCLUDE_DIRS} ${HDF5_INCLUDE_DIRS})
-if(Boost_FOUND)
-  set(INCLUDES ${INCLUDES} ${Boost_INCLUDE_DIRS})
-else()
-  set(${BUILD_TESTS} OFF)
-endif(Boost_FOUND)
+set(INCLUDES include ${ARMADILLO_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 include_directories(${INCLUDES})
 
 add_subdirectory(libionmd)

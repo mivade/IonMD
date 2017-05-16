@@ -11,17 +11,4 @@ namespace fs = boost::filesystem;
 
 TEST_CASE("data can be written", "[data]")
 {
-    auto filename = "test.h5";
-    auto writer = DataWriter(filename, true);
-
-    SECTION("file exists") {
-        REQUIRE(fs::exists(filename));
-    }
-
-    SECTION("ions group created")
-    {
-
-    }
-
-    // fs::remove(filename);
 }

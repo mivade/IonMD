@@ -1,69 +1,73 @@
 #include <iostream>
+#include <stdexcept>
+#include <boost/filesystem.hpp>
 #include <ionmd/data.hpp>
 
 using namespace ionmd;
+namespace fs = boost::filesystem;
 
 
-DataWriter::DataWriter(std::string filename, bool overwrite)
+DataWriter::DataWriter(const SimParams &params, const Trap &trap,
+                       const std::vector<Ion> &ions, bool overwrite)
 {
-    auto mode = overwrite ? H5F_ACC_TRUNC : H5F_ACC_EXCL;
-    file = H5Fcreate(filename.c_str(), mode, H5P_DEFAULT, H5P_DEFAULT);
+    auto path = params.path;
 
-    // Group for storing ion data; for now, store initial and final data. This
-    // lets us reconstruct a simulation from where we stopped since it contains
-    // velocities as well as positions.
-    create_group("/ions");
+    if (fs::exists(path))
+    {
+        if (!overwrite) {
+            auto msg = "The path " + path + " already exists";
+            throw (std::runtime_error(msg));
+        }
 
-    //handles["trajectories"] = H5D
+        if (!fs::is_directory(path)) {
+            auto msg = "Path " + path + " is not a directory";
+            throw(std::runtime_error(msg));
+        }
+    }
+    else {
+        fs::create_directory(path);
+    }
+
+    this->path = path;
+
+    // Output sim params
+    fs::path p_path = path;
+    p_path /= "params.json";
+    std::ofstream pout(p_path.c_str());
+    pout << params.to_json() << std::endl;
+    pout.close();
+
+    // Output trap params
+    fs::path trap_path = path;
+    trap_path /= "trap.json";
+    std::ofstream tout(trap_path.c_str());
+    tout << trap.to_json() << std::endl;
+    tout.close();
+
+    // Output initial ion positions
+    fs::path ions_path = path;
+    ions_path /= "ions-init.csv";
+    std::ofstream ions_out(ions_path.c_str());
+    ions_out << "m,Z,position,velocity,acceleration\n";
+    for (const auto &ion: ions) {
+        ions_out << ion.m << "," << ion.Z << "\n";
+    }
+    ions_out.close();
+
+    // Create stream for writing trajectory data
+    fs::path traj_filename = path;
+    traj_filename /= "trajectories.bin";
+    traj_file.open(traj_filename.c_str(), std::ios::out | std::ios::binary);
 }
 
 
 DataWriter::~DataWriter()
 {
-    if (file > 0) {
-        H5Fclose(file);
-    }
+    traj_file.close();
 }
 
 
-auto DataWriter::create_group(std::string name) -> hid_t
+void DataWriter::write_trajectories(const arma::mat &data)
 {
-    auto handle = H5Gcreate(file, name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    if (handle > 0) {
-        groups[name] = handle;
-    }
-    return handle;
-}
-
-
-auto DataWriter::get_group(std::string key) -> hid_t
-{
-    auto handle = groups.find(key);
-    if (handle != groups.end()) {
-        return handle->second;
-    }
-    else {
-        return -1;
-    }
-}
-
-
-auto DataWriter::get_dataset(std::string key) -> hid_t
-{
-    auto handle = datasets.find(key);
-    if (handle != datasets.end()) {
-        return handle->second;
-    }
-    else {
-        return -1;
-    }
-}
-
-
-auto DataWriter::store_ions(std::string dset, const std::vector<Ion> &ions) -> void
-{
-    auto handle = get_dataset(dset);
-    if (handle < 0) {
-
-    }
+    data.save(traj_file, arma::raw_binary);
 }

@@ -41,7 +41,7 @@ struct Trap
     /// End cap voltage
     double U_ec = 5;
 
-    auto to_string() -> std::string
+    auto to_string() const -> std::string
     {
         std::stringstream stream;
         stream << "Trap parameters:\n"
@@ -54,7 +54,7 @@ struct Trap
         return stream.str();
     }
 
-    auto to_json() -> std::string
+    auto to_json() const -> std::string
     {
         using nlohmann::json;
         json j = {

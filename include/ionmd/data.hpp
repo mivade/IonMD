@@ -1,10 +1,12 @@
 #ifndef DATA_HPP
 #define DATA_HPP
 
+#include <fstream>
 #include <string>
-#include <vector>
-#include <map>
-#include "hdf5.h"
+#include <memory>
+#include <armadillo>
+#include "params.hpp"
+#include "trap.hpp"
 #include "ion.hpp"
 
 namespace ionmd {
@@ -16,32 +18,28 @@ namespace ionmd {
 class DataWriter
 {
 private:
-    hid_t file;
-    std::map<std::string, hid_t> groups;
-    std::map<std::string, hid_t> datasets;
+    /// Path to data files.
+    std::string path;
 
-    hid_t create_group(std::string name);
-
-    hid_t get_group(std::string key);
-    hid_t get_dataset(std::string key);
+    std::ofstream traj_file;
 
 public:
     /**
-     * Opens and initializes an HDF5 file for output.
-     * @param filename Full filename for the data file.
+     * Initialize data output.
+     * @param params
+     * @param trap
+     * @param ions
      * @param overwrite Overwrite existing data.
      */
-    DataWriter(std::string filename, bool overwrite=false);
+    DataWriter(const SimParams &params, const Trap &trap,
+               const std::vector<Ion> &ions, bool overwrite=false);
 
-    /** Closes file. */
     ~DataWriter();
 
     /**
-     * Write ion settings to disk.
-     * @param dset Name of HDF5 dataset
-     * @param ions
+     * Write trajectory updates to disk.
      */
-    void store_ions(std::string dset, const std::vector<Ion> &ions);
+    void write_trajectories(const arma::mat &data);
 };
 
 }  // namespace ionmd

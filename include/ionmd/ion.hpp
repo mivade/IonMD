@@ -58,7 +58,7 @@ public:
     vec a;  /// Ion acceleration
 
     const double m;  /// Ion mass
-    const double Z;  /// Ion charge in units of [e]
+    const double Z;  /// Ion charge in units of [e] FIXME: make integer
 
     /**
      * @param params
