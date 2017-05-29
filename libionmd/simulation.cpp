@@ -3,6 +3,7 @@
 #include <vector>
 #include <array>
 #include <thread>
+#include <fstream>
 
 #include <ionmd/simulation.hpp>
 #include <ionmd/data.hpp>
@@ -143,23 +144,20 @@ void Simulation::run()
     mat coulomb_forces = arma::zeros<mat>(3, ions.size());
 
     // Stores every ion's position in one iteration
-    auto current_positions = std::vector<vec>();
-    for (unsigned int i = 0; i < p->buffer_size; i++) {
-        current_positions.push_back(vec(3));
-    }
-
-    // Stores all ion positions
-    // TODO: also store velocities and accelerations
-    mat trajectories(p->num_steps, ions.size() * 3);
+    vec current_positions(ions.size() * 3);
 
     // Create output directory and files
-    DataWriter writer(*p.get(), *trap.get(), ions);
+    // FIXME: don't always overwrite
+    // DataWriter writer(p, trap, ions, true);
+
+    std::ofstream traj_stream("data.out", std::ios::out | std::ios::binary);
+    traj_stream << ions.size() << "\n" << p->num_steps << "\n";
 
     // Run simulation
     // BOOST_LOG_TRIVIAL(info) << "Start simulation: " << timestamp_str() << "\n";
+    auto t = double(0);
     status = SimStatus::RUNNING;
 
-    auto t = double(0);
     for (unsigned int step = 0; step < p->num_steps; step++)
     {
         // Calculate Coulomb forces
@@ -173,18 +171,19 @@ void Simulation::run()
         for (unsigned int i = 0; i < ions.size(); i++)
         {
             const auto x = ions[i].update(t, coulomb_forces, i);
-
-            // Record trajectory position
+            // writer.update_buffer(i, x);
             for (unsigned int j = 0; j < 3; j++) {
-                trajectories(step, 3*i + j) = x[j];
+                current_positions[3*i + j] = x[j];
             }
-            current_positions[i] = x;
 
             // TODO: Check bounds
         }
 
+        current_positions.save(traj_stream, arma::raw_binary);
         t += p->dt;
     }
+
+    traj_stream.close();
 
     // trajectories.save(p->filename, arma::raw_binary);
     // trajectories.save(p->filename, arma::csv_ascii);

@@ -42,7 +42,8 @@ struct SimParams {
     std::string path = "output";
 
     /// How many points in time to store before writing to disk.
-    size_t buffer_size = 10000;
+    // FIXME: enforce being a divisor of num_steps
+    size_t buffer_size = 5000;
 
     auto to_string() const -> std::string
     {

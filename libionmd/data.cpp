@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <boost/filesystem.hpp>
 #include <ionmd/data.hpp>
@@ -7,11 +8,11 @@ using namespace ionmd;
 namespace fs = boost::filesystem;
 
 
-DataWriter::DataWriter(const SimParams &params, const Trap &trap,
+DataWriter::DataWriter(params_ptr params, trap_ptr trap,
                        const std::vector<Ion> &ions, bool overwrite)
+    : path(params->path), buffer_size(params->buffer_size), buffer_pos(0)
 {
-    auto path = params.path;
-
+    // Create output directory
     if (fs::exists(path))
     {
         if (!overwrite) {
@@ -27,21 +28,20 @@ DataWriter::DataWriter(const SimParams &params, const Trap &trap,
     else {
         fs::create_directory(path);
     }
-
     this->path = path;
 
     // Output sim params
     fs::path p_path = path;
     p_path /= "params.json";
     std::ofstream pout(p_path.c_str());
-    pout << params.to_json() << std::endl;
+    pout << params->to_json() << std::endl;
     pout.close();
 
     // Output trap params
     fs::path trap_path = path;
     trap_path /= "trap.json";
     std::ofstream tout(trap_path.c_str());
-    tout << trap.to_json() << std::endl;
+    tout << trap->to_json() << std::endl;
     tout.close();
 
     // Output initial ion positions
@@ -56,18 +56,21 @@ DataWriter::DataWriter(const SimParams &params, const Trap &trap,
 
     // Create stream for writing trajectory data
     fs::path traj_filename = path;
-    traj_filename /= "trajectories.bin";
-    traj_file.open(traj_filename.c_str(), std::ios::out | std::ios::binary);
+    // traj_filename /= "trajectories.bin";
+    // traj_file.open(traj_filename.c_str(), std::ios::out | std::ios::binary);
+
+    // Allocate ion data buffer
+    buffer.zeros(params->num_steps, 3 * params->buffer_size);
 }
 
 
 DataWriter::~DataWriter()
 {
-    traj_file.close();
+    // traj_file.close();
 }
 
 
-void DataWriter::write_trajectories(const arma::mat &data)
+inline void DataWriter::write(const unsigned int &ion, const arma::vec &data)
 {
-    data.save(traj_file, arma::raw_binary);
+    ion_files[ion] << data;
 }
